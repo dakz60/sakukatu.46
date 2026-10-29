@@ -3,10 +3,6 @@ import { $, go, render, toast, photoCount } from './ui.js';
 import { initForms } from './forms.js';
 import { deletePhoto } from './photoStorage.js';
 import { members } from '../data/features.js';
-import {
-  attachMemberAutocomplete,
-  isMember,
-} from './memberAutocomplete.js';
 
 initForms();
 
@@ -87,26 +83,24 @@ document.body.addEventListener('input', (event) => {
 });
 
 const profileModal = $('#profileModal');
-const profileMember = $('#profileMember');
-const profileBirthday = $('#profileBirthday');
-
-attachMemberAutocomplete(profileMember);
-
-profileMember.addEventListener('change', () => {
-  const member = members.find(
-    (item) => item.name === profileMember.value
-  );
-
-  if (member) {
-    profileBirthday.value = member.birthday;
-  }
-});
+const profileMembers = $('#profileMembers');
 
 $('#editProfile').onclick = () => {
-  profileMember.value = db.profile.name || '';
-  profileBirthday.value = db.profile.birthday || '';
+  const selected = new Set(db.profile.members || (members.some(member => member.name === db.profile.name) ? [db.profile.name] : []));
+  profileMembers.replaceChildren();
+  const legend = document.createElement('legend');
+  legend.textContent = '推しメンを選択';
+  profileMembers.append(legend);
+  members.forEach(member => {
+    const label = document.createElement('label');
+    const input = document.createElement('input');
+    input.type = 'checkbox'; input.name = 'members'; input.value = member.name;
+    input.checked = selected.has(member.name);
+    label.append(input, document.createTextNode(`${member.name}（${member.birthday.slice(5).replace('-', '/')}）`));
+    profileMembers.append(label);
+  });
   profileModal.classList.add('open');
-  profileMember.focus();
+  profileMembers.querySelector('input')?.focus();
 };
 
 $('#profileCancel').onclick = () => {
@@ -122,27 +116,14 @@ profileModal.onclick = (event) => {
 $('#profileForm').onsubmit = (event) => {
   event.preventDefault();
 
-  const member = members.find(
-    (item) => item.name === profileMember.value
-  );
-
-  if (!isMember(profileMember.value) || !member) {
-    toast('候補からメンバーを選んでください');
-    profileMember.focus();
-    return;
-  }
-
-  db.profile = {
-    ...db.profile,
-    name: member.name,
-    group: '櫻坂46',
-    birthday: member.birthday,
-  };
-
-  save();
+  const selected = [...profileMembers.querySelectorAll('input:checked')].map(input => input.value);
+  const previous = db.profile;
+  const first = members.find(member => member.name === selected[0]);
+  db.profile = { ...db.profile, members: selected, name: first?.name || '推しメンバー', birthday: first?.birthday || '', group: '櫻坂46' };
+  try { save(); } catch { db.profile = previous; toast('保存できませんでした'); return; }
   render();
   profileModal.classList.remove('open');
-  toast('プロフィールを保存しました');
+  toast('推しメンを保存しました');
 };
 
 go('photos');

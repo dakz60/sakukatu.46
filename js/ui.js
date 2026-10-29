@@ -90,8 +90,15 @@ export function render() {
   $('#statReports').textContent = `${db.reports.length}件`;
   const spend = db.money.filter(item => item.date?.startsWith(date.slice(0,7))).reduce((sum,item) => sum + (Number(item.amount) || 0), 0);
   $('#moneyTotal').textContent = $('#statSpend').textContent = `¥${spend.toLocaleString()}`;
-  $('#profileName').textContent = db.profile.name;
+  const favorites = (db.profile.members || [db.profile.name]).map(name => members.find(member => member.name === name)).filter(Boolean);
+  $('#profileName').textContent = favorites.length ? favorites.map(member => member.name).join('・') : '推しメンバー';
   $('#profileGroup').textContent = db.profile.group;
-  $('#profileBirthdayText').textContent = db.profile.birthday || '未登録';
+  $('#profileBirthdayText').textContent = favorites.length ? favorites.map(member => `${member.name} ${member.birthday.slice(5).replace('-', '/')}`).join(' / ') : '未登録';
+  $('#birthdayText').textContent = favorites.length ? favorites.map(member => {
+    const birthday = new Date(today.getFullYear(), Number(member.birthday.slice(5, 7)) - 1, Number(member.birthday.slice(8, 10)));
+    const start = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    if (birthday < start) birthday.setFullYear(birthday.getFullYear() + 1);
+    return `${member.name} あと${Math.round((birthday - start) / 86400000)}日`;
+  }).join(' / ') : '未登録';
   $('#homeMilestones').innerHTML = $('#list-milestones').innerHTML = empty('記念日機能は準備中です');
 }

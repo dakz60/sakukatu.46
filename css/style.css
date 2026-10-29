@@ -175,3 +175,8 @@ button { cursor: pointer; }
 .photo-actions { display: flex; justify-content: space-between; margin-top: 14px; }
 .unowned .photo-image { opacity: .45; }
 @media (max-width: 680px) { .photo-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; } .photo-info { padding: 10px; } .photo-info h3 { font-size: 16px; } }
+
+#profileMembers { display: grid; gap: 5px; border: 1px solid var(--border); border-radius: 5px; padding: 10px; }
+#profileMembers label { display: flex; align-items: center; gap: 10px; min-height: 44px; cursor: pointer; }
+#profileMembers input { width: 20px; min-height: 20px; height: 20px; accent-color: var(--accent); }
+#profileName { overflow-wrap: anywhere; }

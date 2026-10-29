@@ -365,14 +365,8 @@
       <form id="profileForm">
         <div class="form-grid">
           <div class="field full">
-            <label for="profileMember">メンバー名 *</label>
-            <input id="profileMember" name="name" type="text" required>
-            <small class="field-hint">ひらがなでも検索できます（例：た → 谷口愛季）</small>
-          </div>
-          <div class="field">
-            <label for="profileBirthday">誕生日</label>
-            <input id="profileBirthday" name="birthday" type="date" readonly>
-            <small class="field-hint">メンバーを選ぶと自動入力されます</small>
+            <p class="field-hint">推しメンを複数選べます。誕生日は自動で表示されます。</p>
+            <fieldset id="profileMembers"><legend>推しメンを選択</legend></fieldset>
           </div>
         </div>
         <div class="modal-actions">
