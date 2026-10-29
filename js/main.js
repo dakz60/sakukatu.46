@@ -1,10 +1,12 @@
-import { db, save } from './storage.js?v=20261030-1';
-import { $, go, render, toast, photoCount } from './ui.js?v=20261030-1';
-import { initForms } from './forms.js?v=20261030-1';
-import { deletePhoto } from './photoStorage.js?v=20261030-1';
-import { members } from '../data/features.js?v=20261030-1';
+import { db, save } from './storage.js?v=20261030-2';
+import { $, go, render, toast, photoCount, setPhotoView } from './ui.js?v=20261030-2';
+import { initForms } from './forms.js?v=20261030-2';
+import { deletePhoto } from './photoStorage.js?v=20261030-2';
+import { members } from '../data/features.js?v=20261030-2';
 
+import { initTrades } from './trades.js?v=20261030-2';
 initForms();
+initTrades();
 
 $('#nav').addEventListener('click', (event) => {
   const button = event.target.closest('[data-page]');
@@ -19,29 +21,27 @@ document.body.addEventListener('click', (event) => {
     go(target.dataset.go, render);
   }
 
+  const view = event.target.closest('[data-photo-view]');
+  if (view) setPhotoView(view.dataset.photoView);
   const counter = event.target.closest('[data-count]');
   if (counter) {
     const item = db.photos[Number(counter.dataset.count)];
     const previous = photoCount(item);
     const previousStatus = item.status;
+    const previousOffer = item.offer;
     item.count = Math.min(99999, Math.max(0, previous + Number(counter.dataset.delta)));
+    item.offer = Math.min(Number(item.offer) || 0, item.count);
     item.status = item.count > 0 ? '所持' : '未所持';
-    try { save(); render(); } catch { item.count = previous; item.status = previousStatus; toast('保存できませんでした。空き容量を確認してください'); }
+    try { save(); render(); } catch { item.count = previous; item.status = previousStatus; item.offer = previousOffer; toast('保存できませんでした。空き容量を確認してください'); }
   }
   const remove = event.target.closest('[data-delete]');
   if (remove) {
     const collection = remove.dataset.delete;
     if (!confirm('この記録を削除しますか？')) return;
-    const [deleted] = db[collection].splice(
-      Number(remove.dataset.index),
-      1
-    );
-
-    if (collection === 'photos' && deleted) {
-      deletePhoto(deleted.id).catch(() => {});
-    }
-
-    save();
+    const index = Number(remove.dataset.index);
+    const [deleted] = db[collection].splice(index, 1);
+    try { save(); } catch { db[collection].splice(index, 0, deleted); toast('削除を保存できませんでした'); return; }
+    if (['photos', 'milestones'].includes(collection) && deleted) deletePhoto(deleted.imageId || deleted.id).catch(() => {});
     render();
     toast('削除しました');
   }

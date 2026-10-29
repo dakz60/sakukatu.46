@@ -180,3 +180,20 @@ button { cursor: pointer; }
 #profileMembers label { display: flex; align-items: center; gap: 10px; min-height: 44px; cursor: pointer; }
 #profileMembers input { width: 20px; min-height: 20px; height: 20px; accent-color: var(--accent); }
 #profileName { overflow-wrap: anywhere; }
+.collection-actions, .collection-tabs { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
+.collection-tabs .active { background: var(--accent); color: white; border-color: var(--accent); }
+.trade-counts, .anniversary { color: var(--accent); font-weight: 700; }
+.trade-line { margin: 12px 0; padding: 12px; border: 1px solid var(--border); border-radius: 5px; }
+.trade-line legend { overflow-wrap: anywhere; font-size: 14px; }
+.trade-line label { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin: 8px 0; }
+.trade-line input { width: 90px; padding: 8px; }
+.member-checkboxes { max-height: 240px; overflow: auto; border: 1px solid var(--border); }
+.member-checkboxes label { display: flex; gap: 8px; align-items: center; min-height: 44px; }
+.member-checkboxes input { width: 20px; min-height: 20px; height: 20px; }
+.milestone-card { border-left: 3px solid var(--accent); padding: 14px; background: var(--accent-light); margin-top: 14px; border-radius: 4px; overflow-wrap: anywhere; }
+.milestone-card h3 { margin: 5px 0; }
+.milestone-card time { color: var(--subtext); font-size: 13px; }
+.memory-note { white-space: pre-wrap; }
+.memory-image img { display: block; max-width: 100%; max-height: 360px; object-fit: contain; border-radius: 5px; }
+#tradeHistory p { margin: 5px 0; overflow-wrap: anywhere; }
+@media (max-width: 680px) { .data-row { flex-wrap: wrap; } }

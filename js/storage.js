@@ -1,5 +1,5 @@
 
-import { collections } from '../data/features.js?v=20261030-1';
+import { collections } from '../data/features.js?v=20261030-2';
 
 const STORAGE_KEY = 'oshi-note-v1';
 
@@ -11,7 +11,8 @@ try {
   stored = {};
 }
 
-export const db = stored;
+export const db = stored && typeof stored === 'object' && !Array.isArray(stored) ? stored : {};
+if (!Array.isArray(db.trades)) db.trades = [];
 
 for (const name of collections) {
   if (!Array.isArray(db[name])) {
@@ -19,7 +20,7 @@ for (const name of collections) {
   }
 }
 
-if (!db.profile) {
+if (!db.profile || typeof db.profile !== 'object' || Array.isArray(db.profile)) {
   db.profile = {
     name: '推しメンバー',
     group: '櫻坂46',
@@ -37,3 +38,5 @@ if (!db.profile.anniversary) {
 export function save() {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(db));
 }
+
+if (db.profile.members != null && !Array.isArray(db.profile.members)) delete db.profile.members;

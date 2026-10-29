@@ -9,6 +9,7 @@ export const labels = {
   money: '推し活家計簿',
   todos: '推し活ToDo',
   places: '推し活マップ',
+  milestones: 'メンバー別記念日',
 };
 
 export const collections = Object.keys(labels);
@@ -49,6 +50,16 @@ export const members = [
 ];
 
 export const forms = {
+  milestones: {
+    title: '記念日を追加',
+    fields: [
+      ['members', 'メンバー（複数選択可）', 'members', true],
+      ['date', '記念日', 'date', true],
+      ['title', 'タイトル', 'text', true],
+      ['note', '思い出・メモ', 'textarea', false],
+      ['photo', '思い出の画像（任意）', 'file', false],
+    ],
+  },
   schedule: {
     title: '予定を追加',
     fields: [
@@ -106,6 +117,8 @@ export const forms = {
       ['series', 'シリーズ・衣装', 'text', true],
       ['pose', 'ポーズ・種類', 'text', false],
       ['count', '所持枚数', 'number', true],
+      ['offer', '提供できる枚数', 'number', true],
+      ['want', '欲しい枚数', 'number', true],
       ['photo', '写真画像（任意）', 'file', false],
       ['note', 'メモ', 'text', false],
     ],
