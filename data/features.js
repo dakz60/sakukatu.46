@@ -1,4 +1,4 @@
-// メニュー名と各機能の入力項目をまとめています。
+// メニュー名と入力項目をまとめています。
 export const labels = {
   schedule: 'スケジュール',
   tickets: '応募・チケット',
@@ -13,21 +13,53 @@ export const labels = {
 
 export const collections = Object.keys(labels);
 
+// 卒業したメンバーを除いた選択肢です。
+export const members = [
+  '遠藤光莉',
+  '大園玲',
+  '大沼晶保',
+  '幸阪茉里乃',
+  '田村保乃',
+  '藤吉夏鈴',
+  '松田里奈',
+  '森田ひかる',
+  '守屋麗奈',
+  '山﨑天',
+  '石森璃花',
+  '遠藤理子',
+  '小田倉麗奈',
+  '小島凪紗',
+  '谷口愛季',
+  '中嶋優月',
+  '的野美青',
+  '向井純葉',
+  '村井優',
+  '村山美羽',
+  '山下瞳月',
+  '浅井恋乃未',
+  '稲熊ひな',
+  '勝又春',
+  '佐藤愛桜',
+  '中川智尋',
+  '松本和子',
+  '目黒陽色',
+  '山川宇衣',
+  '山田桃実',
+];
+
 export const forms = {
   schedule: {
     title: '予定を追加',
     fields: [
       ['title', '予定名', 'text', true],
       ['date', '日付', 'date', true],
-      ['type', '種類', 'select', true, [
-        'ライブ',
-        'テレビ',
-        'ラジオ',
-        '雑誌',
-        '配信',
-        '発売日',
-        'その他',
-      ]],
+      [
+        'type',
+        '種類',
+        'select',
+        true,
+        ['ライブ', 'テレビ', 'ラジオ', '雑誌', '配信', '発売日', 'その他'],
+      ],
       ['place', '場所・メモ', 'text', false],
     ],
   },
@@ -37,13 +69,13 @@ export const forms = {
     fields: [
       ['title', 'イベント・応募名', 'text', true],
       ['date', '締切・入金期限', 'date', true],
-      ['status', '状況', 'select', true, [
-        '応募前',
-        '申込済み',
-        '当選',
-        '落選',
-        '入金済み',
-      ]],
+      [
+        'status',
+        '状況',
+        'select',
+        true,
+        ['応募前', '申込済み', '当選', '落選', '入金済み'],
+      ],
       ['note', 'メモ', 'text', false],
     ],
   },
@@ -52,18 +84,14 @@ export const forms = {
     title: 'グッズを追加',
     fields: [
       ['title', 'グッズ名', 'text', true],
-      ['type', '種類', 'select', true, [
-        'ペンライト',
-        'アクリルスタンド',
-        'タオル',
-        'CD・書籍',
-        'その他',
-      ]],
-      ['status', '所持状況', 'select', true, [
-        '所持',
-        '購入予定',
-        '未所持',
-      ]],
+      [
+        'type',
+        '種類',
+        'select',
+        true,
+        ['ペンライト', 'アクリルスタンド', 'タオル', 'CD・書籍', 'その他'],
+      ],
+      ['status', '所持状況', 'select', true, ['所持', '購入予定', '未所持']],
       ['price', '価格（円）', 'number', false],
       ['note', 'メモ', 'text', false],
     ],
@@ -72,14 +100,10 @@ export const forms = {
   photos: {
     title: '生写真を追加',
     fields: [
-      ['member', 'メンバー', 'text', true],
+      ['member', 'メンバー', 'select', true, members],
       ['series', 'シリーズ・衣装', 'text', true],
       ['pose', 'ポーズ・種類', 'text', false],
-      ['status', '所持状況', 'select', true, [
-        '所持',
-        '購入予定',
-        '未所持',
-      ]],
+      ['status', '所持状況', 'select', true, ['所持', '購入予定', '未所持']],
       ['count', '所持枚数', 'number', false],
       ['photo', '写真画像（任意）', 'file', false],
       ['note', 'メモ', 'text', false],
@@ -102,7 +126,7 @@ export const forms = {
     title: 'ミーグリレポを書く',
     fields: [
       ['date', '参加日', 'date', true],
-      ['member', 'メンバー', 'text', true],
+      ['member', 'メンバー', 'select', true, members],
       ['title', 'イベント名・部', 'text', false],
       ['note', '会話・感想・次回話したいこと', 'textarea', false],
     ],
@@ -114,13 +138,13 @@ export const forms = {
       ['title', '内容', 'text', true],
       ['date', '日付', 'date', true],
       ['amount', '金額（円）', 'number', true],
-      ['type', 'カテゴリ', 'select', true, [
-        'チケット',
-        'グッズ',
-        '遠征',
-        'CD・書籍',
-        'その他',
-      ]],
+      [
+        'type',
+        'カテゴリ',
+        'select',
+        true,
+        ['チケット', 'グッズ', '遠征', 'CD・書籍', 'その他'],
+      ],
     ],
   },
 
@@ -136,12 +160,13 @@ export const forms = {
     title: 'スポットを追加',
     fields: [
       ['title', 'スポット名', 'text', true],
-      ['type', '種類', 'select', true, [
-        'ライブ会場',
-        '聖地巡礼',
-        'お店',
-        'その他',
-      ]],
+      [
+        'type',
+        '種類',
+        'select',
+        true,
+        ['ライブ会場', '聖地巡礼', 'お店', 'その他'],
+      ],
       ['address', '住所・エリア', 'text', false],
       ['url', '地図リンク', 'url', false],
       ['note', 'メモ', 'textarea', false],
