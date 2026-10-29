@@ -31,11 +31,12 @@
           <button data-page="money"><span class="ico">￥</span>推し活家計簿</button>
           <button data-page="todos"><span class="ico">☑</span>推し活ToDo</button>
           <button data-page="places"><span class="ico">⌖</span>推し活マップ</button>
+          <button data-page="milestones"><span class="ico">◎</span>メンバー別記念日</button>
         </nav>
       </div>
 
       <div class="side-note">
-        <strong>✦ 自分だけの推し活ノート</strong>
+        <strong>自分だけの推し活ノート</strong>
         入力したデータはこのブラウザに保存されます。定期的にバックアップしてください。
       </div>
     </aside>
@@ -122,13 +123,21 @@
                 </div>
               </div>
               <div class="birthday">
-                <span>🎂 誕生日まで</span>
-                <strong id="birthdayText">プロフィールを編集</strong>
+                <span>誕生日</span>
+                <strong id="profileBirthdayText">未登録</strong>
               </div>
-              <div class="birthday" style="margin-top:8px">
-                <span>🌸 記念日まで</span>
-                <strong id="anniversaryText">未登録</strong>
+              <div class="birthday">
+                <span>誕生日まで</span>
+                <strong id="birthdayText">未登録</strong>
               </div>
+            </div>
+
+            <div class="panel">
+              <div class="panel-head">
+                <h3>メンバー別記念日</h3>
+                <button class="subtle" data-go="milestones">一覧・追加 →</button>
+              </div>
+              <div id="homeMilestones"></div>
             </div>
 
             <div class="panel">
@@ -317,6 +326,23 @@
           <div class="data-list" id="list-places"></div>
         </div>
       </section>
+
+      <section class="section" id="page-milestones">
+        <div class="page-head">
+          <div>
+            <div class="eyebrow">MEMBER MILESTONES</div>
+            <h2>メンバー別記念日</h2>
+            <p>初ミーグリ、初ファンサ、初グッズなどをメンバーごとに記録。</p>
+          </div>
+          <button class="primary" data-add="milestones">＋ 記念日を追加</button>
+        </div>
+        <div class="panel">
+          <div class="table-tools">
+            <input class="search" placeholder="メンバー・記念日を検索" data-search="milestones">
+          </div>
+          <div class="data-list" id="list-milestones"></div>
+        </div>
+      </section>
     </main>
   </div>
 
@@ -327,6 +353,30 @@
         <div class="form-grid" id="formFields"></div>
         <div class="modal-actions">
           <button type="button" class="secondary" id="cancelBtn">キャンセル</button>
+          <button type="submit" class="primary">保存する</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="modal-wrap" id="profileModal">
+    <div class="modal">
+      <h3>推しプロフィールを編集</h3>
+      <form id="profileForm">
+        <div class="form-grid">
+          <div class="field full">
+            <label for="profileMember">メンバー名 *</label>
+            <input id="profileMember" name="name" type="text" required>
+            <small class="field-hint">ひらがなでも検索できます（例：た → 谷口愛季）</small>
+          </div>
+          <div class="field">
+            <label for="profileBirthday">誕生日</label>
+            <input id="profileBirthday" name="birthday" type="date" readonly>
+            <small class="field-hint">メンバーを選ぶと自動入力されます</small>
+          </div>
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="secondary" id="profileCancel">キャンセル</button>
           <button type="submit" class="primary">保存する</button>
         </div>
       </form>
