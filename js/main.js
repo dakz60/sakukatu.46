@@ -1,8 +1,8 @@
-import { db, save } from './storage.js';
-import { $, go, render, toast, photoCount } from './ui.js';
-import { initForms } from './forms.js';
-import { deletePhoto } from './photoStorage.js';
-import { members } from '../data/features.js';
+import { db, save } from './storage.js?v=20261030-1';
+import { $, go, render, toast, photoCount } from './ui.js?v=20261030-1';
+import { initForms } from './forms.js?v=20261030-1';
+import { deletePhoto } from './photoStorage.js?v=20261030-1';
+import { members } from '../data/features.js?v=20261030-1';
 
 initForms();
 

@@ -1,6 +1,6 @@
-import { db } from './storage.js';
-import { labels, members } from '../data/features.js';
-import { getPhotoURL } from './photoStorage.js';
+import { db } from './storage.js?v=20261030-1';
+import { labels, members } from '../data/features.js?v=20261030-1';
+import { getPhotoURL } from './photoStorage.js?v=20261030-1';
 
 export const $ = (selector) => document.querySelector(selector);
 export const escapeHtml = (value = '') => String(value).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));

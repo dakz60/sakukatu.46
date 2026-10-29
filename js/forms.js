@@ -1,11 +1,11 @@
-import { forms } from '../data/features.js';
-import { db, save } from './storage.js';
-import { $, escapeHtml, render, toast, photoCount } from './ui.js';
-import { savePhoto } from './photoStorage.js';
+import { forms } from '../data/features.js?v=20261030-1';
+import { db, save } from './storage.js?v=20261030-1';
+import { $, escapeHtml, render, toast, photoCount } from './ui.js?v=20261030-1';
+import { savePhoto } from './photoStorage.js?v=20261030-1';
 import {
   attachMemberAutocomplete,
   isMember,
-} from './memberAutocomplete.js';
+} from './memberAutocomplete.js?v=20261030-1';
 
 function openForm(collection, existing) {
   const config = forms[collection];
