@@ -1,6 +1,6 @@
-import { db } from './storage.js?v=20261030-2';
-import { labels, members } from '../data/features.js?v=20261030-2';
-import { getPhotoURL } from './photoStorage.js?v=20261030-2';
+import { db } from './storage.js?v=20261030-3';
+import { labels, members } from '../data/features.js?v=20261030-3';
+import { getPhotoURL } from './photoStorage.js?v=20261030-3';
 
 export const $ = (selector) => document.querySelector(selector);
 export const escapeHtml = (value = '') => String(value).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -18,8 +18,8 @@ export function go(page, update = render) {
   $('#sidebar').classList.remove('open');
   update();
 }
-export { photoCount } from './collectionModel.js?v=20261030-2';
-import { photoCount, offerCount, wantCount, anniversaryInfo, daysToAnniversary } from './collectionModel.js?v=20261030-2';
+export { photoCount } from './collectionModel.js?v=20261030-3';
+import { photoCount, offerCount, wantCount, anniversaryInfo, daysToAnniversary } from './collectionModel.js?v=20261030-3';
 export let photoView = 'all';
 export function setPhotoView(view) { photoView = view; render(); }
 const empty = (message) => `<div class="empty">${escapeHtml(message)}</div>`;

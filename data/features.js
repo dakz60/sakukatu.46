@@ -115,7 +115,7 @@ export const forms = {
       ['member', 'メンバー', 'member', true],
       ['category', '分類', 'select', true, ['公式ランダム', 'CD封入']],
       ['series', 'シリーズ・衣装', 'text', true],
-      ['pose', 'ポーズ・種類', 'text', false],
+      ['pose', 'ポーズ・種類', 'select', true, ['スワリ', 'ヨリ', 'チュウ', 'ヒキ', 'その他']],
       ['count', '所持枚数', 'number', true],
       ['offer', '提供できる枚数', 'number', true],
       ['want', '欲しい枚数', 'number', true],

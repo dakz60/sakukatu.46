@@ -1,10 +1,10 @@
-import { db, save } from './storage.js?v=20261030-2';
-import { $, go, render, toast, photoCount, setPhotoView } from './ui.js?v=20261030-2';
-import { initForms } from './forms.js?v=20261030-2';
-import { deletePhoto } from './photoStorage.js?v=20261030-2';
-import { members } from '../data/features.js?v=20261030-2';
+import { db, save } from './storage.js?v=20261030-3';
+import { $, go, render, toast, photoCount, setPhotoView } from './ui.js?v=20261030-3';
+import { initForms } from './forms.js?v=20261030-3';
+import { deletePhoto } from './photoStorage.js?v=20261030-3';
+import { members } from '../data/features.js?v=20261030-3';
 
-import { initTrades } from './trades.js?v=20261030-2';
+import { initTrades } from './trades.js?v=20261030-3';
 initForms();
 initTrades();
 

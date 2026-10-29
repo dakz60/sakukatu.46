@@ -29,13 +29,16 @@ try:
   def image(): page.locator('[name="photo"]').set_input_files({'name':'photo.png','mimeType':'image/png','buffer':PNG})
   # Owned photo with explicit offer; hope image allowed even with zero owned.
   page.locator('[data-add="photos"]:not([data-wish])').click()
-  for key,value in {'member':'森田ひかる','series':'衣装A','pose':'ヨリ','count':'3','offer':'2'}.items(): page.locator(f'[name="{key}"]').fill(value)
+  for key,value in {'member':'森田ひかる','series':'衣装A','count':'3','offer':'2'}.items(): page.locator(f'[name="{key}"]').fill(value)
+  page.locator('[name="pose"]').select_option('ヨリ')
   image();submit();page.wait_for_selector('.photo-card img')
   page.locator('[data-wish]').click()
-  for key,value in {'member':'田村保乃','series':'CD封入B','pose':'タイプA'}.items(): page.locator(f'[name="{key}"]').fill(value)
+  for key,value in {'member':'田村保乃','series':'CD封入B'}.items(): page.locator(f'[name="{key}"]').fill(value)
+  page.locator('[name="pose"]').select_option('その他');page.locator('[name="customPose"]').fill('タイプA')
   page.locator('[name="category"]').select_option('CD封入');image();submit()
   page.locator('[data-photo-view="want"]').click();assert page.locator('.photo-card').count()==1
   assert page.locator('.photo-card h3').inner_text()=='田村保乃'
+  page.locator('[data-edit-photo]').click();assert page.locator('[name="pose"]').input_value()=='その他';assert page.locator('[name="customPose"]').input_value()=='タイプA';page.locator('#cancelBtn').click()
   page.locator('[data-photo-view="offer"]').click();assert page.locator('.photo-card h3').inner_text()=='森田ひかる'
   # Invalid offer cannot exceed owned count and cannot alter a saved record.
   page.locator('[data-edit-photo]').click();page.locator('[name="offer"]').fill('4');page.locator('#itemForm [type="submit"]').click()
