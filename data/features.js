@@ -102,10 +102,10 @@ export const forms = {
     title: '生写真を追加',
     fields: [
       ['member', 'メンバー', 'member', true],
+      ['category', '分類', 'select', true, ['公式ランダム', 'CD封入']],
       ['series', 'シリーズ・衣装', 'text', true],
       ['pose', 'ポーズ・種類', 'text', false],
-      ['status', '所持状況', 'select', true, ['所持', '購入予定', '未所持']],
-      ['count', '所持枚数', 'number', false],
+      ['count', '所持枚数', 'number', true],
       ['photo', '写真画像（任意）', 'file', false],
       ['note', 'メモ', 'text', false],
     ],

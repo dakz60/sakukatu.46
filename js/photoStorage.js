@@ -21,9 +21,9 @@ export async function savePhoto(id, file) {
     transaction.oncomplete = resolve;
     transaction.onerror = () => reject(transaction.error);
   });
-  const oldURL = urls.get(id);
+  const oldURL = urls.get(String(id));
   if (oldURL) URL.revokeObjectURL(oldURL);
-  urls.delete(id);
+  urls.delete(String(id));
 }
 
 export async function getPhotoURL(id) {

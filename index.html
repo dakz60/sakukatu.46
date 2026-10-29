@@ -228,16 +228,16 @@
           <button class="primary" data-add="photos">＋ 生写真を追加</button>
         </div>
         <div class="panel">
-          <div class="table-tools">
-            <input class="search" placeholder="メンバー・シリーズで検索" data-search="photos">
-            <select class="filter" data-filter="photos">
-              <option value="">すべて</option>
-              <option>所持</option>
-              <option>購入予定</option>
-              <option>未所持</option>
-            </select>
+          <p id="photoSummary" class="photo-summary" aria-live="polite"></p>
+          <div class="table-tools photo-filters">
+            <input class="search" placeholder="メンバー・シリーズ・メモを検索" aria-label="生写真を検索" data-search="photos">
+            <select class="filter" id="photoCategory" data-photo-filter aria-label="生写真の分類"><option value="">すべての分類</option><option>公式ランダム</option><option>CD封入</option></select>
+            <select class="filter" id="photoMember" data-photo-filter aria-label="メンバー"></select>
+            <select class="filter" id="photoSeries" data-photo-filter aria-label="シリーズ"></select>
+            <select class="filter" id="photoOwnership" data-photo-filter aria-label="所持状況"><option value="">すべての所持状況</option><option value="owned">所持</option><option value="duplicates">ダブりのみ</option><option value="missing">未所持のみ</option></select>
           </div>
-          <div class="data-list" id="list-photos"></div>
+          <p id="photoResults" aria-live="polite"></p>
+          <div class="photo-grid" id="list-photos"></div>
         </div>
       </section>
 

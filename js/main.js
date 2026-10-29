@@ -1,5 +1,5 @@
 import { db, save } from './storage.js';
-import { $, go, render, toast } from './ui.js';
+import { $, go, render, toast, photoCount } from './ui.js';
 import { initForms } from './forms.js';
 import { deletePhoto } from './photoStorage.js';
 import { members } from '../data/features.js';
@@ -23,9 +23,19 @@ document.body.addEventListener('click', (event) => {
     go(target.dataset.go, render);
   }
 
+  const counter = event.target.closest('[data-count]');
+  if (counter) {
+    const item = db.photos[Number(counter.dataset.count)];
+    const previous = photoCount(item);
+    const previousStatus = item.status;
+    item.count = Math.min(99999, Math.max(0, previous + Number(counter.dataset.delta)));
+    item.status = item.count > 0 ? '所持' : '未所持';
+    try { save(); render(); } catch { item.count = previous; item.status = previousStatus; toast('保存できませんでした。空き容量を確認してください'); }
+  }
   const remove = event.target.closest('[data-delete]');
   if (remove) {
     const collection = remove.dataset.delete;
+    if (!confirm('この記録を削除しますか？')) return;
     const [deleted] = db[collection].splice(
       Number(remove.dataset.index),
       1
@@ -53,11 +63,11 @@ $('#todayBtn').onclick = () => {
 document.body.addEventListener('change', (event) => {
   if (event.target.matches('[data-done]')) {
     const item = db.todos.find(
-      (todo) => todo.id === Number(event.target.dataset.done)
+      (todo) => String(todo.id) === event.target.dataset.done
     );
 
     if (item) {
-      item.done = true;
+      item.done = event.target.checked;
     }
 
     save();
@@ -65,7 +75,7 @@ document.body.addEventListener('change', (event) => {
     toast('ToDoを完了にしました');
   }
 
-  if (event.target.matches('[data-filter]')) {
+  if (event.target.matches('[data-filter], [data-photo-filter]')) {
     render();
   }
 });
@@ -135,4 +145,4 @@ $('#profileForm').onsubmit = (event) => {
   toast('プロフィールを保存しました');
 };
 
-render();
+go('photos');
