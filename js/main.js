@@ -2,6 +2,11 @@ import { db, save } from './storage.js';
 import { $, go, render, toast } from './ui.js';
 import { initForms } from './forms.js';
 import { deletePhoto } from './photoStorage.js';
+import { members } from '../data/features.js';
+import {
+  attachMemberAutocomplete,
+  isMember,
+} from './memberAutocomplete.js';
 
 initForms();
 
@@ -21,7 +26,10 @@ document.body.addEventListener('click', (event) => {
   const remove = event.target.closest('[data-delete]');
   if (remove) {
     const collection = remove.dataset.delete;
-    const [deleted] = db[collection].splice(Number(remove.dataset.index), 1);
+    const [deleted] = db[collection].splice(
+      Number(remove.dataset.index),
+      1
+    );
 
     if (collection === 'photos' && deleted) {
       deletePhoto(deleted.id).catch(() => {});
@@ -68,31 +76,62 @@ document.body.addEventListener('input', (event) => {
   }
 });
 
+const profileModal = $('#profileModal');
+const profileMember = $('#profileMember');
+const profileBirthday = $('#profileBirthday');
+
+attachMemberAutocomplete(profileMember);
+
+profileMember.addEventListener('change', () => {
+  const member = members.find(
+    (item) => item.name === profileMember.value
+  );
+
+  if (member) {
+    profileBirthday.value = member.birthday;
+  }
+});
+
 $('#editProfile').onclick = () => {
-  const name = prompt('櫻坂46の推しメンバー', db.profile.name);
-  if (name === null) return;
+  profileMember.value = db.profile.name || '';
+  profileBirthday.value = db.profile.birthday || '';
+  profileModal.classList.add('open');
+  profileMember.focus();
+};
 
-  const birthday = prompt(
-    '誕生日（任意・YYYY-MM-DD）',
-    db.profile.birthday || ''
-  );
-  if (birthday === null) return;
+$('#profileCancel').onclick = () => {
+  profileModal.classList.remove('open');
+};
 
-  const anniversary = prompt(
-    '記念日（任意・YYYY-MM-DD）',
-    db.profile.anniversary || ''
+profileModal.onclick = (event) => {
+  if (event.target === profileModal) {
+    profileModal.classList.remove('open');
+  }
+};
+
+$('#profileForm').onsubmit = (event) => {
+  event.preventDefault();
+
+  const member = members.find(
+    (item) => item.name === profileMember.value
   );
-  if (anniversary === null) return;
+
+  if (!isMember(profileMember.value) || !member) {
+    toast('候補からメンバーを選んでください');
+    profileMember.focus();
+    return;
+  }
 
   db.profile = {
-    name,
+    ...db.profile,
+    name: member.name,
     group: '櫻坂46',
-    birthday,
-    anniversary,
+    birthday: member.birthday,
   };
 
   save();
   render();
+  profileModal.classList.remove('open');
   toast('プロフィールを保存しました');
 };
 
