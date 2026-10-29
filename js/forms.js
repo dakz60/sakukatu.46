@@ -2,6 +2,10 @@ import { forms } from '../data/features.js';
 import { db, save } from './storage.js';
 import { $, escapeHtml, render, toast } from './ui.js';
 import { savePhoto } from './photoStorage.js';
+import {
+  attachMemberAutocomplete,
+  isMember,
+} from './memberAutocomplete.js';
 
 function openForm(collection) {
   const config = forms[collection];
@@ -26,6 +30,9 @@ function openForm(collection) {
         option.textContent = value;
         input.append(option);
       });
+    } else if (kind === 'member') {
+      input = document.createElement('input');
+      input.type = 'text';
     } else if (kind === 'textarea') {
       input = document.createElement('textarea');
     } else {
@@ -47,6 +54,10 @@ function openForm(collection) {
     wrap.innerHTML = `<label>${escapeHtml(label)}${required ? ' *' : ''}</label>`;
     wrap.append(input);
     box.append(wrap);
+
+    if (kind === 'member') {
+      attachMemberAutocomplete(input);
+    }
   });
 
   $('#modalWrap').classList.add('open');
@@ -85,7 +96,20 @@ export function initForms() {
     delete item.photo;
     item.id = Date.now();
 
-    if (activeCollection === 'photos' && photo instanceof File && photo.size > 0) {
+    if (
+      ['photos', 'reports'].includes(activeCollection) &&
+      !isMember(item.member)
+    ) {
+      toast('候補からメンバーを選んでください');
+      event.currentTarget.querySelector('[name="member"]')?.focus();
+      return;
+    }
+
+    if (
+      activeCollection === 'photos' &&
+      photo instanceof File &&
+      photo.size > 0
+    ) {
       try {
         await savePhoto(item.id, photo);
       } catch {
