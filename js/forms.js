@@ -54,6 +54,7 @@ function initForms() {
         input.addEventListener('change', updateCustom); updateCustom(); wrap.append(customLabel, custom);
       }
       box.append(wrap);
+      if (name === 'reports' && ['memberAvatar','selfAvatar'].includes(key)) attachAvatarCrop(input,wrap,values[`${key}Id`],values[`${key}Crop`]);
       if (kind === 'member') attachMemberAutocomplete(input);
     }
     conversation = name === 'reports' ? createReportEditor(box, values) : [];

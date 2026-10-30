@@ -286,7 +286,7 @@ button { cursor: pointer; }
 .favorite-days small { color: var(--subtext); }
 body { position: relative; isolation: isolate; }
 body.has-custom-background::before, body.has-custom-background::after { content: ''; position: fixed; inset: 0; pointer-events: none; }
-body.has-custom-background::before { z-index: -2; background: var(--user-background) center / cover no-repeat; }
+body.has-custom-background::before { z-index: -2; background-image: var(--user-background); background-size: var(--user-background-size, cover); background-position: var(--user-background-position, center); background-repeat: no-repeat; }
 body.has-custom-background::after { z-index: -1; background: rgb(0 0 0 / var(--background-shade, 0)); }
 body.has-custom-background .sidebar { background: rgb(8 11 18 / .25); }
 .background-preview { position: relative; min-height: 150px; margin: 20px 0; display: grid; place-items: center; background: #111620 center / cover no-repeat; }
@@ -355,3 +355,16 @@ button { text-shadow: inherit; }
 .photo-favorite { min-height: 44px; padding: 6px 0; }
 .photo-card:focus { outline: 1px solid var(--text); outline-offset: 6px; }
 @media (max-width: 680px) { .home-favorites { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+#cropModal { z-index: 8; }
+.crop-stage { display: flex; align-items: center; justify-content: center; margin: 18px 0; overflow: hidden; }
+#cropCanvas { display: block; touch-action: none; cursor: grab; outline: 1px solid rgb(255 255 255 / .6); }
+#cropCanvas:active { cursor: grabbing; }
+#cropCanvas:focus-visible { outline: 2px solid #fff; outline-offset: 3px; }
+#cropCanvas.round-crop { border-radius: 50%; }
+.crop-control { min-height: 44px; text-align: left; }
+.avatar-crop-preview { position: relative; display: block; width: 84px; height: 84px; overflow: hidden; border-radius: 50%; margin-top: 8px; background: #242a36; }
+.avatar-crop-preview[hidden] { display: none; }
+.avatar-crop-preview img { max-width: none; }
+.report-avatar { position: relative; }
+#cropModal .modal-actions { flex-wrap: wrap; }
+#cropModal button { min-height: 44px; }
