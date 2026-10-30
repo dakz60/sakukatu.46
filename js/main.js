@@ -1,11 +1,12 @@
-import { reportImageIds } from './reports.js?v=20261030-5';
-import { db, save } from './storage.js?v=20261030-5';
-import { $, go, render, toast, photoCount, setPhotoView } from './ui.js?v=20261030-5';
-import { initForms } from './forms.js?v=20261030-5';
-import { deletePhoto } from './photoStorage.js?v=20261030-5';
-import { members } from '../data/features.js?v=20261030-5';
+import { supportingDays } from './collectionModel.js?v=20261030-6';
+import { reportImageIds } from './reports.js?v=20261030-6';
+import { db, save } from './storage.js?v=20261030-6';
+import { $, go, render, toast, photoCount, setPhotoView } from './ui.js?v=20261030-6';
+import { initForms } from './forms.js?v=20261030-6';
+import { deletePhoto } from './photoStorage.js?v=20261030-6';
+import { members } from '../data/features.js?v=20261030-6';
 
-import { initTrades } from './trades.js?v=20261030-5';
+import { initTrades } from './trades.js?v=20261030-6';
 initForms();
 initTrades();
 
@@ -99,7 +100,16 @@ $('#editProfile').onclick = () => {
     input.type = 'checkbox'; input.name = 'members'; input.value = member.name;
     input.checked = selected.has(member.name);
     label.append(input, document.createTextNode(`${member.name}（${member.birthday.slice(5).replace('-', '/')}）`));
-    profileMembers.append(label);
+    const row = document.createElement('div'); row.className = 'favorite-row';
+    const dateLabel = document.createElement('label'); dateLabel.className = 'favorite-date';
+    dateLabel.append(document.createTextNode('推し始めた日'));
+    const since = document.createElement('input'); since.type = 'date'; since.dataset.favoriteSince = member.name;
+    since.setAttribute('aria-label', `${member.name}を推し始めた日`);
+    const today = new Date(); since.max = new Date(today.getTime() - today.getTimezoneOffset() * 60000).toISOString().slice(0,10);
+    since.value = db.profile.startDates?.[member.name] || '';
+    const update = () => { dateLabel.hidden = !input.checked; since.disabled = !input.checked; };
+    input.addEventListener('change', update); update(); dateLabel.append(since);
+    row.append(label, dateLabel); profileMembers.append(row);
   });
   profileModal.classList.add('open');
   profileMembers.querySelector('input')?.focus();
@@ -119,9 +129,14 @@ $('#profileForm').onsubmit = (event) => {
   event.preventDefault();
 
   const selected = [...profileMembers.querySelectorAll('input:checked')].map(input => input.value);
+  const startDates = { ...db.profile.startDates };
+  for (const field of profileMembers.querySelectorAll('[data-favorite-since]:not(:disabled)')) {
+    if (field.value && supportingDays(field.value) == null) { toast('推し始めた日は今日以前の日付を指定してください'); return; }
+    if (field.value) startDates[field.dataset.favoriteSince] = field.value; else delete startDates[field.dataset.favoriteSince];
+  }
   const previous = db.profile;
   const first = members.find(member => member.name === selected[0]);
-  db.profile = { ...db.profile, members: selected, name: first?.name || '推しメンバー', birthday: first?.birthday || '', group: '櫻坂46' };
+  db.profile = { ...db.profile, members: selected, startDates, name: first?.name || '推しメンバー', birthday: first?.birthday || '', group: '櫻坂46' };
   try { save(); } catch { db.profile = previous; toast('保存できませんでした'); return; }
   render();
   profileModal.classList.remove('open');

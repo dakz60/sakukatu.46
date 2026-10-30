@@ -1,12 +1,12 @@
-import { db, save } from './storage.js?v=20261030-5';
-import { $, escapeHtml, render, toast } from './ui.js?v=20261030-5';
-import { offerCount, wantCount, applyTrade } from './collectionModel.js?v=20261030-5';
+import { db, save } from './storage.js?v=20261030-6';
+import { $, escapeHtml, render, toast } from './ui.js?v=20261030-6';
+import { offerCount, keepCount, wantCount, applyTrade } from './collectionModel.js?v=20261030-6';
 export function initTrades() {
   const modal = $('#tradeModal');
   $('#openTrade').onclick = () => {
     const candidates = db.photos.filter(item => offerCount(item) || wantCount(item));
     $('#tradeLines').innerHTML = candidates.length ? candidates.map(item => `<fieldset class="trade-line" data-trade-id="${escapeHtml(item.id)}"><legend>${escapeHtml(item.member)} / ${escapeHtml(item.series)} / ${escapeHtml(item.pose || '種類未設定')}</legend>
-      <label>渡す（提供 ${offerCount(item)}枚）<input type="number" name="give" min="0" max="${offerCount(item)}" step="1" value="0" required></label>
+      <p class="field-hint">コレクション ${keepCount(item)}枚は交換対象外</p><label>渡す（提供 ${offerCount(item)}枚）<input type="number" name="give" min="0" max="${offerCount(item)}" step="1" value="0" required></label>
       <label>もらう（希望 ${wantCount(item)}枚）<input type="number" name="receive" min="0" max="99999" step="1" value="0" required></label></fieldset>`).join('') : '<p>まず生写真の編集で「提供できる枚数」または「欲しい枚数」を設定してください。</p>';
     modal.classList.add('open');
   };

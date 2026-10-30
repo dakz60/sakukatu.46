@@ -277,3 +277,10 @@ button { cursor: pointer; }
 .sidebar { box-shadow: none; }
 .toast { border: 0; border-radius: 0; }
 .member-suggestions { border-radius: 0; box-shadow: none; }
+
+#profileMembers .favorite-date { display: grid; gap: 6px; padding: 0 0 12px 30px; font-weight: normal; }
+#profileMembers .favorite-date[hidden] { display: none; }
+#profileMembers .favorite-date input { width: 100%; height: auto; min-height: 40px; }
+.favorite-days { display: grid; gap: 4px; padding: 18px 0; border-top: 1px solid var(--border); }
+.favorite-days strong { color: var(--accent); font-size: 18px; }
+.favorite-days small { color: var(--subtext); }

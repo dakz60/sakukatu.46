@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#fff8fb">
   <title>櫻坂46 推し活ノート</title>
-  <link rel="stylesheet" href="css/style.css?v=20261030-5">
+  <link rel="stylesheet" href="css/style.css?v=20261030-6">
 </head>
 <body>
   <div class="app">
@@ -120,6 +120,7 @@
                   <p id="profileGroup">櫻坂46</p>
                 </div>
               </div>
+              <div id="favoriteDays" aria-live="polite"></div>
               <div class="birthday">
                 <span>誕生日</span>
                 <strong id="profileBirthdayText">未登録</strong>
@@ -223,7 +224,7 @@
         </div>
         <div class="panel">
           <div class="collection-actions"><button class="secondary" data-add="photos" data-wish>＋ 希望を登録</button><button class="primary" id="openTrade">現場で交換する</button></div>
-          <div class="collection-tabs" role="group" aria-label="生写真の表示"><button class="secondary active" data-photo-view="all">すべて</button><button class="secondary" data-photo-view="owned">所持</button><button class="secondary" data-photo-view="offer">提供</button><button class="secondary" data-photo-view="want">希望</button></div>
+          <div class="collection-tabs" role="group" aria-label="生写真の表示"><button class="secondary active" data-photo-view="all">すべて</button><button class="secondary" data-photo-view="owned">コレクション</button><button class="secondary" data-photo-view="offer">提供</button><button class="secondary" data-photo-view="want">希望</button></div>
           <p id="photoSummary" class="photo-summary" aria-live="polite"></p>
           <div class="table-tools photo-filters">
             <input class="search" placeholder="メンバー・シリーズ・メモを検索" aria-label="生写真を検索" data-search="photos">
@@ -356,7 +357,7 @@
       <form id="profileForm">
         <div class="form-grid">
           <div class="field full">
-            <p class="field-hint">推しメンを複数選べます。誕生日は自動で表示されます。</p>
+            <p class="field-hint">推しメンを複数選べます。推し始めた日を登録すると日数を表示します。</p>
             <fieldset id="profileMembers"><legend>推しメンを選択</legend></fieldset>
           </div>
         </div>
@@ -371,6 +372,6 @@
   <div class="modal-wrap" id="tradeModal"><div class="modal"><h3>現場で交換する</h3><p>提供・希望として登録した写真から、渡す枚数ともらう枚数を選んでください。未登録の写真は先に「希望を登録」から追加できます。</p><form id="tradeForm"><div id="tradeLines"></div><div class="modal-actions"><button type="button" class="secondary" id="cancelTrade">キャンセル</button><button type="submit" class="primary">交換を確定</button></div></form></div></div>
   <div class="toast" id="toast"></div>
 
-  <script type="module" src="js/main.js?v=20261030-5"></script>
+  <script type="module" src="js/main.js?v=20261030-6"></script>
 </body>
 </html>

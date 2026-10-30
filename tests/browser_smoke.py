@@ -47,6 +47,10 @@ try:
   page.locator('[data-edit-photo]').click();page.locator('[name="offer"]').fill('4');page.locator('#itemForm [type="submit"]').click()
   assert page.locator('#toast').inner_text()=='提供枚数は所持枚数以下にしてください'
   page.locator('#cancelBtn').click();assert '提供 2枚' in page.locator('.trade-counts').inner_text()
+  page.locator('[data-edit-photo]').click();assert page.locator('[name="keep"]').input_value()=='1'
+  page.locator('[name="keep"]').fill('2');assert page.locator('[name="offer"]').input_value()=='1'
+  page.locator('[name="keep"]').fill('1');assert page.locator('[name="offer"]').input_value()=='2';submit()
+  assert 'コレクション 1枚' in page.locator('.trade-counts').inner_text()
   # Cancel must not change inventory; confirm atomically updates all lists.
   page.locator('#openTrade').click();page.locator('#cancelTrade').click()
   assert page.locator('.photo-counter strong').inner_text()=='3枚'
@@ -63,6 +67,7 @@ try:
   page.wait_for_selector('#tradeModal:not(.open)',state='attached');assert page.locator('.photo-card').count()==0
   page.locator('[data-photo-view="owned"]').click();assert page.locator('.photo-card').count()==2
   assert page.locator('#tradeHistory').text_content().count('受け取った')==2
+  assert all('コレクション 1枚' in text for text in page.locator('.trade-counts').all_inner_texts())
   page.reload();assert page.locator('#page-home').evaluate('(el)=>el.classList.contains("active")');nav('photos');assert page.locator('.photo-card').count()==2;assert page.locator('#tradeHistory').text_content().count('受け取った')==2
   # Multi-member anniversary with image, filtering, edit and persistence.
   nav('milestones');page.locator('[data-add="milestones"]').click()
@@ -74,8 +79,9 @@ try:
   page.locator('#milestoneMember').select_option('山﨑天');assert page.locator('#list-milestones .milestone-card').count()==0
   page.locator('#milestoneMember').select_option('田村保乃');page.locator('[data-edit-milestone]').click();page.locator('[name="title"]').fill('初ファンサ記念');submit();page.wait_for_selector('#list-milestones img')
   # Favorite home anniversaries.
-  nav('home');page.locator('#editProfile').click();page.locator('#profileMembers input[value="森田ひかる"]').check();page.locator('#profileForm [type="submit"]').click()
+  nav('home');page.locator('#editProfile').click();page.locator('#profileMembers input[value="森田ひかる"]').check();page.locator('[data-favorite-since="森田ひかる"]').fill('2025-01-01');page.locator('#profileForm [type="submit"]').click()
   assert '初ファンサ記念' in page.locator('#homeMilestones').inner_text()
+  assert '日目' in page.locator('#favoriteDays').inner_text()
   # Existing report -> anniversary prefill, no duplicate source record.
   nav('reports');page.locator('[data-add="reports"]').click();page.locator('[name="member"]').fill('森田ひかる');page.locator('[name="title"]').fill('初ミーグリ');page.locator('[name="note"]').fill('話せた')
   page.locator('[name="part"]').fill('5部');page.locator('[name="tickets"]').fill('3')
@@ -94,7 +100,7 @@ try:
   page.locator('[data-search="reports"]').fill('')
   page.locator('#list-reports [data-create-milestone]').click();assert page.locator('[name="title"]').input_value()=='初ミーグリ';assert page.locator('#itemForm [name="members"]:checked').count()==1;submit()
   page.locator('#list-reports [data-create-milestone]').click();assert '編集' in page.locator('#modalTitle').inner_text();page.locator('#cancelBtn').click()
-  page.reload();nav('milestones');assert page.locator('#list-milestones .milestone-card').count()==2;page.wait_for_selector('#list-milestones img')
+  page.reload();assert '2025/01/01から' in page.locator('#favoriteDays').inner_text();nav('milestones');assert page.locator('#list-milestones .milestone-card').count()==2;page.wait_for_selector('#list-milestones img')
   for name in ['schedule','tickets','goods','lives','reports','money','todos','places','milestones','photos','home']: nav(name)
   page.set_viewport_size({'width':390,'height':844});assert page.evaluate('document.documentElement.scrollWidth <= innerWidth')
   page.locator('#menuBtn').click();nav('photos');assert page.evaluate('document.documentElement.scrollWidth <= innerWidth')

@@ -1,5 +1,5 @@
 
-import { collections } from '../data/features.js?v=20261030-5';
+import { collections } from '../data/features.js?v=20261030-6';
 
 const STORAGE_KEY = 'oshi-note-v1';
 

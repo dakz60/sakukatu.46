@@ -1,11 +1,11 @@
-import { forms, members } from '../data/features.js?v=20261030-5';
-import { db, save } from './storage.js?v=20261030-5';
-import { $, render, toast } from './ui.js?v=20261030-5';
-import { photoCount, offerCount, wantCount } from './collectionModel.js?v=20261030-5';
-import { savePhoto, deletePhoto } from './photoStorage.js?v=20261030-5';
-import { attachMemberAutocomplete, isMember } from './memberAutocomplete.js?v=20261030-5';
+import { forms, members } from '../data/features.js?v=20261030-6';
+import { db, save } from './storage.js?v=20261030-6';
+import { $, render, toast } from './ui.js?v=20261030-6';
+import { photoCount, offerCount, wantCount, keepCount } from './collectionModel.js?v=20261030-6';
+import { savePhoto, deletePhoto } from './photoStorage.js?v=20261030-6';
+import { attachMemberAutocomplete, isMember } from './memberAutocomplete.js?v=20261030-6';
 
-import { createReportEditor, prepareReport, reportImageIds } from './reports.js?v=20261030-5';
+import { createReportEditor, prepareReport, reportImageIds } from './reports.js?v=20261030-6';
 
 export function initForms() {
   let collection = '', editing = null, busy = false, conversation = [];
@@ -35,9 +35,9 @@ export function initForms() {
       else if (kind === 'date') { const date = new Date(); input.value = values[key] || new Date(date.getTime() - date.getTimezoneOffset() * 60000).toISOString().slice(0,10); }
       else input.value = values[key] ?? (kind === 'select' ? choices[0] : '');
       if (name === 'reports' && key === 'tickets') { input.min = '1'; input.max = '9999'; input.step = '1'; }
-      if (name === 'photos' && ['count', 'offer', 'want'].includes(key)) {
+      if (name === 'photos' && ['count', 'keep', 'offer', 'want'].includes(key)) {
         input.min = '0'; input.max = '99999'; input.step = '1';
-        input.value = key === 'count' ? (item ? photoCount(item) : defaults.count ?? 1) : key === 'offer' ? offerCount(values) : wantCount(values);
+        input.value = key === 'count' ? (item ? photoCount(item) : defaults.count ?? 1) : key === 'keep' ? (item ? keepCount(item) : defaults.count ?? 1) : key === 'offer' ? offerCount(values) : wantCount(values);
       }
       const caption = document.createElement('label'); caption.htmlFor = input.id; caption.textContent = label + (required ? ' *' : '');
       wrap.append(caption, input);
@@ -53,6 +53,13 @@ export function initForms() {
       }
       box.append(wrap);
       if (kind === 'member') attachMemberAutocomplete(input);
+    }
+    if (name === 'photos') {
+      const total = box.querySelector('[name="count"]'), keep = box.querySelector('[name="keep"]'), offer = box.querySelector('[name="offer"]');
+      keep.addEventListener('input', () => { offer.value = Math.max(0, Number(total.value) - Number(keep.value)); });
+      offer.addEventListener('input', () => { keep.value = Math.max(0, Number(total.value) - Number(offer.value)); });
+      total.addEventListener('input', () => { offer.value = Math.min(Number(total.value), Number(offer.value)); keep.value = Math.max(0, Number(total.value) - Number(offer.value)); });
+      const hint = document.createElement('p'); hint.className = 'field-hint field full'; hint.textContent = '残す枚数と提供枚数は連動します。交換では提供分だけを使い、コレクション分は残します。'; box.append(hint);
     }
     conversation = name === 'reports' ? createReportEditor(box, values) : [];
     $('#modalWrap').classList.add('open');
@@ -84,9 +91,12 @@ export function initForms() {
     const file = data.get('photo'); delete item.photo;
     if (['photos', 'reports'].includes(collection) && !isMember(item.member)) { toast('候補からメンバーを選んでください'); return; }
     if (collection === 'photos') {
-      for (const key of ['count', 'offer', 'want']) item[key] = Number(item[key]);
-      if (![item.count, item.offer, item.want].every(value => Number.isSafeInteger(value) && value >= 0 && value <= 99999)) { toast('枚数は0〜99999の整数で入力してください'); return; }
+      for (const key of ['count', 'keep', 'offer', 'want']) item[key] = Number(item[key]);
+      if (![item.count, item.keep, item.offer, item.want].every(value => Number.isSafeInteger(value) && value >= 0 && value <= 99999)) { toast('枚数は0〜99999の整数で入力してください'); return; }
+      if (item.keep > item.count) { toast('残す枚数は所持枚数以下にしてください'); return; }
       if (item.offer > item.count) { toast('提供枚数は所持枚数以下にしてください'); return; }
+      if (item.keep + item.offer !== item.count) { toast('残す枚数と提供枚数の合計を所持枚数に合わせてください'); return; }
+      delete item.keep;
       if (item.pose === 'その他') item.pose = (item.customPose || '').trim();
       delete item.customPose;
       if (!item.pose) { toast('ポーズ・種類を入力してください'); return; }

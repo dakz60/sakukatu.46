@@ -1,7 +1,7 @@
-import { reportCard, loadReportImages } from './reports.js?v=20261030-5';
-import { db } from './storage.js?v=20261030-5';
-import { labels, members } from '../data/features.js?v=20261030-5';
-import { getPhotoURL } from './photoStorage.js?v=20261030-5';
+import { reportCard, loadReportImages } from './reports.js?v=20261030-6';
+import { db } from './storage.js?v=20261030-6';
+import { labels, members } from '../data/features.js?v=20261030-6';
+import { getPhotoURL } from './photoStorage.js?v=20261030-6';
 
 export const $ = (selector) => document.querySelector(selector);
 export const escapeHtml = (value = '') => String(value).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -19,8 +19,8 @@ export function go(page, update = render) {
   $('#sidebar').classList.remove('open');
   update();
 }
-export { photoCount } from './collectionModel.js?v=20261030-5';
-import { photoCount, offerCount, wantCount, anniversaryInfo, daysToAnniversary } from './collectionModel.js?v=20261030-5';
+export { photoCount } from './collectionModel.js?v=20261030-6';
+import { photoCount, offerCount, keepCount, wantCount, anniversaryInfo, daysToAnniversary, supportingDays } from './collectionModel.js?v=20261030-6';
 export let photoView = 'all';
 export function setPhotoView(view) { photoView = view; render(); }
 const empty = (message) => `<div class="empty">${escapeHtml(message)}</div>`;
@@ -36,7 +36,7 @@ function renderPhotos() {
   const query = $('[data-search="photos"]').value.trim().toLowerCase();
   const items = db.photos.filter(item => {
     const count = photoCount(item);
-    return (photoView === 'all' || (photoView === 'owned' ? count > 0 : photoView === 'offer' ? offerCount(item) > 0 : wantCount(item) > 0))
+    return (photoView === 'all' || (photoView === 'owned' ? keepCount(item) > 0 : photoView === 'offer' ? offerCount(item) > 0 : wantCount(item) > 0))
       && (!$('#photoMember').value || item.member === $('#photoMember').value)
       && (!$('#photoSeries').value || item.series === $('#photoSeries').value)
       && (!$('#photoCategory').value || item.category === $('#photoCategory').value)
@@ -57,7 +57,7 @@ function renderPhotos() {
       <h3>${escapeHtml(item.member)}</h3><p>${escapeHtml(item.series)}</p><p>${escapeHtml(item.pose || 'ポーズ未設定')}</p>
       ${item.note ? `<p class="photo-note">${escapeHtml(item.note)}</p>` : ''}
       <span class="ownership">${count === 0 ? '未所持' : count > 1 ? `ダブり ${count - 1}枚` : '所持'}</span>
-      <p class="trade-counts">提供 ${offerCount(item)}枚 · 希望 ${wantCount(item)}枚</p>
+      <p class="trade-counts">コレクション ${keepCount(item)}枚 · 提供 ${offerCount(item)}枚 · 希望 ${wantCount(item)}枚</p>
       <div class="photo-counter"><button type="button" data-count="${index}" data-delta="-1" aria-label="${escapeHtml(item.member + ' ' + item.pose)}の所持枚数を減らす" ${count === 0 ? 'disabled' : ''}>−</button><strong>${count}枚</strong><button type="button" data-count="${index}" data-delta="1" aria-label="${escapeHtml(item.member + ' ' + item.pose)}の所持枚数を増やす">＋</button></div>
       <div class="photo-actions"><button class="subtle" data-edit-photo="${index}">編集</button><button class="del" data-delete="photos" data-index="${index}">削除</button></div></div></article>`;
   }).join('') : empty(db.photos.length ? '条件に合う生写真がありません。' : '生写真は未登録です。画像・メンバー・シリーズ・枚数を登録できます。');
@@ -98,6 +98,11 @@ export function render() {
   const favorites = (db.profile.members || [db.profile.name]).map(name => members.find(member => member.name === name)).filter(Boolean);
   $('#profileName').textContent = favorites.length ? favorites.map(member => member.name).join('・') : '推しメンバー';
   $('#profileGroup').textContent = db.profile.group;
+  $('#favoriteDays').innerHTML = favorites.map(member => {
+    const start = db.profile.startDates?.[member.name];
+    const days = supportingDays(start);
+    return `<div class="favorite-days"><span>${escapeHtml(member.name)}</span><strong>${days == null ? '推し始めた日：未登録' : `推して${days.toLocaleString()}日目`}</strong>${days == null ? '' : `<small>${escapeHtml(start.replaceAll('-', '/'))}から</small>`}</div>`;
+  }).join('');
   $('#profileBirthdayText').textContent = favorites.length ? favorites.map(member => `${member.name} ${member.birthday.slice(5).replace('-', '/')}`).join(' / ') : '未登録';
   $('#birthdayText').textContent = favorites.length ? favorites.map(member => {
     const birthday = new Date(today.getFullYear(), Number(member.birthday.slice(5, 7)) - 1, Number(member.birthday.slice(8, 10)));
