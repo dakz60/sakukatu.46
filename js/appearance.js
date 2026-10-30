@@ -2,16 +2,16 @@
 
 function initAppearance() {
   const modal = $('#appearanceModal'), form = $('#appearanceForm');
-  const fileInput = $('#backgroundFile'), wash = $('#backgroundWash');
+  const fileInput = $('#backgroundFile'), shade = $('#backgroundShade');
   const preview = $('#backgroundPreview');
   let temporaryURL = '', busy = false, generation = 0;
   const setPreview = url => { preview.style.backgroundImage = url ? `url("${url}")` : 'none'; preview.classList.toggle('has-image', !!url); };
-  const updateWash = () => { $('#backgroundWashValue').textContent = `${wash.value}%`; preview.style.setProperty('--preview-wash', Number(wash.value) / 100); };
+  const updateShade = () => { $('#backgroundShadeValue').textContent = `${shade.value}%`; preview.style.setProperty('--preview-shade', Number(shade.value) / 100); };
   function releasePreview() { if (temporaryURL) URL.revokeObjectURL(temporaryURL); temporaryURL = ''; }
   async function apply() {
     const current = ++generation;
     const settings = db.appearance || {};
-    document.body.style.setProperty('--background-wash', (settings.wash ?? 80) / 100);
+    document.body.style.setProperty('--background-shade', (settings.shade ?? 0) / 100);
     if (!settings.backgroundId) { document.body.style.removeProperty('--user-background'); document.body.classList.remove('has-custom-background'); return; }
     try {
       const url = await getPhotoURL(settings.backgroundId);
@@ -21,7 +21,7 @@ function initAppearance() {
     } catch { toast('背景画像を読み込めませんでした。背景の設定から選び直せます'); }
   }
   $('#appearanceBtn').onclick = async () => {
-    form.reset(); releasePreview(); setPreview(''); wash.value = db.appearance?.wash ?? 80; updateWash();
+    form.reset(); releasePreview(); setPreview(''); shade.value = db.appearance?.shade ?? 0; updateShade();
     $('#removeBackground').disabled = !db.appearance?.backgroundId;
     modal.classList.add('open');
     if (db.appearance?.backgroundId) {
@@ -35,7 +35,7 @@ function initAppearance() {
     if (file && !file.type.startsWith('image/')) { fileInput.value = ''; toast('画像ファイルを選んでください'); return; }
     if (file) { temporaryURL = URL.createObjectURL(file); setPreview(temporaryURL); }
   };
-  wash.oninput = updateWash;
+  shade.oninput = updateShade;
   const setBusy = value => { busy = value; form.querySelectorAll('button,input').forEach(element => { element.disabled = value; }); if (!value) $('#removeBackground').disabled = !db.appearance?.backgroundId; };
   form.onsubmit = async event => {
     event.preventDefault(); if (busy) return;
@@ -49,7 +49,7 @@ function initAppearance() {
         const image = new Image(); image.src = temporaryURL; await image.decode();
         newId = `background-${crypto.randomUUID()}`; await savePhoto(newId, file);
       }
-      db.appearance = {backgroundId: newId || previous.backgroundId, wash: Number(wash.value)};
+      db.appearance = {backgroundId: newId || previous.backgroundId, shade: Number(shade.value)};
       try { save(); } catch (error) { db.appearance = previous; throw error; }
       await apply(); modal.classList.remove('open'); releasePreview();
       if (newId && previous?.backgroundId) deletePhoto(previous.backgroundId).catch(() => {});
@@ -59,7 +59,7 @@ function initAppearance() {
   };
   $('#removeBackground').onclick = async () => {
     if (busy) return;
-    const previous = db.appearance; db.appearance = {wash:previous?.wash ?? 80};
+    const previous = db.appearance; db.appearance = {shade:previous?.shade ?? 0};
     try { save(); } catch { db.appearance = previous; toast('背景の解除を保存できませんでした'); return; }
     setBusy(true); await apply(); modal.classList.remove('open'); releasePreview();
     if (previous?.backgroundId) deletePhoto(previous.backgroundId).catch(() => {});
