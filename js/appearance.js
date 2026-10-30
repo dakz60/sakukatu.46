@@ -1,6 +1,6 @@
-import { db, save } from './storage.js';
-import { savePhoto, getPhotoURL, deletePhoto } from './photoStorage.js';
-import { $, toast } from './ui.js';
+import { db, save } from './storage.js?v=20261030-11';
+import { savePhoto, getPhotoURL, deletePhoto } from './photoStorage.js?v=20261030-11';
+import { $, toast } from './ui.js?v=20261030-11';
 
 export function initAppearance() {
   const modal = $('#appearanceModal'), form = $('#appearanceForm');

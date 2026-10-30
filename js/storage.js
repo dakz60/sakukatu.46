@@ -1,6 +1,6 @@
-import { migratePhotos } from './collectionModel.js';
+import { migratePhotos } from './collectionModel.js?v=20261030-11';
 
-import { collections } from '../data/features.js';
+import { collections } from '../data/features.js?v=20261030-11';
 
 const STORAGE_KEY = 'oshi-note-v1';
 

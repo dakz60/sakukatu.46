@@ -1,5 +1,5 @@
-import { escapeHtml } from './ui.js';
-import { getPhotoURL, savePhoto } from './photoStorage.js';
+import { escapeHtml } from './ui.js?v=20261030-11';
+import { getPhotoURL, savePhoto } from './photoStorage.js?v=20261030-11';
 
 export function reportImageIds(item) {
   return [item.memberAvatarId, item.selfAvatarId, ...(item.messages || []).map(message => message.imageId)].filter(Boolean);
