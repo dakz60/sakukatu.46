@@ -1,11 +1,11 @@
-import { reportImageIds } from './reports.js?v=20261030-4';
-import { db, save } from './storage.js?v=20261030-4';
-import { $, go, render, toast, photoCount, setPhotoView } from './ui.js?v=20261030-4';
-import { initForms } from './forms.js?v=20261030-4';
-import { deletePhoto } from './photoStorage.js?v=20261030-4';
-import { members } from '../data/features.js?v=20261030-4';
+import { reportImageIds } from './reports.js?v=20261030-5';
+import { db, save } from './storage.js?v=20261030-5';
+import { $, go, render, toast, photoCount, setPhotoView } from './ui.js?v=20261030-5';
+import { initForms } from './forms.js?v=20261030-5';
+import { deletePhoto } from './photoStorage.js?v=20261030-5';
+import { members } from '../data/features.js?v=20261030-5';
 
-import { initTrades } from './trades.js?v=20261030-4';
+import { initTrades } from './trades.js?v=20261030-5';
 initForms();
 initTrades();
 
@@ -128,4 +128,4 @@ $('#profileForm').onsubmit = (event) => {
   toast('推しメンを保存しました');
 };
 
-go('photos');
+go('home');

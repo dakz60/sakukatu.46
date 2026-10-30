@@ -1,11 +1,11 @@
-import { forms, members } from '../data/features.js?v=20261030-4';
-import { db, save } from './storage.js?v=20261030-4';
-import { $, render, toast } from './ui.js?v=20261030-4';
-import { photoCount, offerCount, wantCount } from './collectionModel.js?v=20261030-4';
-import { savePhoto, deletePhoto } from './photoStorage.js?v=20261030-4';
-import { attachMemberAutocomplete, isMember } from './memberAutocomplete.js?v=20261030-4';
+import { forms, members } from '../data/features.js?v=20261030-5';
+import { db, save } from './storage.js?v=20261030-5';
+import { $, render, toast } from './ui.js?v=20261030-5';
+import { photoCount, offerCount, wantCount } from './collectionModel.js?v=20261030-5';
+import { savePhoto, deletePhoto } from './photoStorage.js?v=20261030-5';
+import { attachMemberAutocomplete, isMember } from './memberAutocomplete.js?v=20261030-5';
 
-import { createReportEditor, prepareReport, reportImageIds } from './reports.js?v=20261030-4';
+import { createReportEditor, prepareReport, reportImageIds } from './reports.js?v=20261030-5';
 
 export function initForms() {
   let collection = '', editing = null, busy = false, conversation = [];

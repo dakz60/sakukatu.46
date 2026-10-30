@@ -27,6 +27,9 @@ try:
    page.locator('#itemForm [type="submit"]').click()
    page.wait_for_selector('#modalWrap:not(.open)',state='attached')
   def image(): page.locator('[name="photo"]').set_input_files({'name':'photo.png','mimeType':'image/png','buffer':PNG})
+  assert page.locator('#page-home').evaluate('(el)=>el.classList.contains("active")')
+  assert page.locator('.top-actions .avatar').count()==0
+  nav('photos')
   # Owned photo with explicit offer; hope image allowed even with zero owned.
   page.locator('[data-add="photos"]:not([data-wish])').click()
   for key,value in {'member':'森田ひかる','series':'衣装A','count':'3','offer':'2'}.items(): page.locator(f'[name="{key}"]').fill(value)
@@ -60,7 +63,7 @@ try:
   page.wait_for_selector('#tradeModal:not(.open)',state='attached');assert page.locator('.photo-card').count()==0
   page.locator('[data-photo-view="owned"]').click();assert page.locator('.photo-card').count()==2
   assert page.locator('#tradeHistory').text_content().count('受け取った')==2
-  page.reload();assert page.locator('.photo-card').count()==2;assert page.locator('#tradeHistory').text_content().count('受け取った')==2
+  page.reload();assert page.locator('#page-home').evaluate('(el)=>el.classList.contains("active")');nav('photos');assert page.locator('.photo-card').count()==2;assert page.locator('#tradeHistory').text_content().count('受け取った')==2
   # Multi-member anniversary with image, filtering, edit and persistence.
   nav('milestones');page.locator('[data-add="milestones"]').click()
   page.locator('[name="title"]').fill('初ファンサ')
