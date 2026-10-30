@@ -1,4 +1,4 @@
-export const labels = {
+const labels = {
   schedule: 'スケジュール',
   tickets: '応募・チケット',
   goods: 'グッズ管理',
@@ -11,9 +11,9 @@ export const labels = {
   milestones: 'メンバー別記念日',
 };
 
-export const collections = Object.keys(labels);
+const collections = Object.keys(labels);
 
-export const members = [
+const members = [
   { name: '遠藤光莉', kana: 'えんどうひかり', birthday: '1999-04-17' },
   { name: '大園玲', kana: 'おおぞのれい', birthday: '2000-04-18' },
   { name: '大沼晶保', kana: 'おおぬまあきほ', birthday: '1999-10-12' },
@@ -46,7 +46,7 @@ export const members = [
   { name: '山田桃実', kana: 'やまだももみ', birthday: '2008-07-20' },
 ];
 
-export const forms = {
+const forms = {
   milestones: {
     title: '記念日を追加',
     fields: [
