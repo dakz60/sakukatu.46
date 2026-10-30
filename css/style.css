@@ -342,3 +342,16 @@ button { text-shadow: inherit; }
 }
 
 #page-tickets .search, #page-tickets .filter, #resetTickets { min-height: 44px; }
+
+.home-favorites { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px 16px; }
+.home-favorite { min-width: 0; padding: 0; border: 0; background: transparent; color: var(--text); text-align: left; }
+.home-favorite > strong, .home-favorite > span:not(.photo-image), .home-favorite > small { display: block; margin-top: 6px; overflow-wrap: anywhere; }
+.home-favorite .photo-image { width: 100%; }
+.home-favorite small { font-size: 12px; }
+.home-favorites > .empty { grid-column: 1 / -1; }
+.favorite-filter { display: flex; align-items: center; gap: 8px; min-height: 44px; cursor: pointer; }
+.favorite-filter input { width: 18px; height: 18px; }
+.photo-actions { flex-wrap: wrap; gap: 8px; }
+.photo-favorite { min-height: 44px; padding: 6px 0; }
+.photo-card:focus { outline: 1px solid var(--text); outline-offset: 6px; }
+@media (max-width: 680px) { .home-favorites { grid-template-columns: repeat(2, minmax(0, 1fr)); } }

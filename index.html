@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#0c1017">
   <title>櫻坂46 推し活ノート</title>
-  <link rel="stylesheet" href="css/style.css?v=20261030-18">
+  <link rel="stylesheet" href="css/style.css?v=20261030-19">
 </head>
 <body>
   <div class="app">
@@ -101,6 +101,11 @@
                 <button class="subtle" data-go="todos">一覧 →</button>
               </div>
               <div id="homeTodos"></div>
+            </div>
+            <div class="panel">
+              <div class="panel-head"><h3>お気に入りの生写真</h3><button type="button" class="subtle" data-go="photos">生写真へ →</button></div>
+              <p id="homeFavoritesSummary" class="field-hint" aria-live="polite"></p>
+              <div id="homeFavorites" class="home-favorites"></div>
             </div>
           </div>
 
@@ -237,6 +242,7 @@
             <select class="filter" id="photoSeries" data-photo-filter aria-label="シリーズ"></select>
 
           </div>
+          <label class="favorite-filter"><input type="checkbox" id="photoFavoritesOnly" data-photo-filter>お気に入りのみ</label>
           <p id="photoResults" aria-live="polite"></p>
           <div class="photo-grid" id="list-photos"></div><details><summary>交換履歴</summary><div id="tradeHistory"></div></details>
         </div>
@@ -386,17 +392,18 @@
   </div>
   <div class="toast" id="toast"></div>
 
-  <script src="data/features.js?v=20261030-18"></script>
-  <script src="js/collectionModel.js?v=20261030-18"></script>
-  <script src="js/photoStorage.js?v=20261030-18"></script>
-  <script src="js/storage.js?v=20261030-18"></script>
-  <script src="js/memberAutocomplete.js?v=20261030-18"></script>
-  <script src="js/reports.js?v=20261030-18"></script>
-  <script src="js/tickets.js?v=20261030-18"></script>
-  <script src="js/ui.js?v=20261030-18"></script>
-  <script src="js/forms.js?v=20261030-18"></script>
-  <script src="js/appearance.js?v=20261030-18"></script>
-  <script src="js/trades.js?v=20261030-18"></script>
-  <script src="js/main.js?v=20261030-18"></script>
+  <script src="data/features.js?v=20261030-19"></script>
+  <script src="js/collectionModel.js?v=20261030-19"></script>
+  <script src="js/photoStorage.js?v=20261030-19"></script>
+  <script src="js/storage.js?v=20261030-19"></script>
+  <script src="js/memberAutocomplete.js?v=20261030-19"></script>
+  <script src="js/reports.js?v=20261030-19"></script>
+  <script src="js/tickets.js?v=20261030-19"></script>
+  <script src="js/favorites.js?v=20261030-19"></script>
+  <script src="js/ui.js?v=20261030-19"></script>
+  <script src="js/forms.js?v=20261030-19"></script>
+  <script src="js/appearance.js?v=20261030-19"></script>
+  <script src="js/trades.js?v=20261030-19"></script>
+  <script src="js/main.js?v=20261030-19"></script>
 </body>
 </html>

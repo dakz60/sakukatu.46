@@ -31,7 +31,8 @@ function renderPhotos() {
   const query = $('[data-search="photos"]').value.trim().toLowerCase();
   const items = db.photos.filter(item => {
     const count = photoCount(item);
-    return item.inventory === (photoView === 'owned' ? 'collection' : photoView)
+    return (!$('#photoFavoritesOnly').checked || item.favorite)
+      && item.inventory === (photoView === 'owned' ? 'collection' : photoView)
       && (!$('#photoMember').value || item.member === $('#photoMember').value)
       && (!$('#photoSeries').value || item.series === $('#photoSeries').value)
       && (!$('#photoCategory').value || item.category === $('#photoCategory').value)
@@ -49,13 +50,13 @@ function renderPhotos() {
   list.innerHTML = items.length ? items.map(item => {
     const index = db.photos.indexOf(item);
     const count = photoCount(item);
-    return `<article class="photo-card ${count === 0 ? 'unowned' : ''}">
+    return `<article class="photo-card ${count === 0 ? 'unowned' : ''}" tabindex="-1" data-photo-record="${escapeHtml(item.id)}">
       <div class="photo-image" data-photo-id="${escapeHtml(item.imageId || item.id)}"><span>画像なし</span></div>
       <div class="photo-info"><span class="tag">${escapeHtml(item.category || '分類未設定')}</span>
       <h3>${escapeHtml(item.member)}</h3><p>${escapeHtml(item.series)}</p><p>${escapeHtml(item.pose || 'ポーズ未設定')}</p>
       ${item.note ? `<p class="photo-note">${escapeHtml(item.note)}</p>` : ''}
       <div class="photo-counter"><button type="button" data-count="${index}" data-delta="-1" aria-label="${escapeHtml(item.member + ' ' + item.pose)}の所持枚数を減らす" ${count === 0 ? 'disabled' : ''}>−</button><strong>${count}枚</strong><button type="button" data-count="${index}" data-delta="1" aria-label="${escapeHtml(item.member + ' ' + item.pose)}の所持枚数を増やす">＋</button></div>
-      <div class="photo-actions"><button class="subtle" data-edit-photo="${index}">編集</button><button class="del" data-delete="photos" data-index="${index}">削除</button></div></div></article>`;
+      <div class="photo-actions"><button type="button" class="subtle photo-favorite" data-favorite-photo="${escapeHtml(item.id)}" aria-pressed="${Boolean(item.favorite)}">${item.favorite ? '★ お気に入り' : '☆ お気に入り'}</button><button class="subtle" data-edit-photo="${index}">編集</button><button class="del" data-delete="photos" data-index="${index}">削除</button></div></div></article>`;
   }).join('') : empty(db.photos.length ? '条件に合う生写真がありません。' : '生写真は未登録です。画像・メンバー・シリーズ・枚数を登録できます。');
   list.querySelectorAll('[data-photo-id]').forEach(async element => {
     try {
@@ -75,6 +76,7 @@ function rows(collection, items) {
 }
 function render() {
   renderPhotos();
+  renderHomeFavorites();
   for (const collection of Object.keys(labels).filter(name => !['photos', 'milestones', 'reports'].includes(name))) {
     const query = $(`[data-search="${collection}"]`)?.value.toLowerCase() || '';
     const filter = $(`[data-filter="${collection}"]`)?.value || '';

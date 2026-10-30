@@ -86,7 +86,7 @@ function applySeparatedTrade(photos, lines) {
   if (!given || !received) throw new Error('渡す写真ともらう写真をそれぞれ選んでください');
   for (const {item,receive} of incoming) {
     let owned = result.find(photo => photo.inventory === 'collection' && ['member','series','pose','category'].every(key => (photo[key] || '') === (item[key] || '')));
-    if (!owned) { owned = {...item, id:crypto.randomUUID(), inventory:'collection', count:0}; result.push(owned); }
+    if (!owned) { owned = {...item, id:crypto.randomUUID(), inventory:'collection', count:0, favorite:false, favoriteAt:undefined}; result.push(owned); }
     owned.count = photoCount(owned) + receive;
     if (owned.count > 99999) throw new Error('枚数の上限を超えています');
   }

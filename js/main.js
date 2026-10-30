@@ -20,6 +20,10 @@ document.body.addEventListener('click', (event) => {
   if (event.target.closest('#resetTickets')) {
     $('[data-search="tickets"]').value = ''; $('[data-filter="tickets"]').value = ''; render();
   }
+  const favorite = event.target.closest('[data-favorite-photo]');
+  if (favorite) togglePhotoFavorite(favorite.dataset.favoritePhoto);
+  const openFavorite = event.target.closest('[data-open-favorite]');
+  if (openFavorite) openFavoritePhoto(openFavorite.dataset.openFavorite);
   const view = event.target.closest('[data-photo-view]');
   if (view) setPhotoView(view.dataset.photoView);
   const counter = event.target.closest('[data-count]');
