@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#fff8fb">
   <title>櫻坂46 推し活ノート</title>
-  <link rel="stylesheet" href="css/style.css?v=20261030-6">
+  <link rel="stylesheet" href="css/style.css?v=20261030-7">
 </head>
 <body>
   <div class="app">
@@ -224,14 +224,14 @@
         </div>
         <div class="panel">
           <div class="collection-actions"><button class="secondary" data-add="photos" data-wish>＋ 希望を登録</button><button class="primary" id="openTrade">現場で交換する</button></div>
-          <div class="collection-tabs" role="group" aria-label="生写真の表示"><button class="secondary active" data-photo-view="all">すべて</button><button class="secondary" data-photo-view="owned">コレクション</button><button class="secondary" data-photo-view="offer">提供</button><button class="secondary" data-photo-view="want">希望</button></div>
+          <div class="collection-tabs" role="group" aria-label="生写真の表示"><button class="secondary" data-photo-view="owned">コレクション</button><button class="secondary" data-photo-view="offer">提供</button><button class="secondary" data-photo-view="want">希望</button></div>
           <p id="photoSummary" class="photo-summary" aria-live="polite"></p>
           <div class="table-tools photo-filters">
             <input class="search" placeholder="メンバー・シリーズ・メモを検索" aria-label="生写真を検索" data-search="photos">
             <select class="filter" id="photoCategory" data-photo-filter aria-label="生写真の分類"><option value="">すべての分類</option><option>公式ランダム</option><option>CD封入</option></select>
             <select class="filter" id="photoMember" data-photo-filter aria-label="メンバー"></select>
             <select class="filter" id="photoSeries" data-photo-filter aria-label="シリーズ"></select>
-            <select class="filter" id="photoOwnership" data-photo-filter aria-label="所持状況"><option value="">すべての所持状況</option><option value="owned">所持</option><option value="duplicates">ダブりのみ</option><option value="missing">未所持のみ</option></select>
+
           </div>
           <p id="photoResults" aria-live="polite"></p>
           <div class="photo-grid" id="list-photos"></div><details><summary>交換履歴</summary><div id="tradeHistory"></div></details>
@@ -372,6 +372,6 @@
   <div class="modal-wrap" id="tradeModal"><div class="modal"><h3>現場で交換する</h3><p>提供・希望として登録した写真から、渡す枚数ともらう枚数を選んでください。未登録の写真は先に「希望を登録」から追加できます。</p><form id="tradeForm"><div id="tradeLines"></div><div class="modal-actions"><button type="button" class="secondary" id="cancelTrade">キャンセル</button><button type="submit" class="primary">交換を確定</button></div></form></div></div>
   <div class="toast" id="toast"></div>
 
-  <script type="module" src="js/main.js?v=20261030-6"></script>
+  <script type="module" src="js/main.js?v=20261030-7"></script>
 </body>
 </html>

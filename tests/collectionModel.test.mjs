@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { photoCount, offerCount, keepCount, applyTrade, anniversaryInfo, daysToAnniversary, supportingDays } from '../js/collectionModel.js';
+import { photoCount, offerCount, keepCount, applyTrade, anniversaryInfo, daysToAnniversary, supportingDays, migratePhotos } from '../js/collectionModel.js';
 
 test('legacy records remain readable; duplicates are not automatically offered', () => {
   assert.equal(photoCount({status:'所持'}), 1);
@@ -37,4 +37,22 @@ test('favorite day count starts at day one and rejects invalid or future dates',
   assert.equal(supportingDays('2026-10-31', new Date(2026,9,30)),null);
   assert.equal(supportingDays('2026-02-30', new Date(2026,9,30)),null);
   assert.equal(supportingDays(undefined),null);
+});
+
+test('migration separates stocks, retains images, and is repeatable', () => {
+  const previous = [{id:'old',member:'A',count:3,offer:2,want:1}];
+  const migrated = migratePhotos(previous);
+  assert.deepEqual(migrated.map(({inventory,count}) => [inventory,count]), [['collection',1],['offer',2],['want',1]]);
+  assert.ok(migrated.every(item => item.imageId === 'old'));
+  assert.deepEqual(migratePhotos(migrated),migrated);
+  assert.equal(previous[0].count,3);
+});
+test('trades only remove offered stocks and receive into a separate collection', () => {
+  const photos = [{id:'keep',inventory:'collection',member:'A',count:1}, {id:'offer',inventory:'offer',member:'A',count:2}, {id:'want',inventory:'want',member:'B',count:1,imageId:'wish-image'}];
+  const result = applyTrade(photos,[{id:'offer',give:2,receive:0},{id:'want',give:0,receive:1}]);
+  assert.equal(result.find(item=>item.id==='keep').count,1);
+  assert.equal(result.find(item=>item.id==='offer').count,0);
+  assert.equal(result.find(item=>item.id==='want').count,0);
+  assert.equal(result.find(item=>item.member==='B' && item.inventory==='collection').count,1);
+  assert.throws(()=>applyTrade(photos,[{id:'keep',give:1,receive:0},{id:'want',give:0,receive:1}]));
 });

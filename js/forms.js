@@ -1,11 +1,11 @@
-import { forms, members } from '../data/features.js?v=20261030-6';
-import { db, save } from './storage.js?v=20261030-6';
-import { $, render, toast } from './ui.js?v=20261030-6';
-import { photoCount, offerCount, wantCount, keepCount } from './collectionModel.js?v=20261030-6';
-import { savePhoto, deletePhoto } from './photoStorage.js?v=20261030-6';
-import { attachMemberAutocomplete, isMember } from './memberAutocomplete.js?v=20261030-6';
+import { forms, members } from '../data/features.js?v=20261030-7';
+import { db, save, imageInUse } from './storage.js?v=20261030-7';
+import { $, render, toast, photoView, setPhotoView } from './ui.js?v=20261030-7';
+import { photoCount } from './collectionModel.js?v=20261030-7';
+import { savePhoto, deletePhoto, getPhotoURL } from './photoStorage.js?v=20261030-7';
+import { attachMemberAutocomplete, isMember } from './memberAutocomplete.js?v=20261030-7';
 
-import { createReportEditor, prepareReport, reportImageIds } from './reports.js?v=20261030-6';
+import { createReportEditor, prepareReport, reportImageIds } from './reports.js?v=20261030-7';
 
 export function initForms() {
   let collection = '', editing = null, busy = false, conversation = [];
@@ -13,7 +13,9 @@ export function initForms() {
     if (!forms[name]) return;
     collection = name; editing = item;
     const values = item || defaults;
+    $('#itemForm').dataset.inventory = item?.inventory || defaults.inventory || (photoView === 'owned' ? 'collection' : photoView);
     $('#modalTitle').textContent = item ? `${name === 'photos' ? '生写真' : name === 'reports' ? 'ミーグリレポ' : '記念日'}を編集` : forms[name].title;
+    if (name === 'photos') $('#modalTitle').textContent = `${({'collection':'コレクション','offer':'提供用','want':'希望'})[$('#itemForm').dataset.inventory]}を${item ? '編集' : '登録'}`;
     const box = $('#formFields'); box.replaceChildren();
     for (const [key, label, kind, required, choices] of forms[name].fields) {
       const wrap = document.createElement('div'); wrap.className = 'field' + (['textarea', 'members'].includes(kind) ? ' full' : '');
@@ -35,12 +37,19 @@ export function initForms() {
       else if (kind === 'date') { const date = new Date(); input.value = values[key] || new Date(date.getTime() - date.getTimezoneOffset() * 60000).toISOString().slice(0,10); }
       else input.value = values[key] ?? (kind === 'select' ? choices[0] : '');
       if (name === 'reports' && key === 'tickets') { input.min = '1'; input.max = '9999'; input.step = '1'; }
-      if (name === 'photos' && ['count', 'keep', 'offer', 'want'].includes(key)) {
+      if (name === 'photos' && key === 'count') {
         input.min = '0'; input.max = '99999'; input.step = '1';
-        input.value = key === 'count' ? (item ? photoCount(item) : defaults.count ?? 1) : key === 'keep' ? (item ? keepCount(item) : defaults.count ?? 1) : key === 'offer' ? offerCount(values) : wantCount(values);
+        input.value = item ? photoCount(item) : defaults.count ?? 1;
       }
       const caption = document.createElement('label'); caption.htmlFor = input.id; caption.textContent = label + (required ? ' *' : '');
       wrap.append(caption, input);
+      if (key === 'photo' && name === 'photos') {
+        const preview = document.createElement('img'); preview.className = 'editor-image'; preview.alt = '登録する生写真'; preview.hidden = true;
+        if (item) getPhotoURL(item.imageId || item.id).then(url => { if (url && preview.isConnected && !input.files.length) { preview.src = url; preview.hidden = false; } }).catch(() => {});
+        let temporaryURL;
+        input.addEventListener('change', () => { if (temporaryURL) URL.revokeObjectURL(temporaryURL); const file = input.files[0]; if (file) { temporaryURL = URL.createObjectURL(file); preview.src = temporaryURL; preview.hidden = false; preview.onload = () => URL.revokeObjectURL(temporaryURL); } });
+        wrap.append(preview);
+      }
       if (key === 'photo' && item) { const hint = document.createElement('small'); hint.textContent = '画像を選ばなければ現在の画像を保持します'; wrap.append(hint); }
       if (name === 'photos' && key === 'pose') {
         const custom = document.createElement('input');
@@ -53,13 +62,6 @@ export function initForms() {
       }
       box.append(wrap);
       if (kind === 'member') attachMemberAutocomplete(input);
-    }
-    if (name === 'photos') {
-      const total = box.querySelector('[name="count"]'), keep = box.querySelector('[name="keep"]'), offer = box.querySelector('[name="offer"]');
-      keep.addEventListener('input', () => { offer.value = Math.max(0, Number(total.value) - Number(keep.value)); });
-      offer.addEventListener('input', () => { keep.value = Math.max(0, Number(total.value) - Number(offer.value)); });
-      total.addEventListener('input', () => { offer.value = Math.min(Number(total.value), Number(offer.value)); keep.value = Math.max(0, Number(total.value) - Number(offer.value)); });
-      const hint = document.createElement('p'); hint.className = 'field-hint field full'; hint.textContent = '残す枚数と提供枚数は連動します。交換では提供分だけを使い、コレクション分は残します。'; box.append(hint);
     }
     conversation = name === 'reports' ? createReportEditor(box, values) : [];
     $('#modalWrap').classList.add('open');
@@ -79,7 +81,7 @@ export function initForms() {
       return;
     }
     const add = event.target.closest('[data-add]');
-    if (add) { delete $('#itemForm').dataset.sourceId; delete $('#itemForm').dataset.sourceCollection; open(add.dataset.add, null, add.hasAttribute('data-wish') ? { count: 0, want: 1 } : {}); }
+    if (add) { delete $('#itemForm').dataset.sourceId; delete $('#itemForm').dataset.sourceCollection; open(add.dataset.add, null, add.hasAttribute('data-wish') ? { inventory: 'want', count: 1 } : {}); }
   });
   const close = () => { if (!busy) $('#modalWrap').classList.remove('open'); };
   $('#cancelBtn').onclick = close;
@@ -91,12 +93,10 @@ export function initForms() {
     const file = data.get('photo'); delete item.photo;
     if (['photos', 'reports'].includes(collection) && !isMember(item.member)) { toast('候補からメンバーを選んでください'); return; }
     if (collection === 'photos') {
-      for (const key of ['count', 'keep', 'offer', 'want']) item[key] = Number(item[key]);
-      if (![item.count, item.keep, item.offer, item.want].every(value => Number.isSafeInteger(value) && value >= 0 && value <= 99999)) { toast('枚数は0〜99999の整数で入力してください'); return; }
-      if (item.keep > item.count) { toast('残す枚数は所持枚数以下にしてください'); return; }
-      if (item.offer > item.count) { toast('提供枚数は所持枚数以下にしてください'); return; }
-      if (item.keep + item.offer !== item.count) { toast('残す枚数と提供枚数の合計を所持枚数に合わせてください'); return; }
-      delete item.keep;
+      item.count = Number(item.count);
+      if (!Number.isSafeInteger(item.count) || item.count < 0 || item.count > 99999) { toast('枚数は0〜99999の整数で入力してください'); return; }
+      item.inventory = form.dataset.inventory;
+      delete item.offer; delete item.keep; delete item.want;
       if (item.pose === 'その他') item.pose = (item.customPose || '').trim();
       delete item.customPose;
       if (!item.pose) { toast('ポーズ・種類を入力してください'); return; }
@@ -121,8 +121,10 @@ export function initForms() {
       try { save(); } catch (error) { db[collection] = previous; throw error; }
       persisted = true;
       if (collection === 'reports' && editing) reportImageIds(editing).filter(id => !reportImageIds(item).includes(id)).forEach(id => deletePhoto(id).catch(() => {}));
-      if (newImage && editing) deletePhoto(editing.imageId || editing.id).catch(() => {});
-      render(); $('#modalWrap').classList.remove('open'); form.reset(); toast('保存しました');
+      if (newImage && editing) { const oldId = editing.imageId || editing.id; if (!imageInUse(oldId)) deletePhoto(oldId).catch(() => {}); }
+      const targetView = item.inventory === 'collection' ? 'owned' : item.inventory;
+      if (collection === 'photos' && targetView !== photoView) setPhotoView(targetView); else render();
+      $('#modalWrap').classList.remove('open'); form.reset(); toast('保存しました');
     } catch {
       if (!persisted) reportImages.forEach(id => deletePhoto(id).catch(() => {}));
       if (newImage && !persisted) deletePhoto(newImage).catch(() => {});

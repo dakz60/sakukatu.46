@@ -1,12 +1,12 @@
-import { supportingDays } from './collectionModel.js?v=20261030-6';
-import { reportImageIds } from './reports.js?v=20261030-6';
-import { db, save } from './storage.js?v=20261030-6';
-import { $, go, render, toast, photoCount, setPhotoView } from './ui.js?v=20261030-6';
-import { initForms } from './forms.js?v=20261030-6';
-import { deletePhoto } from './photoStorage.js?v=20261030-6';
-import { members } from '../data/features.js?v=20261030-6';
+import { supportingDays } from './collectionModel.js?v=20261030-7';
+import { reportImageIds } from './reports.js?v=20261030-7';
+import { db, save, imageInUse } from './storage.js?v=20261030-7';
+import { $, go, render, toast, photoCount, setPhotoView } from './ui.js?v=20261030-7';
+import { initForms } from './forms.js?v=20261030-7';
+import { deletePhoto } from './photoStorage.js?v=20261030-7';
+import { members } from '../data/features.js?v=20261030-7';
 
-import { initTrades } from './trades.js?v=20261030-6';
+import { initTrades } from './trades.js?v=20261030-7';
 initForms();
 initTrades();
 
@@ -30,11 +30,9 @@ document.body.addEventListener('click', (event) => {
     const item = db.photos[Number(counter.dataset.count)];
     const previous = photoCount(item);
     const previousStatus = item.status;
-    const previousOffer = item.offer;
     item.count = Math.min(99999, Math.max(0, previous + Number(counter.dataset.delta)));
-    item.offer = Math.min(Number(item.offer) || 0, item.count);
     item.status = item.count > 0 ? '所持' : '未所持';
-    try { save(); render(); } catch { item.count = previous; item.status = previousStatus; item.offer = previousOffer; toast('保存できませんでした。空き容量を確認してください'); }
+    try { save(); render(); } catch { item.count = previous; item.status = previousStatus; toast('保存できませんでした。空き容量を確認してください'); }
   }
   const remove = event.target.closest('[data-delete]');
   if (remove) {
@@ -44,7 +42,7 @@ document.body.addEventListener('click', (event) => {
     const [deleted] = db[collection].splice(index, 1);
     try { save(); } catch { db[collection].splice(index, 0, deleted); toast('削除を保存できませんでした'); return; }
     if (collection === 'reports' && deleted) reportImageIds(deleted).forEach(id => deletePhoto(id).catch(() => {}));
-    if (['photos', 'milestones'].includes(collection) && deleted) deletePhoto(deleted.imageId || deleted.id).catch(() => {});
+    if (['photos', 'milestones'].includes(collection) && deleted && !imageInUse(deleted.imageId || deleted.id)) deletePhoto(deleted.imageId || deleted.id).catch(() => {});
     render();
     toast('削除しました');
   }

@@ -1,7 +1,7 @@
-import { reportCard, loadReportImages } from './reports.js?v=20261030-6';
-import { db } from './storage.js?v=20261030-6';
-import { labels, members } from '../data/features.js?v=20261030-6';
-import { getPhotoURL } from './photoStorage.js?v=20261030-6';
+import { reportCard, loadReportImages } from './reports.js?v=20261030-7';
+import { db } from './storage.js?v=20261030-7';
+import { labels, members } from '../data/features.js?v=20261030-7';
+import { getPhotoURL } from './photoStorage.js?v=20261030-7';
 
 export const $ = (selector) => document.querySelector(selector);
 export const escapeHtml = (value = '') => String(value).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -19,10 +19,10 @@ export function go(page, update = render) {
   $('#sidebar').classList.remove('open');
   update();
 }
-export { photoCount } from './collectionModel.js?v=20261030-6';
-import { photoCount, offerCount, keepCount, wantCount, anniversaryInfo, daysToAnniversary, supportingDays } from './collectionModel.js?v=20261030-6';
-export let photoView = 'all';
-export function setPhotoView(view) { photoView = view; render(); }
+export { photoCount } from './collectionModel.js?v=20261030-7';
+import { photoCount, anniversaryInfo, daysToAnniversary, supportingDays } from './collectionModel.js?v=20261030-7';
+export let photoView = 'owned';
+export function setPhotoView(view) { photoView = view; ['#photoMember','#photoSeries','#photoCategory'].forEach(selector => { $(selector).value = ''; }); $('[data-search="photos"]').value = ''; render(); }
 const empty = (message) => `<div class="empty">${escapeHtml(message)}</div>`;
 function options(selector, values, placeholder) {
   const select = $(selector);
@@ -32,18 +32,21 @@ function options(selector, values, placeholder) {
 }
 function renderPhotos() {
   options('#photoMember', [...members.map(member => member.name), ...db.photos.map(item => item.member)], 'すべてのメンバー');
-  options('#photoSeries', db.photos.map(item => item.series), 'すべてのシリーズ');
+  options('#photoSeries', db.photos.filter(item => item.inventory === (photoView === 'owned' ? 'collection' : photoView)).map(item => item.series), 'すべてのシリーズ');
   const query = $('[data-search="photos"]').value.trim().toLowerCase();
   const items = db.photos.filter(item => {
     const count = photoCount(item);
-    return (photoView === 'all' || (photoView === 'owned' ? keepCount(item) > 0 : photoView === 'offer' ? offerCount(item) > 0 : wantCount(item) > 0))
+    return item.inventory === (photoView === 'owned' ? 'collection' : photoView)
       && (!$('#photoMember').value || item.member === $('#photoMember').value)
       && (!$('#photoSeries').value || item.series === $('#photoSeries').value)
       && (!$('#photoCategory').value || item.category === $('#photoCategory').value)
-      && (!$('#photoOwnership').value || ($('#photoOwnership').value === 'duplicates' ? count > 1 : $('#photoOwnership').value === 'owned' ? count > 0 : count === 0))
       && [item.member, item.series, item.pose, item.note].some(value => String(value || '').toLowerCase().includes(query));
   });
-  $('#photoSummary').textContent = `登録 ${db.photos.length}種類 / 所持 ${db.photos.reduce((sum, item) => sum + photoCount(item), 0)}枚 / ダブり ${db.photos.reduce((sum, item) => sum + Math.max(0, photoCount(item) - 1), 0)}枚`;
+  const inventory = photoView === 'owned' ? 'collection' : photoView;
+  const all = db.photos.filter(item => item.inventory === inventory);
+  const title = {collection:'コレクション',offer:'提供用',want:'希望'}[inventory];
+  $('#photoSummary').textContent = `${title}：${all.length}件`;
+  document.querySelectorAll('[data-add="photos"]:not([data-wish])').forEach(button => { button.textContent = `＋ ${title}を登録`; });
   document.querySelectorAll('[data-photo-view]').forEach(button => { button.classList.toggle('active', button.dataset.photoView === photoView); button.setAttribute('aria-pressed', String(button.dataset.photoView === photoView)); });
   $('#tradeHistory').innerHTML = db.trades.map(trade => `<div class="data-row"><div><strong>${escapeHtml(new Date(trade.date).toLocaleString('ja-JP'))}</strong>${trade.lines.map(line => `<p>${escapeHtml(line.member)} / ${escapeHtml(line.series)} / ${escapeHtml(line.pose || '')}：渡した ${line.give}枚・受け取った ${line.receive}枚</p>`).join('')}</div></div>`).join('') || empty('まだ交換の記録がありません');
   $('#photoResults').textContent = `${items.length}種類を表示`;
@@ -56,8 +59,6 @@ function renderPhotos() {
       <div class="photo-info"><span class="tag">${escapeHtml(item.category || '分類未設定')}</span>
       <h3>${escapeHtml(item.member)}</h3><p>${escapeHtml(item.series)}</p><p>${escapeHtml(item.pose || 'ポーズ未設定')}</p>
       ${item.note ? `<p class="photo-note">${escapeHtml(item.note)}</p>` : ''}
-      <span class="ownership">${count === 0 ? '未所持' : count > 1 ? `ダブり ${count - 1}枚` : '所持'}</span>
-      <p class="trade-counts">コレクション ${keepCount(item)}枚 · 提供 ${offerCount(item)}枚 · 希望 ${wantCount(item)}枚</p>
       <div class="photo-counter"><button type="button" data-count="${index}" data-delta="-1" aria-label="${escapeHtml(item.member + ' ' + item.pose)}の所持枚数を減らす" ${count === 0 ? 'disabled' : ''}>−</button><strong>${count}枚</strong><button type="button" data-count="${index}" data-delta="1" aria-label="${escapeHtml(item.member + ' ' + item.pose)}の所持枚数を増やす">＋</button></div>
       <div class="photo-actions"><button class="subtle" data-edit-photo="${index}">編集</button><button class="del" data-delete="photos" data-index="${index}">削除</button></div></div></article>`;
   }).join('') : empty(db.photos.length ? '条件に合う生写真がありません。' : '生写真は未登録です。画像・メンバー・シリーズ・枚数を登録できます。');

@@ -2,10 +2,11 @@ export function photoCount(item) {
   const count = Number(item.count);
   return Number.isSafeInteger(count) && count >= 0 && item.count !== '' && item.count != null ? count : (['未所持', '購入予定'].includes(item.status) ? 0 : 1);
 }
-export const offerCount = item => Math.min(photoCount(item), Math.max(0, Number(item.offer) || 0));
-export const keepCount = item => photoCount(item) - offerCount(item);
-export const wantCount = item => Math.max(0, Number(item.want) || 0);
+export const offerCount = item => item.inventory ? (item.inventory === 'offer' ? photoCount(item) : 0) : Math.min(photoCount(item), Math.max(0, Number(item.offer) || 0));
+export const keepCount = item => item.inventory ? (item.inventory === 'collection' ? photoCount(item) : 0) : photoCount(item) - offerCount(item);
+export const wantCount = item => item.inventory ? (item.inventory === 'want' ? photoCount(item) : 0) : Math.max(0, Number(item.want) || 0);
 export function applyTrade(photos, lines) {
+  if (photos.every(item => item.inventory)) return applySeparatedTrade(photos, lines);
   const result = photos.map(item => ({ ...item }));
   let given = 0, received = 0;
   for (const item of result) {
@@ -54,4 +55,38 @@ export function supportingDays(date, now = new Date()) {
   if (start.getFullYear() !== year || start.getMonth() !== month - 1 || start.getDate() !== day) return null;
   const elapsed = Math.round((Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()) - Date.UTC(year, month - 1, day)) / 86400000);
   return elapsed >= 0 ? elapsed + 1 : null;
+}
+
+export function migratePhotos(photos) {
+  return photos.flatMap(item => {
+    if (item.inventory) return [{...item}];
+    const imageId = item.imageId || item.id;
+    const base = { ...item, imageId }; delete base.offer; delete base.want; delete base.keep;
+    const result = [];
+    if (keepCount(item) || (!offerCount(item) && !wantCount(item))) result.push({...base, inventory:'collection', count:keepCount(item)});
+    if (offerCount(item)) result.push({...base, id:`${item.id}:offer`, inventory:'offer', count:offerCount(item)});
+    if (wantCount(item)) result.push({...base, id:`${item.id}:want`, inventory:'want', count:wantCount(item)});
+    return result;
+  });
+}
+function applySeparatedTrade(photos, lines) {
+  const result = photos.map(item => ({...item}));
+  let given = 0, received = 0;
+  const incoming = [];
+  for (const line of lines) {
+    const item = result.find(item => String(item.id) === String(line.id));
+    const give = Number(line.give), receive = Number(line.receive);
+    if (!item || ![give,receive].every(value => Number.isSafeInteger(value) && value >= 0 && value <= 99999) || give > offerCount(item) || (receive && item.inventory !== 'want')) throw new Error('交換する写真と枚数を確認してください');
+    if (give) item.count -= give;
+    if (receive) { item.count = Math.max(0, item.count - receive); incoming.push({item,receive}); }
+    given += give; received += receive;
+  }
+  if (!given || !received) throw new Error('渡す写真ともらう写真をそれぞれ選んでください');
+  for (const {item,receive} of incoming) {
+    let owned = result.find(photo => photo.inventory === 'collection' && ['member','series','pose','category'].every(key => (photo[key] || '') === (item[key] || '')));
+    if (!owned) { owned = {...item, id:crypto.randomUUID(), inventory:'collection', count:0}; result.push(owned); }
+    owned.count = photoCount(owned) + receive;
+    if (owned.count > 99999) throw new Error('枚数の上限を超えています');
+  }
+  return result;
 }

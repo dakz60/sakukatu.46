@@ -1,5 +1,6 @@
+import { migratePhotos } from './collectionModel.js?v=20261030-7';
 
-import { collections } from '../data/features.js?v=20261030-6';
+import { collections } from '../data/features.js?v=20261030-7';
 
 const STORAGE_KEY = 'oshi-note-v1';
 
@@ -40,3 +41,8 @@ export function save() {
 }
 
 if (db.profile.members != null && !Array.isArray(db.profile.members)) delete db.profile.members;
+
+db.photos = migratePhotos(db.photos);
+export function imageInUse(id) {
+  return [...db.photos, ...db.milestones].some(item => String(item.imageId || item.id) === String(id)) || db.reports.some(item => [item.memberAvatarId,item.selfAvatarId,...(item.messages || []).map(message => message.imageId)].includes(id));
+}

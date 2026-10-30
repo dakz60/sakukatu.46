@@ -30,45 +30,40 @@ try:
   assert page.locator('#page-home').evaluate('(el)=>el.classList.contains("active")')
   assert page.locator('.top-actions .avatar').count()==0
   nav('photos')
-  # Owned photo with explicit offer; hope image allowed even with zero owned.
+  # Independent inventories, each with its own image and count.
+  def photo(member, series, pose, count):
+   page.locator('[data-add="photos"]:not([data-wish])').click()
+   for key,value in {'member':member,'series':series,'count':str(count)}.items(): page.locator(f'[name="{key}"]').fill(value)
+   page.locator('[name="pose"]').select_option(pose);image();submit();page.wait_for_selector('.photo-card img')
+  photo('森田ひかる','衣装A','ヨリ',1)
+  page.locator('[data-photo-view="offer"]').click();assert page.locator('.photo-card').count()==0
+  photo('森田ひかる','衣装A','ヨリ',2)
+  page.locator('[data-photo-view="owned"]').click();assert page.locator('.photo-counter strong').inner_text()=='1枚'
+  page.locator('[data-edit-photo]').click();page.locator('[name="count"]').fill('3');submit()
+  page.locator('[data-photo-view="offer"]').click();assert page.locator('.photo-counter strong').inner_text()=='2枚'
+  page.locator('[data-photo-view="want"]').click()
   page.locator('[data-add="photos"]:not([data-wish])').click()
-  for key,value in {'member':'森田ひかる','series':'衣装A','count':'3','offer':'2'}.items(): page.locator(f'[name="{key}"]').fill(value)
-  page.locator('[name="pose"]').select_option('ヨリ')
-  image();submit();page.wait_for_selector('.photo-card img')
-  page.locator('[data-wish]').click()
-  for key,value in {'member':'田村保乃','series':'CD封入B'}.items(): page.locator(f'[name="{key}"]').fill(value)
+  for key,value in {'member':'田村保乃','series':'CD封入B','count':'1'}.items():page.locator(f'[name="{key}"]').fill(value)
   page.locator('[name="pose"]').select_option('その他');page.locator('[name="customPose"]').fill('タイプA')
-  page.locator('[name="category"]').select_option('CD封入');image();submit()
-  page.locator('[data-photo-view="want"]').click();assert page.locator('.photo-card').count()==1
-  assert page.locator('.photo-card h3').inner_text()=='田村保乃'
-  page.locator('[data-edit-photo]').click();assert page.locator('[name="pose"]').input_value()=='その他';assert page.locator('[name="customPose"]').input_value()=='タイプA';page.locator('#cancelBtn').click()
-  page.locator('[data-photo-view="offer"]').click();assert page.locator('.photo-card h3').inner_text()=='森田ひかる'
-  # Invalid offer cannot exceed owned count and cannot alter a saved record.
-  page.locator('[data-edit-photo]').click();page.locator('[name="offer"]').fill('4');page.locator('#itemForm [type="submit"]').click()
-  assert page.locator('#toast').inner_text()=='提供枚数は所持枚数以下にしてください'
-  page.locator('#cancelBtn').click();assert '提供 2枚' in page.locator('.trade-counts').inner_text()
-  page.locator('[data-edit-photo]').click();assert page.locator('[name="keep"]').input_value()=='1'
-  page.locator('[name="keep"]').fill('2');assert page.locator('[name="offer"]').input_value()=='1'
-  page.locator('[name="keep"]').fill('1');assert page.locator('[name="offer"]').input_value()=='2';submit()
-  assert 'コレクション 1枚' in page.locator('.trade-counts').inner_text()
-  # Cancel must not change inventory; confirm atomically updates all lists.
-  page.locator('#openTrade').click();page.locator('#cancelTrade').click()
-  assert page.locator('.photo-counter strong').inner_text()=='3枚'
-  page.locator('#openTrade').click()
-  lines=page.locator('.trade-line');lines.nth(0).locator('[name="receive"]').fill('1');lines.nth(1).locator('[name="give"]').fill('2')
-  # Simulated quota failure is confined to this temporary context.
+  page.locator('[name="category"]').select_option('CD封入');image();submit();page.wait_for_selector('.photo-card img')
+  page.locator('[data-edit-photo]').click();assert page.locator('[name="customPose"]').input_value()=='タイプA';page.locator('#cancelBtn').click()
+  page.locator('[data-photo-view="offer"]').click()
+  assert 'ダブり' not in page.locator('#page-photos').inner_text()
+  page.locator('#openTrade').click();page.locator('#cancelTrade').click();assert page.locator('.photo-counter strong').inner_text()=='2枚'
+  page.locator('#openTrade').click();lines=page.locator('.trade-line')
+  lines.nth(0).locator('[name="receive"]').fill('1');lines.nth(1).locator('[name="give"]').fill('2')
   page.evaluate("() => { window.originalSetItem = Storage.prototype.setItem; Storage.prototype.setItem = function(){throw new Error('simulated quota failure')}; }")
   page.once('dialog',lambda dialog:dialog.accept());page.locator('#tradeForm [type="submit"]').click()
-  assert page.locator('#tradeModal').evaluate('(el)=>el.classList.contains("open")')
-  assert page.locator('.photo-counter strong').inner_text()=='3枚'
+  assert page.locator('#tradeModal').evaluate('(el)=>el.classList.contains("open")');assert page.locator('.photo-counter strong').inner_text()=='2枚'
   assert not page.locator('#tradeHistory .data-row').count()
   page.evaluate('() => { Storage.prototype.setItem = window.originalSetItem; }')
-  page.once('dialog',lambda dialog:dialog.accept());page.locator('#tradeForm [type="submit"]').click()
-  page.wait_for_selector('#tradeModal:not(.open)',state='attached');assert page.locator('.photo-card').count()==0
+  page.once('dialog',lambda dialog:dialog.accept());page.locator('#tradeForm [type="submit"]').click();page.wait_for_selector('#tradeModal:not(.open)',state='attached')
+  assert page.locator('.photo-counter strong').inner_text()=='0枚'
   page.locator('[data-photo-view="owned"]').click();assert page.locator('.photo-card').count()==2
+  assert page.locator('.photo-counter strong').all_inner_texts()==['3枚','1枚']
   assert page.locator('#tradeHistory').text_content().count('受け取った')==2
-  assert all('コレクション 1枚' in text for text in page.locator('.trade-counts').all_inner_texts())
-  page.reload();assert page.locator('#page-home').evaluate('(el)=>el.classList.contains("active")');nav('photos');assert page.locator('.photo-card').count()==2;assert page.locator('#tradeHistory').text_content().count('受け取った')==2
+  page.reload();assert page.locator('#page-home').evaluate('(el)=>el.classList.contains("active")');nav('photos')
+  assert page.locator('.photo-card').count()==2;page.wait_for_function("document.querySelectorAll('#list-photos img').length === 2")
   # Multi-member anniversary with image, filtering, edit and persistence.
   nav('milestones');page.locator('[data-add="milestones"]').click()
   page.locator('[name="title"]').fill('初ファンサ')
@@ -113,6 +108,16 @@ try:
   assert page.locator('#list-reports .report-card').evaluate("el => getComputedStyle(el).borderTopWidth === '0px' && getComputedStyle(el).borderRadius === '0px'")
   assert page.locator('#list-reports .report-bubble').first.evaluate("el => getComputedStyle(el).backgroundColor === 'rgba(0, 0, 0, 0)' && getComputedStyle(el).borderRadius === '0px'")
   assert not errors,errors
+  # Migration keeps existing images available after either inventory is removed.
+  context.close()
+  context=browser.new_context(storage_state={'cookies': [], 'origins': []});page=context.new_page();page.set_default_timeout(5000)
+  page.goto(f'http://127.0.0.1:{server.server_port}');nav('photos');photo('森田ひかる','移行確認','ヨリ',3)
+  page.evaluate("""async () => { const version = new URL(document.querySelector('script[type=module]').src).search; const {db,save} = await import('./js/storage.js'+version); delete db.photos[0].inventory; db.photos[0].offer=2; save(); }""")
+  page.reload();nav('photos');page.wait_for_selector('.photo-card img');assert page.locator('.photo-counter strong').inner_text()=='1枚'
+  page.once('dialog',lambda dialog:dialog.accept());page.locator('[data-delete="photos"]').click()
+  page.locator('[data-photo-view="offer"]').click();page.wait_for_selector('.photo-card img');assert page.locator('.photo-counter strong').inner_text()=='2枚'
+  page.reload();nav('photos');assert page.locator('.photo-card').count()==0
+  page.locator('[data-photo-view="offer"]').click();page.wait_for_selector('.photo-card img')
   context.close();browser.close()
   print('PASS: offers/wants/images, exchange/cancel/history/reload, multi-member anniversaries, edit/filter/home, report linking, navigation/mobile')
 finally: server.shutdown();server.server_close()
