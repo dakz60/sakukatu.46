@@ -1,4 +1,3 @@
-// メニュー名と入力項目をまとめています。
 export const labels = {
   schedule: 'スケジュール',
   tickets: '応募・チケット',
@@ -14,8 +13,6 @@ export const labels = {
 
 export const collections = Object.keys(labels);
 
-// 名前・読み・誕生日の一覧です。
-// 卒業したメンバーは候補から外しています。
 export const members = [
   { name: '遠藤光莉', kana: 'えんどうひかり', birthday: '1999-04-17' },
   { name: '大園玲', kana: 'おおぞのれい', birthday: '2000-04-18' },
