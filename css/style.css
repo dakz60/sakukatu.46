@@ -197,3 +197,83 @@ button { cursor: pointer; }
 .memory-image img { display: block; max-width: 100%; max-height: 360px; object-fit: contain; border-radius: 5px; }
 #tradeHistory p { margin: 5px 0; overflow-wrap: anywhere; }
 @media (max-width: 680px) { .data-row { flex-wrap: wrap; } }
+.report-card { max-width: 640px; width: 100%; margin: 0 auto 24px; padding: 24px 18px; border: 6px solid #f3f1f8; background: white; }
+.report-header { text-align: center; font-size: 13px; margin-bottom: 24px; }
+.report-header h3 { margin: 12px 0 4px; font-size: 17px; }
+.report-header p { color: var(--subtext); margin: 8px 0; }
+.report-avatar { display: inline-flex; flex: 0 0 34px; width: 34px; height: 34px; align-items: center; justify-content: center; overflow: hidden; border-radius: 50%; background: #f3deea; color: var(--accent); font-size: 13px; }
+.report-avatar.large { width: 112px; height: 112px; font-size: 32px; }
+.report-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.report-message { display: flex; align-items: flex-start; gap: 8px; margin: 16px 0; }
+.report-message.from-self { flex-direction: row-reverse; }
+.report-bubble { max-width: calc(100% - 48px); padding: 9px 12px; border-radius: 14px; background: #f4f4f4; white-space: pre-wrap; overflow-wrap: anywhere; font-size: 14px; }
+.report-stage { text-align: center; color: #888; font-size: 12px; white-space: pre-wrap; }
+.report-inline-image { max-width: 80%; margin: 20px auto; }
+.report-inline-image img { display: block; max-width: 100%; max-height: 460px; margin: auto; object-fit: contain; border-radius: 6px; }
+.report-memo { padding: 14px; margin-top: 20px; background: #fff8fb; font-size: 14px; }
+.report-memo p { white-space: pre-wrap; overflow-wrap: anywhere; }
+.report-actions, .conversation-toolbar { display: flex; flex-wrap: wrap; gap: 8px; justify-content: space-between; margin-top: 12px; }
+.conversation-editor h4 { margin: 8px 0; }
+.conversation-block { min-width: 0; margin: 12px 0; padding: 12px; border: 1px solid var(--border); border-radius: 5px; }
+.conversation-block textarea { width: 100%; }
+.conversation-block .secondary { min-height: 36px; padding: 4px 10px; }
+.editor-image { max-width: 100%; max-height: 100px; display: block; margin: 8px auto; }
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+@media (max-width: 680px) { .report-card { padding: 20px 10px; border-width: 4px; } .report-bubble { padding: 8px 10px; font-size: 13px; } }
+
+/* Sections are separated by whitespace and simple rules. */
+:root { --background: #fff; --border: #e5e5e5; }
+.stat, .panel, .photo-card, .data-row, .milestone-card, .report-card {
+  border: 0; border-radius: 0; background: transparent; box-shadow: none;
+}
+.panel { margin-bottom: 32px; }
+.stat { border-bottom: 1px solid var(--border); }
+.data-row { border-bottom: 1px solid var(--border); padding: 16px 0; }
+.photo-card { padding-bottom: 18px; }
+.photo-image { background: #f7f7f7; }
+.photo-info { padding: 14px 0; }
+.photo-grid { gap: 28px 20px; }
+.milestone-card { padding: 22px 0; margin-top: 0; border-bottom: 1px solid var(--border); }
+.milestone-card .tag { white-space: normal; }
+.side-note { border: 0; border-top: 1px solid var(--border); border-radius: 0; padding: 18px 8px; }
+.brand-mark, .profile-pic, .photo-record-thumb { border: 0; border-radius: 0; background: transparent; }
+.birthday { border: 0; border-radius: 0; padding: 12px 0; border-top: 1px solid var(--border); }
+.nav button { border-radius: 0; }
+.nav button.active { background: transparent; box-shadow: inset 2px 0 var(--accent); }
+.tag, .tag.green, .tag.orange { border: 0; border-radius: 0; background: transparent; padding: 3px 0; }
+.primary, .secondary, .del, .icon-btn, .profile-edit, .photo-counter button {
+  border: 0; border-radius: 0; background: transparent; color: var(--accent);
+}
+.primary { border-bottom: 1px solid var(--accent); }
+.primary:hover, .secondary:hover, .del:hover, .profile-edit:hover, .photo-counter button:hover { background: #fafafa; }
+.collection-tabs .active { background: transparent; color: var(--accent); border-bottom: 2px solid var(--accent); }
+.collection-tabs { gap: 18px; }
+.search, .filter, .field input:not([type="checkbox"]):not([type="file"]), .field select, .field textarea {
+  border: 0; border-bottom: 1px solid #aaa; border-radius: 0; background: transparent;
+}
+.field input[type="file"] { border: 0; border-radius: 0; padding-left: 0; }
+.modal { border: 0; border-radius: 0; padding: 26px; }
+.conversation-block, .trade-line, .member-checkboxes, #profileMembers {
+  border: 0; border-top: 1px solid var(--border); border-radius: 0; padding: 16px 0;
+}
+.conversation-block legend, .trade-line legend { padding: 0 8px 0 0; }
+.report-card { padding: 28px 0 36px; margin-bottom: 32px; border-bottom: 1px solid var(--border); }
+.report-header { margin-bottom: 32px; }
+.report-message { margin: 20px 0; gap: 12px; }
+.report-bubble { border-radius: 0; background: transparent; padding: 5px 0; }
+.report-memo { border-top: 1px solid var(--border); background: transparent; padding: 20px 0 0; }
+.report-inline-image img, .memory-image img { border-radius: 0; }
+.report-actions { margin-top: 28px; padding-top: 12px; border-top: 1px solid var(--border); }
+.report-stage { margin: 24px 0; }
+@media (max-width: 680px) {
+  .panel { padding: 14px 0; }
+  .report-card { padding: 20px 0 28px; }
+  .report-bubble { padding: 5px 0; }
+  .photo-info { padding: 12px 0; }
+  .photo-grid { gap: 22px 16px; }
+}
+
+.datebox, .avatar { border: 0; border-radius: 0; background: transparent; }
+.sidebar { box-shadow: none; }
+.toast { border: 0; border-radius: 0; }
+.member-suggestions { border-radius: 0; box-shadow: none; }

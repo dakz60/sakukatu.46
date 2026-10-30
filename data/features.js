@@ -141,8 +141,12 @@ export const forms = {
     fields: [
       ['date', '参加日', 'date', true],
       ['member', 'メンバー', 'member', true],
-      ['title', 'イベント名・部', 'text', false],
-      ['note', '会話・感想・次回話したいこと', 'textarea', false],
+      ['title', 'イベント名', 'text', false],
+      ['part', '部（例：5部）', 'text', false],
+      ['tickets', '使用枚数（任意）', 'number', false],
+      ['memberAvatar', 'メンバーのアイコン（任意）', 'file', false],
+      ['selfAvatar', '自分のアイコン（任意）', 'file', false],
+      ['note', '感想・メモ', 'textarea', false],
     ],
   },
 

@@ -74,7 +74,21 @@ try:
   nav('home');page.locator('#editProfile').click();page.locator('#profileMembers input[value="森田ひかる"]').check();page.locator('#profileForm [type="submit"]').click()
   assert '初ファンサ記念' in page.locator('#homeMilestones').inner_text()
   # Existing report -> anniversary prefill, no duplicate source record.
-  nav('reports');page.locator('[data-add="reports"]').click();page.locator('[name="member"]').fill('森田ひかる');page.locator('[name="title"]').fill('初ミーグリ');page.locator('[name="note"]').fill('話せた');submit()
+  nav('reports');page.locator('[data-add="reports"]').click();page.locator('[name="member"]').fill('森田ひかる');page.locator('[name="title"]').fill('初ミーグリ');page.locator('[name="note"]').fill('話せた')
+  page.locator('[name="part"]').fill('5部');page.locator('[name="tickets"]').fill('3')
+  for field in ['memberAvatar','selfAvatar']: page.locator(f'[name="{field}"]').set_input_files({'name':'icon.png','mimeType':'image/png','buffer':PNG})
+  for kind,text in [('member','おかえり〜'),('self','ただいま！'),('note','（用紙を出す）')]:
+   page.locator(f'[data-add-message="{kind}"]').click();page.locator(f'[data-message-input="{kind}"]').fill(text)
+  page.locator('[data-add-message="image"]').click();page.locator('[data-message-input="image"]').set_input_files({'name':'memory.png','mimeType':'image/png','buffer':PNG})
+  submit();page.wait_for_function("document.querySelectorAll('#list-reports img').length === 4")
+  assert page.locator('#list-reports .from-self').count()==1
+  assert '5部' in page.locator('#list-reports .report-header').inner_text()
+  page.locator('#list-reports [data-edit-report]').click()
+  page.locator('.conversation-block').nth(1).get_by_role('button',name='この会話を上へ').click()
+  submit();assert 'from-self' in page.locator('#list-reports .report-message').first.get_attribute('class')
+  page.locator('[data-search="reports"]').fill('ただいま');assert page.locator('#list-reports .report-card').count()==1
+  page.locator('[data-search="reports"]').fill('見つからない内容');assert page.locator('#list-reports .report-card').count()==0
+  page.locator('[data-search="reports"]').fill('')
   page.locator('#list-reports [data-create-milestone]').click();assert page.locator('[name="title"]').input_value()=='初ミーグリ';assert page.locator('#itemForm [name="members"]:checked').count()==1;submit()
   page.locator('#list-reports [data-create-milestone]').click();assert '編集' in page.locator('#modalTitle').inner_text();page.locator('#cancelBtn').click()
   page.reload();nav('milestones');assert page.locator('#list-milestones .milestone-card').count()==2;page.wait_for_selector('#list-milestones img')
@@ -85,6 +99,10 @@ try:
   page.locator('#menuBtn').click();nav('milestones');page.locator('#list-milestones [data-edit-milestone]').first.click();assert page.evaluate('document.documentElement.scrollWidth <= innerWidth');page.locator('#cancelBtn').click()
   page.once('dialog',lambda dialog:dialog.accept());page.locator('#list-milestones [data-delete="milestones"]').first.click()
   assert page.locator('#list-milestones .milestone-card').count()==1
+  page.locator('#menuBtn').click();nav('reports');assert page.evaluate('document.documentElement.scrollWidth <= innerWidth');assert page.locator('#list-reports .report-message').count()==2
+  page.wait_for_function("document.querySelectorAll('#list-reports img').length === 4")
+  assert page.locator('#list-reports .report-card').evaluate("el => getComputedStyle(el).borderTopWidth === '0px' && getComputedStyle(el).borderRadius === '0px'")
+  assert page.locator('#list-reports .report-bubble').first.evaluate("el => getComputedStyle(el).backgroundColor === 'rgba(0, 0, 0, 0)' && getComputedStyle(el).borderRadius === '0px'")
   assert not errors,errors
   context.close();browser.close()
   print('PASS: offers/wants/images, exchange/cancel/history/reload, multi-member anniversaries, edit/filter/home, report linking, navigation/mobile')

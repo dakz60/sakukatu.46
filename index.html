@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#fff8fb">
   <title>櫻坂46 推し活ノート</title>
-  <link rel="stylesheet" href="css/style.css?v=20261030-3">
+  <link rel="stylesheet" href="css/style.css?v=20261030-4">
 </head>
 <body>
   <div class="app">
@@ -36,7 +36,7 @@
       </div>
 
       <div class="side-note">
-        <strong>自分だけの推し活ノート</strong>
+        <strong>データの保存について</strong>
         入力したデータはこのブラウザに保存されます。定期的にバックアップしてください。
       </div>
     </aside>
@@ -56,9 +56,8 @@
       <section class="section active" id="page-home">
         <div class="page-head">
           <div>
-            <div class="eyebrow">MY DASHBOARD</div>
-            <h2>今日も推し活を楽しもう！</h2>
-            <p id="todayText">大切な予定も、思い出もここに。</p>
+            <h2>推し活ノート</h2>
+            <p id="todayText">予定と記録を確認できます。</p>
           </div>
           <button class="primary" data-add="schedule">＋ 予定を追加</button>
         </div>
@@ -74,19 +73,19 @@
             <span class="stat-icon">♧</span>
             <div class="label">応募・支払い期限</div>
             <div class="value" id="statDeadlines">0件</div>
-            <div class="hint">忘れずチェック</div>
+            <div class="hint">期限の近い応募</div>
           </div>
           <div class="stat">
             <span class="stat-icon">♡</span>
             <div class="label">ミーグリレポ</div>
             <div class="value" id="statReports">0件</div>
-            <div class="hint">思い出を記録</div>
+            <div class="hint">登録したレポ</div>
           </div>
           <div class="stat">
             <span class="stat-icon">￥</span>
             <div class="label">今月の推し活費</div>
             <div class="value" id="statSpend">¥0</div>
-            <div class="hint">使いすぎ防止に</div>
+            <div class="hint">今月の支出合計</div>
           </div>
         </div>
 
@@ -102,7 +101,7 @@
 
             <div class="panel">
               <div class="panel-head">
-                <h3>忘れずにやること</h3>
+                <h3>未完了のToDo</h3>
                 <button class="subtle" data-go="todos">一覧 →</button>
               </div>
               <div id="homeTodos"></div>
@@ -112,7 +111,7 @@
           <div>
             <div class="panel">
               <div class="panel-head">
-                <h3>推しプロフィール</h3>
+                <h3>推しメン</h3>
                 <button class="profile-edit" id="editProfile">編集</button>
               </div>
               <div class="profile">
@@ -154,7 +153,6 @@
       <section class="section" id="page-schedule">
         <div class="page-head">
           <div>
-            <div class="eyebrow">PLAN YOUR DAYS</div>
             <h2>スケジュール・出演情報</h2>
             <p>ライブ、テレビ、ラジオ、雑誌、配信、発売日をまとめて管理。</p>
           </div>
@@ -181,7 +179,6 @@
       <section class="section" id="page-tickets">
         <div class="page-head">
           <div>
-            <div class="eyebrow">DON'T MISS IT</div>
             <h2>応募・チケット</h2>
             <p>申込、当落、入金の状況と締切を記録。</p>
           </div>
@@ -198,7 +195,6 @@
       <section class="section" id="page-goods">
         <div class="page-head">
           <div>
-            <div class="eyebrow">MY GOODS</div>
             <h2>グッズ管理</h2>
             <p>所持品や購入予定のグッズを記録。</p>
           </div>
@@ -221,7 +217,6 @@
       <section class="section" id="page-photos">
         <div class="page-head">
           <div>
-            <div class="eyebrow">PHOTO COLLECTION</div>
             <h2>生写真コレクション</h2>
             <p>メンバー・シリーズ別に所持状況を記録。</p>
           </div>
@@ -246,7 +241,6 @@
       <section class="section" id="page-lives">
         <div class="page-head">
           <div>
-            <div class="eyebrow">LIVE MEMORIES</div>
             <h2>ライブ参戦記録</h2>
             <p>会場、座席、セットリスト、感想を思い出と一緒に記録。</p>
           </div>
@@ -263,7 +257,6 @@
       <section class="section" id="page-reports">
         <div class="page-head">
           <div>
-            <div class="eyebrow">KEEP THE MEMORY</div>
             <h2>ミーグリレポ</h2>
             <p>会話や感想、次に話したいことを自分用に保存。</p>
           </div>
@@ -280,7 +273,6 @@
       <section class="section" id="page-money">
         <div class="page-head">
           <div>
-            <div class="eyebrow">TRACK YOUR BUDGET</div>
             <h2>推し活家計簿</h2>
             <p>チケットやグッズ、遠征の出費を記録。</p>
           </div>
@@ -301,7 +293,6 @@
       <section class="section" id="page-todos">
         <div class="page-head">
           <div>
-            <div class="eyebrow">LITTLE THINGS MATTER</div>
             <h2>推し活ToDo</h2>
             <p>予約、応募、入金などのタスクを忘れずに。</p>
           </div>
@@ -315,7 +306,6 @@
       <section class="section" id="page-places">
         <div class="page-head">
           <div>
-            <div class="eyebrow">OSHI ACTIVITY MAP</div>
             <h2>推し活マップ</h2>
             <p>ライブ会場や聖地巡礼スポットを保存。</p>
           </div>
@@ -332,7 +322,6 @@
       <section class="section" id="page-milestones">
         <div class="page-head">
           <div>
-            <div class="eyebrow">MEMBER MILESTONES</div>
             <h2>メンバー別記念日</h2>
             <p>初ミーグリ、初ファンサ、初グッズなどをメンバーごとに記録。</p>
           </div>
@@ -364,7 +353,7 @@
 
   <div class="modal-wrap" id="profileModal">
     <div class="modal">
-      <h3>推しプロフィールを編集</h3>
+      <h3>推しメンを編集</h3>
       <form id="profileForm">
         <div class="form-grid">
           <div class="field full">
@@ -383,6 +372,6 @@
   <div class="modal-wrap" id="tradeModal"><div class="modal"><h3>現場で交換する</h3><p>提供・希望として登録した写真から、渡す枚数ともらう枚数を選んでください。未登録の写真は先に「希望を登録」から追加できます。</p><form id="tradeForm"><div id="tradeLines"></div><div class="modal-actions"><button type="button" class="secondary" id="cancelTrade">キャンセル</button><button type="submit" class="primary">交換を確定</button></div></form></div></div>
   <div class="toast" id="toast"></div>
 
-  <script type="module" src="js/main.js?v=20261030-3"></script>
+  <script type="module" src="js/main.js?v=20261030-4"></script>
 </body>
 </html>

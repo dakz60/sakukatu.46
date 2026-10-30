@@ -1,17 +1,19 @@
-import { forms, members } from '../data/features.js?v=20261030-3';
-import { db, save } from './storage.js?v=20261030-3';
-import { $, render, toast } from './ui.js?v=20261030-3';
-import { photoCount, offerCount, wantCount } from './collectionModel.js?v=20261030-3';
-import { savePhoto, deletePhoto } from './photoStorage.js?v=20261030-3';
-import { attachMemberAutocomplete, isMember } from './memberAutocomplete.js?v=20261030-3';
+import { forms, members } from '../data/features.js?v=20261030-4';
+import { db, save } from './storage.js?v=20261030-4';
+import { $, render, toast } from './ui.js?v=20261030-4';
+import { photoCount, offerCount, wantCount } from './collectionModel.js?v=20261030-4';
+import { savePhoto, deletePhoto } from './photoStorage.js?v=20261030-4';
+import { attachMemberAutocomplete, isMember } from './memberAutocomplete.js?v=20261030-4';
+
+import { createReportEditor, prepareReport, reportImageIds } from './reports.js?v=20261030-4';
 
 export function initForms() {
-  let collection = '', editing = null, busy = false;
+  let collection = '', editing = null, busy = false, conversation = [];
   function open(name, item = null, defaults = {}) {
     if (!forms[name]) return;
     collection = name; editing = item;
     const values = item || defaults;
-    $('#modalTitle').textContent = item ? `${name === 'photos' ? '生写真' : '記念日'}を編集` : forms[name].title;
+    $('#modalTitle').textContent = item ? `${name === 'photos' ? '生写真' : name === 'reports' ? 'ミーグリレポ' : '記念日'}を編集` : forms[name].title;
     const box = $('#formFields'); box.replaceChildren();
     for (const [key, label, kind, required, choices] of forms[name].fields) {
       const wrap = document.createElement('div'); wrap.className = 'field' + (['textarea', 'members'].includes(kind) ? ' full' : '');
@@ -32,6 +34,7 @@ export function initForms() {
       if (kind === 'file') input.accept = 'image/*';
       else if (kind === 'date') { const date = new Date(); input.value = values[key] || new Date(date.getTime() - date.getTimezoneOffset() * 60000).toISOString().slice(0,10); }
       else input.value = values[key] ?? (kind === 'select' ? choices[0] : '');
+      if (name === 'reports' && key === 'tickets') { input.min = '1'; input.max = '9999'; input.step = '1'; }
       if (name === 'photos' && ['count', 'offer', 'want'].includes(key)) {
         input.min = '0'; input.max = '99999'; input.step = '1';
         input.value = key === 'count' ? (item ? photoCount(item) : defaults.count ?? 1) : key === 'offer' ? offerCount(values) : wantCount(values);
@@ -51,18 +54,19 @@ export function initForms() {
       box.append(wrap);
       if (kind === 'member') attachMemberAutocomplete(input);
     }
+    conversation = name === 'reports' ? createReportEditor(box, values) : [];
     $('#modalWrap').classList.add('open');
   }
   document.body.addEventListener('click', event => {
     if (busy) return;
-    const edit = event.target.closest('[data-edit-photo], [data-edit-milestone]');
-    if (edit) { const name = edit.hasAttribute('data-edit-photo') ? 'photos' : 'milestones'; open(name, db[name][Number(name === 'photos' ? edit.dataset.editPhoto : edit.dataset.editMilestone)]); return; }
+    const edit = event.target.closest('[data-edit-photo], [data-edit-milestone], [data-edit-report]');
+    if (edit) { const name = edit.hasAttribute('data-edit-photo') ? 'photos' : edit.hasAttribute('data-edit-report') ? 'reports' : 'milestones'; open(name, db[name][Number(name === 'photos' ? edit.dataset.editPhoto : name === 'reports' ? edit.dataset.editReport : edit.dataset.editMilestone)]); return; }
     const source = event.target.closest('[data-create-milestone]');
     if (source) {
       const record = db[source.dataset.createMilestone][Number(source.dataset.index)];
       const linked = db.milestones.find(item => item.sourceId === String(record.id) && item.sourceCollection === source.dataset.createMilestone);
       if (linked) { open('milestones', linked); return; }
-      open('milestones', null, { title: record.title || '初ミーグリ', date: record.date, note: record.note || '', members: record.member ? [record.member] : [], sourceId: String(record.id), sourceCollection: source.dataset.createMilestone });
+      open('milestones', null, { title: record.title || '初ミーグリ', date: record.date, note: [record.note, ...(record.messages || []).map(message => message.kind === 'image' ? '（画像）' : `${message.kind === 'member' ? record.member : message.kind === 'self' ? '自分' : 'メモ'}：${message.text}`)].filter(Boolean).join('\n'), members: record.member ? [record.member] : [], sourceId: String(record.id), sourceCollection: source.dataset.createMilestone });
       // Keep the source association with the form, without copying source records.
       $('#itemForm').dataset.sourceId = String(record.id); $('#itemForm').dataset.sourceCollection = source.dataset.createMilestone;
       return;
@@ -99,14 +103,18 @@ export function initForms() {
     busy = true; const submit = form.querySelector('[type="submit"]'); submit.disabled = true;
     const previous = [...db[collection]];
     let newImage, persisted = false;
+    const reportImages = [];
     try {
+      if (collection === 'reports') await prepareReport(item, form, conversation, reportImages);
       if (file instanceof File && file.size) { newImage = `image-${crypto.randomUUID()}`; await savePhoto(newImage, file); item.imageId = newImage; }
       if (editing) db[collection].splice(db[collection].indexOf(editing), 1, item); else db[collection].unshift(item);
       try { save(); } catch (error) { db[collection] = previous; throw error; }
       persisted = true;
+      if (collection === 'reports' && editing) reportImageIds(editing).filter(id => !reportImageIds(item).includes(id)).forEach(id => deletePhoto(id).catch(() => {}));
       if (newImage && editing) deletePhoto(editing.imageId || editing.id).catch(() => {});
       render(); $('#modalWrap').classList.remove('open'); form.reset(); toast('保存しました');
     } catch {
+      if (!persisted) reportImages.forEach(id => deletePhoto(id).catch(() => {}));
       if (newImage && !persisted) deletePhoto(newImage).catch(() => {});
       toast('保存できませんでした。空き容量と画像を確認してください');
     } finally { busy = false; submit.disabled = false; }

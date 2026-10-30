@@ -1,10 +1,11 @@
-import { db, save } from './storage.js?v=20261030-3';
-import { $, go, render, toast, photoCount, setPhotoView } from './ui.js?v=20261030-3';
-import { initForms } from './forms.js?v=20261030-3';
-import { deletePhoto } from './photoStorage.js?v=20261030-3';
-import { members } from '../data/features.js?v=20261030-3';
+import { reportImageIds } from './reports.js?v=20261030-4';
+import { db, save } from './storage.js?v=20261030-4';
+import { $, go, render, toast, photoCount, setPhotoView } from './ui.js?v=20261030-4';
+import { initForms } from './forms.js?v=20261030-4';
+import { deletePhoto } from './photoStorage.js?v=20261030-4';
+import { members } from '../data/features.js?v=20261030-4';
 
-import { initTrades } from './trades.js?v=20261030-3';
+import { initTrades } from './trades.js?v=20261030-4';
 initForms();
 initTrades();
 
@@ -41,6 +42,7 @@ document.body.addEventListener('click', (event) => {
     const index = Number(remove.dataset.index);
     const [deleted] = db[collection].splice(index, 1);
     try { save(); } catch { db[collection].splice(index, 0, deleted); toast('削除を保存できませんでした'); return; }
+    if (collection === 'reports' && deleted) reportImageIds(deleted).forEach(id => deletePhoto(id).catch(() => {}));
     if (['photos', 'milestones'].includes(collection) && deleted) deletePhoto(deleted.imageId || deleted.id).catch(() => {});
     render();
     toast('削除しました');

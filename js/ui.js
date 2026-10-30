@@ -1,6 +1,7 @@
-import { db } from './storage.js?v=20261030-3';
-import { labels, members } from '../data/features.js?v=20261030-3';
-import { getPhotoURL } from './photoStorage.js?v=20261030-3';
+import { reportCard, loadReportImages } from './reports.js?v=20261030-4';
+import { db } from './storage.js?v=20261030-4';
+import { labels, members } from '../data/features.js?v=20261030-4';
+import { getPhotoURL } from './photoStorage.js?v=20261030-4';
 
 export const $ = (selector) => document.querySelector(selector);
 export const escapeHtml = (value = '') => String(value).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -18,8 +19,8 @@ export function go(page, update = render) {
   $('#sidebar').classList.remove('open');
   update();
 }
-export { photoCount } from './collectionModel.js?v=20261030-3';
-import { photoCount, offerCount, wantCount, anniversaryInfo, daysToAnniversary } from './collectionModel.js?v=20261030-3';
+export { photoCount } from './collectionModel.js?v=20261030-4';
+import { photoCount, offerCount, wantCount, anniversaryInfo, daysToAnniversary } from './collectionModel.js?v=20261030-4';
 export let photoView = 'all';
 export function setPhotoView(view) { photoView = view; render(); }
 const empty = (message) => `<div class="empty">${escapeHtml(message)}</div>`;
@@ -59,7 +60,7 @@ function renderPhotos() {
       <p class="trade-counts">提供 ${offerCount(item)}枚 · 希望 ${wantCount(item)}枚</p>
       <div class="photo-counter"><button type="button" data-count="${index}" data-delta="-1" aria-label="${escapeHtml(item.member + ' ' + item.pose)}の所持枚数を減らす" ${count === 0 ? 'disabled' : ''}>−</button><strong>${count}枚</strong><button type="button" data-count="${index}" data-delta="1" aria-label="${escapeHtml(item.member + ' ' + item.pose)}の所持枚数を増やす">＋</button></div>
       <div class="photo-actions"><button class="subtle" data-edit-photo="${index}">編集</button><button class="del" data-delete="photos" data-index="${index}">削除</button></div></div></article>`;
-  }).join('') : empty(db.photos.length ? '条件に合う生写真がありません。' : '最初の1枚を登録しましょう。現物を撮影して、メンバー・シリーズ・枚数を記録できます。');
+  }).join('') : empty(db.photos.length ? '条件に合う生写真がありません。' : '生写真は未登録です。画像・メンバー・シリーズ・枚数を登録できます。');
   list.querySelectorAll('[data-photo-id]').forEach(async element => {
     try {
       const url = await getPhotoURL(element.dataset.photoId);
@@ -77,7 +78,7 @@ function rows(collection, items) {
 }
 export function render() {
   renderPhotos();
-  for (const collection of Object.keys(labels).filter(name => !['photos', 'milestones'].includes(name))) {
+  for (const collection of Object.keys(labels).filter(name => !['photos', 'milestones', 'reports'].includes(name))) {
     const query = $(`[data-search="${collection}"]`)?.value.toLowerCase() || '';
     const filter = $(`[data-filter="${collection}"]`)?.value || '';
     $(`#list-${collection}`).innerHTML = rows(collection, db[collection].filter(item => Object.values(item).join(' ').toLowerCase().includes(query) && (!filter || item.type === filter || item.status === filter)));
@@ -104,6 +105,9 @@ export function render() {
     if (birthday < start) birthday.setFullYear(birthday.getFullYear() + 1);
     return `${member.name} あと${Math.round((birthday - start) / 86400000)}日`;
   }).join(' / ') : '未登録';
+  const reportQuery = $('[data-search="reports"]').value.trim().toLowerCase();
+  $('#list-reports').innerHTML = db.reports.filter(item => [item.member, item.title, item.note, item.part, ...(item.messages || []).map(message => message.text || '')].join(' ').toLowerCase().includes(reportQuery)).map(item => reportCard(item, db.reports.indexOf(item))).join('') || empty('レポは未登録です');
+  loadReportImages($('#list-reports'));
   renderMilestones();
 }
 
@@ -122,7 +126,7 @@ function renderMilestones() {
   const query = $('[data-search="milestones"]').value.trim().toLowerCase();
   const filter = $('#milestoneMember').value;
   const items = [...db.milestones].sort((a,b) => b.date.localeCompare(a.date));
-  $('#list-milestones').innerHTML = items.filter(item => (!filter || (item.members || []).includes(filter)) && [item.title, item.note, ...(item.members || [])].join(' ').toLowerCase().includes(query)).map(item => milestoneCard(item)).join('') || empty('メンバーとの最初の思い出を記録しましょう');
+  $('#list-milestones').innerHTML = items.filter(item => (!filter || (item.members || []).includes(filter)) && [item.title, item.note, ...(item.members || [])].join(' ').toLowerCase().includes(query)).map(item => milestoneCard(item)).join('') || empty('記念日は未登録です');
   const favorites = db.profile.members || [db.profile.name];
   const home = items.filter(item => (item.members || []).some(member => favorites.includes(member))).sort((a, b) => {
     const aDays = daysToAnniversary(a.date), bDays = daysToAnniversary(b.date);
