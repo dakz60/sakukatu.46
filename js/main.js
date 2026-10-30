@@ -1,12 +1,12 @@
-import { supportingDays } from './collectionModel.js?v=20261030-8';
-import { reportImageIds } from './reports.js?v=20261030-8';
-import { db, save, imageInUse } from './storage.js?v=20261030-8';
-import { $, go, render, toast, photoCount, setPhotoView } from './ui.js?v=20261030-8';
-import { initForms } from './forms.js?v=20261030-8';
-import { deletePhoto } from './photoStorage.js?v=20261030-8';
-import { members } from '../data/features.js?v=20261030-8';
+import { supportingDays } from './collectionModel.js?v=20261030-9';
+import { reportImageIds } from './reports.js?v=20261030-9';
+import { db, save, imageInUse } from './storage.js?v=20261030-9';
+import { $, go, render, toast, photoCount, setPhotoView } from './ui.js?v=20261030-9';
+import { initForms } from './forms.js?v=20261030-9';
+import { deletePhoto } from './photoStorage.js?v=20261030-9';
+import { members } from '../data/features.js?v=20261030-9';
 
-import { initTrades } from './trades.js?v=20261030-8';
+import { initTrades } from './trades.js?v=20261030-9';
 initForms();
 initTrades();
 

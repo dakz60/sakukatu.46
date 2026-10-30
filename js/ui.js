@@ -1,7 +1,7 @@
-import { reportCard, loadReportImages } from './reports.js?v=20261030-8';
-import { db } from './storage.js?v=20261030-8';
-import { labels, members } from '../data/features.js?v=20261030-8';
-import { getPhotoURL } from './photoStorage.js?v=20261030-8';
+import { reportCard, loadReportImages } from './reports.js?v=20261030-9';
+import { db } from './storage.js?v=20261030-9';
+import { labels, members } from '../data/features.js?v=20261030-9';
+import { getPhotoURL } from './photoStorage.js?v=20261030-9';
 
 export const $ = (selector) => document.querySelector(selector);
 export const escapeHtml = (value = '') => String(value).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -19,8 +19,8 @@ export function go(page, update = render) {
   $('#sidebar').classList.remove('open');
   update();
 }
-export { photoCount } from './collectionModel.js?v=20261030-8';
-import { photoCount, anniversaryInfo, daysToAnniversary, supportingDays } from './collectionModel.js?v=20261030-8';
+export { photoCount } from './collectionModel.js?v=20261030-9';
+import { photoCount, anniversaryInfo, daysToAnniversary, supportingDays } from './collectionModel.js?v=20261030-9';
 export let photoView = 'owned';
 export function setPhotoView(view) { photoView = view; ['#photoMember','#photoSeries','#photoCategory'].forEach(selector => { $(selector).value = ''; }); $('[data-search="photos"]').value = ''; render(); }
 const empty = (message) => `<div class="empty">${escapeHtml(message)}</div>`;
@@ -75,7 +75,7 @@ function renderPhotos() {
   });
 }
 function rows(collection, items) {
-  return items.map(item => `<div class="data-row"><div class="data-main"><strong>${escapeHtml(item.title || item.member || '')}</strong><small>${escapeHtml([item.date, item.type, item.status, item.venue, item.note, item.amount ? `¥${Number(item.amount).toLocaleString()}` : ''].filter(Boolean).join(' / '))}</small></div>${['reports', 'lives'].includes(collection) ? `<button class="subtle" data-create-milestone="${collection}" data-index="${db[collection].indexOf(item)}">記念日に追加</button>` : ''}${collection === 'todos' ? `<input type="checkbox" aria-label="完了" data-done="${item.id}" ${item.done ? 'checked' : ''}>` : ''}<button class="del" data-delete="${collection}" data-index="${db[collection].indexOf(item)}">削除</button></div>`).join('') || empty('まだ記録がありません');
+  return items.map(item => `<div class="data-row"><div class="data-main"><strong>${escapeHtml(item.title || item.member || '')}</strong><small>${escapeHtml([item.date, collection === 'schedule' ? item.time : '', item.type, item.status, item.venue, item.note, item.amount ? `¥${Number(item.amount).toLocaleString()}` : ''].filter(Boolean).join(' / '))}</small></div>${['reports', 'lives'].includes(collection) ? `<button class="subtle" data-create-milestone="${collection}" data-index="${db[collection].indexOf(item)}">記念日に追加</button>` : ''}${collection === 'todos' ? `<input type="checkbox" aria-label="完了" data-done="${item.id}" ${item.done ? 'checked' : ''}>` : ''}<button class="del" data-delete="${collection}" data-index="${db[collection].indexOf(item)}">削除</button></div>`).join('') || empty('まだ記録がありません');
 }
 export function render() {
   renderPhotos();
@@ -87,7 +87,7 @@ export function render() {
   const today = new Date();
   const date = new Date(today.getTime() - today.getTimezoneOffset() * 60000).toISOString().slice(0, 10);
   const end = new Date(today); end.setDate(end.getDate() + 7);
-  const upcoming = db.schedule.filter(item => item.date >= date).sort((a,b) => a.date.localeCompare(b.date));
+  const upcoming = db.schedule.filter(item => item.date >= date).sort((a,b) => a.date.localeCompare(b.date) || (a.time || '99:99').localeCompare(b.time || '99:99'));
   $('#homeEvents').innerHTML = rows('schedule', upcoming.slice(0, 5));
   $('#homeTodos').innerHTML = rows('todos', db.todos.filter(item => !item.done).slice(0, 5));
   $('#homeReports').innerHTML = rows('reports', db.reports.slice(0, 3));

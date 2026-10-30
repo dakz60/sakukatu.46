@@ -65,6 +65,7 @@ export const forms = {
     fields: [
       ['title', '予定名', 'text', true],
       ['date', '日付', 'date', true],
+      ['time', '時刻（任意）', 'time', false],
       [
         'type',
         '種類',

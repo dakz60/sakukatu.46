@@ -1,6 +1,6 @@
-import { db, save } from './storage.js?v=20261030-8';
-import { $, escapeHtml, render, toast } from './ui.js?v=20261030-8';
-import { offerCount, wantCount, applyTrade } from './collectionModel.js?v=20261030-8';
+import { db, save } from './storage.js?v=20261030-9';
+import { $, escapeHtml, render, toast } from './ui.js?v=20261030-9';
+import { offerCount, wantCount, applyTrade } from './collectionModel.js?v=20261030-9';
 export function initTrades() {
   const modal = $('#tradeModal');
   $('#openTrade').onclick = () => {
