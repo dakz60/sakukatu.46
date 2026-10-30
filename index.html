@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#fff8fb">
   <title>櫻坂46 推し活ノート</title>
-  <link rel="stylesheet" href="css/style.css?v=20261030-9">
+  <link rel="stylesheet" href="css/style.css?v=7cfb966cbea3">
 </head>
 <body>
   <div class="app">
@@ -44,6 +44,7 @@
           <div class="crumb">マイページ　/　<b id="crumb">ホーム</b></div>
         </div>
         <div class="top-actions">
+          <button type="button" class="subtle" id="appearanceBtn">背景</button>
           <button class="icon-btn" id="todayBtn" title="今日">▦</button>
         </div>
       </div>
@@ -369,8 +370,18 @@
   </div>
 
   <div class="modal-wrap" id="tradeModal"><div class="modal"><h3>現場で交換する</h3><p>提供・希望として登録した写真から、渡す枚数ともらう枚数を選んでください。未登録の写真は先に「希望を登録」から追加できます。</p><form id="tradeForm"><div id="tradeLines"></div><div class="modal-actions"><button type="button" class="secondary" id="cancelTrade">キャンセル</button><button type="submit" class="primary">交換を確定</button></div></form></div></div>
+  <div class="modal-wrap" id="appearanceModal">
+    <div class="modal"><h3>背景</h3>
+      <form id="appearanceForm">
+        <div class="field"><label for="backgroundFile">好きな画像を選ぶ</label><input id="backgroundFile" type="file" accept="image/*"></div>
+        <div id="backgroundPreview" class="background-preview"><span>文字の見え方</span></div>
+        <div class="field"><label for="backgroundWash">白の濃さ <output id="backgroundWashValue">80%</output></label><input id="backgroundWash" type="range" min="40" max="95" step="5" value="80"><small class="field-hint">濃くすると文字が読みやすくなります。</small></div>
+        <div class="modal-actions"><button type="button" class="subtle" id="removeBackground">背景を解除</button><button type="button" class="secondary" id="cancelAppearance">キャンセル</button><button type="submit" class="primary">保存する</button></div>
+      </form>
+    </div>
+  </div>
   <div class="toast" id="toast"></div>
 
-  <script type="module" src="js/main.js?v=20261030-9"></script>
+  <script src="js/app.js?v=1cfb157c0ca9"></script>
 </body>
 </html>

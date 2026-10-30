@@ -1,7 +1,7 @@
-import { reportCard, loadReportImages } from './reports.js?v=20261030-9';
-import { db } from './storage.js?v=20261030-9';
-import { labels, members } from '../data/features.js?v=20261030-9';
-import { getPhotoURL } from './photoStorage.js?v=20261030-9';
+import { reportCard, loadReportImages } from './reports.js';
+import { db } from './storage.js';
+import { labels, members } from '../data/features.js';
+import { getPhotoURL } from './photoStorage.js';
 
 export const $ = (selector) => document.querySelector(selector);
 export const escapeHtml = (value = '') => String(value).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -19,8 +19,8 @@ export function go(page, update = render) {
   $('#sidebar').classList.remove('open');
   update();
 }
-export { photoCount } from './collectionModel.js?v=20261030-9';
-import { photoCount, anniversaryInfo, daysToAnniversary, supportingDays } from './collectionModel.js?v=20261030-9';
+export { photoCount } from './collectionModel.js';
+import { photoCount, anniversaryInfo, daysToAnniversary, supportingDays } from './collectionModel.js';
 export let photoView = 'owned';
 export function setPhotoView(view) { photoView = view; ['#photoMember','#photoSeries','#photoCategory'].forEach(selector => { $(selector).value = ''; }); $('[data-search="photos"]').value = ''; render(); }
 const empty = (message) => `<div class="empty">${escapeHtml(message)}</div>`;

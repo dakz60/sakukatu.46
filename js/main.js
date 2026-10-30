@@ -1,14 +1,16 @@
-import { supportingDays } from './collectionModel.js?v=20261030-9';
-import { reportImageIds } from './reports.js?v=20261030-9';
-import { db, save, imageInUse } from './storage.js?v=20261030-9';
-import { $, go, render, toast, photoCount, setPhotoView } from './ui.js?v=20261030-9';
-import { initForms } from './forms.js?v=20261030-9';
-import { deletePhoto } from './photoStorage.js?v=20261030-9';
-import { members } from '../data/features.js?v=20261030-9';
+import { initAppearance } from './appearance.js';
+import { supportingDays } from './collectionModel.js';
+import { reportImageIds } from './reports.js';
+import { db, save, imageInUse } from './storage.js';
+import { $, go, render, toast, photoCount, setPhotoView } from './ui.js';
+import { initForms } from './forms.js';
+import { deletePhoto } from './photoStorage.js';
+import { members } from '../data/features.js';
 
-import { initTrades } from './trades.js?v=20261030-9';
+import { initTrades } from './trades.js';
 initForms();
 initTrades();
+initAppearance();
 
 $('#nav').addEventListener('click', (event) => {
   const button = event.target.closest('[data-page]');

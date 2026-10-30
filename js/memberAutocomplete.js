@@ -1,4 +1,4 @@
-import { members } from '../data/features.js?v=20261030-9';
+import { members } from '../data/features.js';
 
 function normalize(value) {
   return value

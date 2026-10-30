@@ -284,3 +284,11 @@ button { cursor: pointer; }
 .favorite-days { display: grid; gap: 4px; padding: 18px 0; border-top: 1px solid var(--border); }
 .favorite-days strong { color: var(--accent); font-size: 18px; }
 .favorite-days small { color: var(--subtext); }
+body { position: relative; isolation: isolate; }
+body.has-custom-background::before, body.has-custom-background::after { content: ''; position: fixed; inset: 0; pointer-events: none; }
+body.has-custom-background::before { z-index: -2; background: var(--user-background) center / cover no-repeat; }
+body.has-custom-background::after { z-index: -1; background: rgb(255 255 255 / var(--background-wash, .8)); }
+body.has-custom-background .sidebar { background: rgb(255 255 255 / .85); }
+.background-preview { position: relative; min-height: 150px; margin: 20px 0; display: grid; place-items: center; background: #fafafa center / cover no-repeat; }
+.background-preview::before { content: ''; position: absolute; inset: 0; background: rgb(255 255 255 / var(--preview-wash, .8)); }
+.background-preview span { position: relative; font-size: 18px; }
