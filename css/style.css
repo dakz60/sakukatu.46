@@ -1,6 +1,6 @@
 :root {
   --text: #fff;
-  --subtext: #d0d5df;
+  --subtext: #fff;
   --border: rgb(255 255 255 / .22);
   --surface: #171b24;
   --background: #0c1017;
@@ -304,7 +304,7 @@ body { background: linear-gradient(155deg, #1c2230, #090c12) fixed; }
 .report-avatar { background: #342d3c; color: var(--text); text-shadow: none; }
 .modal { background: var(--surface); color: var(--text); text-shadow: none; }
 .field input, .field select, .field textarea, .search, .filter { color: var(--text); }
-input::placeholder, textarea::placeholder { color: #b9c0ce; opacity: 1; }
+input::placeholder, textarea::placeholder { color: #fff; opacity: 1; }
 select option { background: var(--surface); color: var(--text); }
 .field input[readonly] { background: #242a36; color: var(--subtext); }
 .member-suggestions, .member-suggestion { background: var(--surface); color: var(--text); }
