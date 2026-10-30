@@ -7,7 +7,7 @@ function initForms() {
     collection = name; editing = item;
     const values = item || defaults;
     $('#itemForm').dataset.inventory = item?.inventory || defaults.inventory || (photoView === 'owned' ? 'collection' : photoView);
-    $('#modalTitle').textContent = item ? `${name === 'photos' ? '生写真' : name === 'reports' ? 'ミーグリレポ' : '記念日'}を編集` : forms[name].title;
+    $('#modalTitle').textContent = item ? `${name === 'photos' ? '生写真' : name === 'reports' ? 'ミーグリレポ' : name === 'tickets' ? '応募・チケット' : '記念日'}を編集` : forms[name].title;
     if (name === 'photos') $('#modalTitle').textContent = `${({'collection':'コレクション','offer':'提供用','want':'希望'})[$('#itemForm').dataset.inventory]}を${item ? '編集' : '登録'}`;
     const box = $('#formFields'); box.replaceChildren();
     for (const [key, label, kind, required, choices] of forms[name].fields) {
@@ -61,8 +61,8 @@ function initForms() {
   }
   document.body.addEventListener('click', event => {
     if (busy) return;
-    const edit = event.target.closest('[data-edit-photo], [data-edit-milestone], [data-edit-report]');
-    if (edit) { const name = edit.hasAttribute('data-edit-photo') ? 'photos' : edit.hasAttribute('data-edit-report') ? 'reports' : 'milestones'; open(name, db[name][Number(name === 'photos' ? edit.dataset.editPhoto : name === 'reports' ? edit.dataset.editReport : edit.dataset.editMilestone)]); return; }
+    const edit = event.target.closest('[data-edit-photo], [data-edit-milestone], [data-edit-report], [data-edit-ticket]');
+    if (edit) { const name = edit.hasAttribute('data-edit-photo') ? 'photos' : edit.hasAttribute('data-edit-report') ? 'reports' : edit.hasAttribute('data-edit-ticket') ? 'tickets' : 'milestones'; open(name, db[name][Number(name === 'photos' ? edit.dataset.editPhoto : name === 'reports' ? edit.dataset.editReport : name === 'tickets' ? edit.dataset.editTicket : edit.dataset.editMilestone)]); return; }
     const source = event.target.closest('[data-create-milestone]');
     if (source) {
       const record = db[source.dataset.createMilestone][Number(source.dataset.index)];

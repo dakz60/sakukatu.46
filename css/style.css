@@ -322,3 +322,23 @@ button:focus-visible, a:focus-visible { outline: 2px solid #fff; outline-offset:
 }
 button { text-shadow: inherit; }
 #appearanceBtn { font-size: 14px; font-weight: 600; min-height: 40px; padding: 8px; }
+
+#list-tickets { gap: 18px; }
+.ticket-row { padding: 20px; background: rgb(0 0 0 / .42); border-bottom: 1px solid var(--border); }
+.ticket-heading { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; }
+.ticket-heading h3 { margin: 0; font-size: 18px; overflow-wrap: anywhere; }
+.ticket-status { flex-shrink: 0; font-size: 14px; font-weight: 700; }
+.ticket-deadline { display: flex; align-items: baseline; flex-wrap: wrap; gap: 8px 16px; margin-top: 16px; }
+.ticket-deadline > span { font-size: 13px; }
+.ticket-deadline time { font-size: 18px; font-weight: 700; }
+.ticket-deadline strong { font-size: 14px; }
+.ticket-note { margin: 12px 0 0; white-space: pre-wrap; overflow-wrap: anywhere; }
+.ticket-actions { display: flex; justify-content: flex-end; gap: 16px; margin-top: 12px; }
+.ticket-actions button { min-width: 56px; min-height: 44px; }
+@media (max-width: 680px) {
+  .ticket-row { padding: 18px 14px; }
+  .ticket-heading { flex-direction: column; gap: 8px; }
+  .ticket-heading h3 { font-size: 17px; }
+}
+
+#page-tickets .search, #page-tickets .filter, #resetTickets { min-height: 44px; }

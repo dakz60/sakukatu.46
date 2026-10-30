@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#0c1017">
   <title>櫻坂46 推し活ノート</title>
-  <link rel="stylesheet" href="css/style.css?v=20261030-17">
+  <link rel="stylesheet" href="css/style.css?v=20261030-18">
 </head>
 <body>
   <div class="app">
@@ -186,8 +186,12 @@
         </div>
         <div class="panel">
           <div class="table-tools">
-            <input class="search" placeholder="イベント名を検索" data-search="tickets">
+            <input class="search" placeholder="イベント名・メモを検索" aria-label="応募を検索" data-search="tickets">
+            <select class="filter" data-filter="tickets" aria-label="応募の状況"><option value="">すべての状況</option><option>応募前</option><option>申込済み</option><option>当選</option><option>落選</option><option>入金済み</option></select>
+            <button type="button" class="subtle" id="resetTickets" hidden>絞り込みを解除</button>
           </div>
+          <p class="field-hint">対応中を先に、期限順で表示します。</p>
+          <p id="ticketSummary" aria-live="polite"></p>
           <div class="data-list" id="list-tickets"></div>
         </div>
       </section>
@@ -382,16 +386,17 @@
   </div>
   <div class="toast" id="toast"></div>
 
-  <script src="data/features.js?v=20261030-14"></script>
-  <script src="js/collectionModel.js?v=20261030-14"></script>
-  <script src="js/photoStorage.js?v=20261030-14"></script>
-  <script src="js/storage.js?v=20261030-14"></script>
-  <script src="js/memberAutocomplete.js?v=20261030-14"></script>
-  <script src="js/reports.js?v=20261030-14"></script>
-  <script src="js/ui.js?v=20261030-14"></script>
-  <script src="js/forms.js?v=20261030-14"></script>
-  <script src="js/appearance.js?v=20261030-14"></script>
-  <script src="js/trades.js?v=20261030-14"></script>
-  <script src="js/main.js?v=20261030-14"></script>
+  <script src="data/features.js?v=20261030-18"></script>
+  <script src="js/collectionModel.js?v=20261030-18"></script>
+  <script src="js/photoStorage.js?v=20261030-18"></script>
+  <script src="js/storage.js?v=20261030-18"></script>
+  <script src="js/memberAutocomplete.js?v=20261030-18"></script>
+  <script src="js/reports.js?v=20261030-18"></script>
+  <script src="js/tickets.js?v=20261030-18"></script>
+  <script src="js/ui.js?v=20261030-18"></script>
+  <script src="js/forms.js?v=20261030-18"></script>
+  <script src="js/appearance.js?v=20261030-18"></script>
+  <script src="js/trades.js?v=20261030-18"></script>
+  <script src="js/main.js?v=20261030-18"></script>
 </body>
 </html>
