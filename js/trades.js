@@ -24,4 +24,4 @@ function initTrades() {
       modal.classList.remove('open'); render(); toast('交換を記録しました');
     } catch (error) { toast(error.message || '交換を保存できませんでした'); }
   };
-}r
+}
