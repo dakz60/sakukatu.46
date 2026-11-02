@@ -6,7 +6,7 @@ function initTrades() {
     const candidates = db.photos.filter(item => offerCount(item) || wantCount(item));
     $('#tradeLines').innerHTML = candidates.length ? candidates.map(item => `<fieldset class="trade-line" data-trade-id="${escapeHtml(item.id)}"><legend>${escapeHtml(item.member)} / ${escapeHtml(item.series)} / ${escapeHtml(item.pose || '種類未設定')}</legend>
       <label>渡す（提供 ${offerCount(item)}枚）<input type="number" name="give" min="0" max="${offerCount(item)}" step="1" value="0" required></label>
-      <label>貰う（希望 ${wantCount(item)}枚）<input type="number" name="receive" min="0" max="${item.inventory === 'want' ? 99999 : 0}" step="1" value="0" required></label></fieldset>`).join('') : '<p>提供用と希望の一覧に写真を登録してください。</p>';
+      <label>もらう（希望 ${wantCount(item)}枚）<input type="number" name="receive" min="0" max="${item.inventory === 'want' ? 99999 : 0}" step="1" value="0" required></label></fieldset>`).join('') : '<p>提供用と希望の一覧に写真を登録してください。</p>';
     modal.classList.add('open');
   };
   $('#cancelTrade').onclick = () => modal.classList.remove('open');
