@@ -367,4 +367,4 @@ button { text-shadow: inherit; }
 .avatar-crop-preview img { max-width: none; }
 .report-avatar { position: relative; }
 #cropModal .modal-actions { flex-wrap: wrap; }
-#cropModal button { m
+#cropModal button { min-height: 44px; }
