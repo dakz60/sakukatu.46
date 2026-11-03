@@ -95,7 +95,7 @@ function rows(collection, items) {
   return items.map(item => {
     const index = db[collection].indexOf(item);
 
-    const editButton = ['schedule', 'lives'].includes(collection)
+    const editButton = ['schedule', 'lives', 'goods', 'money', 'todos', 'places'].includes(collection)
       ? `<button type="button" class="subtle" data-edit-record="${collection}" data-index="${index}">編集</button>`
       : '';
 
