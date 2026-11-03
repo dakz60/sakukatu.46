@@ -6,8 +6,23 @@ function initForms() {
     if (!forms[name]) return;
     collection = name; editing = item;
     const values = item || defaults;
-    $('#itemForm').dataset.inventory = item?.inventory || defaults.inventory || (photoView === 'owned' ? 'collection' : photoView);
-    $('#modalTitle').textContent = item ? `${name === 'photos' ? '生写真' : name === 'reports' ? 'ミーグリレポ' : name === 'tickets' ? '応募・チケット' : name === 'schedule' ? '予定' : name === 'lives' ? '参戦記録' : '記念日'}を編集` : forms[name].title;
+    $('#itemForm').dataset.inventory = item?.inventory || defaults.inventory || (photoView === 'owned' ? 'collection' : photoView); 
+    const editTitles = {
+    photos: '生写真',
+    reports: 'ミーグリレポ',
+    tickets: '応募・チケット',
+    schedule: '予定',
+    lives: '参戦記録',
+    goods: 'グッズ',
+    money: '支出',
+    todos: 'ToDo',
+    places: 'スポット',
+    milestones: '記念日'
+  };
+
+$('#modalTitle').textContent = item
+  ? `${editTitles[name] || '記録'}を編集`
+  : forms[name].title;
     if (name === 'photos') $('#modalTitle').textContent = `${({'collection':'コレクション','offer':'提供用','want':'希望'})[$('#itemForm').dataset.inventory]}を${item ? '編集' : '登録'}`;
     const box = $('#formFields'); box.replaceChildren();
     for (const [key, label, kind, required, choices] of forms[name].fields) {
@@ -66,7 +81,7 @@ function initForms() {
 
 if (
   recordEdit &&
-  ['schedule', 'lives'].includes(recordEdit.dataset.editRecord)
+  ['schedule', 'lives', 'goods', 'money', 'todos', 'places'].includes(recordEdit.dataset.editRecord)
 ) {
   const name = recordEdit.dataset.editRecord;
   const item = db[name][Number(recordEdit.dataset.index)];
