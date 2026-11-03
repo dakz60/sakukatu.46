@@ -71,9 +71,36 @@ function renderPhotos() {
     } catch { if (element.isConnected) element.textContent = '画像を読み込めませんでした'; }
   });
 }
+function byRecordDate(items, newestFirst = false) {
+  return [...items].sort((a, b) => {
+    if (!a.date) return b.date ? 1 : 0;
+    if (!b.date) return -1;
+
+    const order =
+      a.date.localeCompare(b.date) ||
+      (a.time || '99:99').localeCompare(b.time || '99:99');
+
+    return newestFirst ? -order : order;
+  });
+}
 function rows(collection, items) {
-  if (collection === 'tickets' && typeof renderTicketRows === 'function') return renderTicketRows(items);
-  return items.map(item => `<div class="data-row"><div class="data-main"><strong>${escapeHtml(item.title || item.member || '')}</strong><small>${escapeHtml([item.date, collection === 'schedule' ? item.time : '', item.type, item.status, item.venue, item.note, item.amount ? `¥${Number(item.amount).toLocaleString()}` : ''].filter(Boolean).join(' / '))}</small></div>${['reports', 'lives'].includes(collection) ? `<button class="subtle" data-create-milestone="${collection}" data-index="${db[collection].indexOf(item)}">記念日に追加</button>` : ''}${collection === 'todos' ? `<input type="checkbox" aria-label="完了" data-done="${item.id}" ${item.done ? 'checked' : ''}>` : ''}<button class="del" data-delete="${collection}" data-index="${db[collection].indexOf(item)}">削除</button></div>`).join('') || empty('まだ記録がありません');
+  if (['schedule', 'lives', 'reports'].includes(collection)) {
+    items = byRecordDate(items, collection !== 'schedule');
+  }
+
+  if (collection === 'tickets' && typeof renderTicketRows === 'function') {
+    return renderTicketRows(items);
+  }
+
+  return items.map(item => {
+    const index = db[collection].indexOf(item);
+
+    const editButton = ['schedule', 'lives'].includes(collection)
+      ? `<button type="button" class="subtle" data-edit-record="${collection}" data-index="${index}">編集</button>`
+      : '';
+
+    return `<div class="data-row"><div class="data-main"><strong>${escapeHtml(item.title || item.member || '')}</strong><small>${escapeHtml([item.date, collection === 'schedule' ? item.time : '', item.type, item.status, item.venue, item.note, item.amount ? `¥${Number(item.amount).toLocaleString()}` : ''].filter(Boolean).join(' / '))}</small></div>${editButton}${['reports', 'lives'].includes(collection) ? `<button class="subtle" data-create-milestone="${collection}" data-index="${index}">記念日に追加</button>` : ''}${collection === 'todos' ? `<input type="checkbox" aria-label="完了" data-done="${item.id}" ${item.done ? 'checked' : ''}>` : ''}<button class="del" data-delete="${collection}" data-index="${index}">削除</button></div>`;
+  }).join('') || empty('まだ記録がありません');
 }
 function render() {
   renderPhotos();
@@ -89,7 +116,10 @@ function render() {
   const upcoming = db.schedule.filter(item => item.date >= date).sort((a,b) => a.date.localeCompare(b.date) || (a.time || '99:99').localeCompare(b.time || '99:99'));
   $('#homeEvents').innerHTML = rows('schedule', upcoming.slice(0, 5));
   $('#homeTodos').innerHTML = rows('todos', db.todos.filter(item => !item.done).slice(0, 5));
-  $('#homeReports').innerHTML = rows('reports', db.reports.slice(0, 3));
+  $('#homeReports').innerHTML = rows(
+  'reports',
+  byRecordDate(db.reports, true).slice(0, 3)
+);
   $('#statEvents').textContent = `${upcoming.filter(item => new Date(item.date) < end).length}件`;
   $('#statDeadlines').textContent = `${db.tickets.filter(item => item.date >= date && !['落選','入金済み'].includes(item.status)).length}件`;
   $('#statReports').textContent = `${db.reports.length}件`;
@@ -110,8 +140,37 @@ function render() {
     if (birthday < start) birthday.setFullYear(birthday.getFullYear() + 1);
     return `${member.name} あと${Math.round((birthday - start) / 86400000)}日`;
   }).join(' / ') : '未登録';
-  const reportQuery = $('[data-search="reports"]').value.trim().toLowerCase();
-  $('#list-reports').innerHTML = db.reports.filter(item => [item.member, item.title, item.note, item.part, ...(item.messages || []).map(message => message.text || '')].join(' ').toLowerCase().includes(reportQuery)).map(item => reportCard(item, db.reports.indexOf(item))).join('') || empty('レポは未登録です');
+const reportTerms = normalize(
+  $('[data-search="reports"]').value
+).split(/\s+/).filter(Boolean);
+
+const reports = byRecordDate(db.reports, true).filter(item => {
+  const kana =
+    members.find(member => member.name === item.member)?.kana || '';
+
+  const text = normalize([
+    item.member,
+    kana,
+    item.date,
+    item.title,
+    item.note,
+    item.part,
+    ...(item.messages || []).map(message => message.text || '')
+  ].join(' '));
+
+  return reportTerms.every(term => text.includes(term));
+});
+
+$('#reportResults').textContent =
+  `${reports.length}件を表示 / 全${db.reports.length}件`;
+
+$('#list-reports').innerHTML = reports
+  .map(item => reportCard(item, db.reports.indexOf(item)))
+  .join('') || empty(
+    db.reports.length
+      ? '条件に合うレポはありません'
+      : 'レポは未登録です'
+  );
   loadReportImages($('#list-reports'));
   renderMilestones();
 }
