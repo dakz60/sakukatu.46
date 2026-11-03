@@ -99,7 +99,7 @@ function rows(collection, items) {
       ? `<button type="button" class="subtle" data-edit-record="${collection}" data-index="${index}">編集</button>`
       : '';
 
-    return `<div class="data-row"><div class="data-main"><strong>${escapeHtml(item.title || item.member || '')}</strong><small>${escapeHtml([item.date, collection === 'schedule' ? item.time : '', item.type, item.status, item.venue, item.note, item.amount ? `¥${Number(item.amount).toLocaleString()}` : ''].filter(Boolean).join(' / '))}</small></div>${editButton}${['reports', 'lives'].includes(collection) ? `<button class="subtle" data-create-milestone="${collection}" data-index="${index}">記念日に追加</button>` : ''}${collection === 'todos' ? `<input type="checkbox" aria-label="完了" data-done="${item.id}" ${item.done ? 'checked' : ''}>` : ''}<button class="del" data-delete="${collection}" data-index="${index}">削除</button></div>`;
+    return `<div class="data-row"><div class="data-main"><strong>${escapeHtml(item.title || item.member || '')}</strong><small>${escapeHtml([item.date, collection === 'schedule' ? item.time : '', item.type, item.status, item.venue, item.note, item.amount ? `¥${Number(item.amount).toLocaleString()}` : ''].filter(Boolean).join(' / '))}</small></div>${['reports', 'lives'].includes(collection) ? `<button class="subtle" data-create-milestone="${collection}" data-index="${index}">記念日に追加</button>` : ''}${collection === 'todos' ? `<input type="checkbox" aria-label="完了" data-done="${item.id}" ${item.done ? 'checked' : ''}>` : ''}${editButton}<button class="del" data-delete="${collection}" data-index="${index}">削除</button></div>`;
   }).join('') || empty('まだ記録がありません');
 }
 function render() {
