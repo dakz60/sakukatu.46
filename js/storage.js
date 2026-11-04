@@ -67,6 +67,10 @@ function imageInUse(id) {
   const references = [
     ...db.photos.map((item) => item.imageId || item.id),
 
+    ...db.goods.map((item) => item.imageId),
+
+    ...(db.goodsCatalog || []).map((item) => item.iconId),
+
     ...db.milestones.map((item) => item.imageId || item.id),
 
     ...db.reports.flatMap((item) => [
