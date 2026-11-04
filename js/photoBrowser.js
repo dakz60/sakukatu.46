@@ -8,7 +8,17 @@ const photoBrowserState = {
   status: ''
 };
 
+const photoExtraGroups = [
+  { name: 'HMV', kana: 'えいちえむぶい hmv' },
+  { name: 'その他', kana: 'そのた' }
+];
+
+const photoBrowserSearchOptions = [];
 const standardPhotoPoses = ['スワリ', 'ヨリ', 'チュウ', 'ヒキ'];
+
+function photoMemberOptions() {
+  return [...members, ...photoExtraGroups];
+}
 
 const photoInventory = () =>
   photoView === 'owned' ? 'collection' : photoView;
@@ -64,9 +74,11 @@ function seriesPhotoRecords(name, entry, inventory = photoInventory()) {
     (item) =>
       item.member === name &&
       item.inventory === inventory &&
-      (item.catalogId
-        ? item.catalogId === entry.id
-        : !entry.duplicate && item.series === entry.title)
+      (
+        item.catalogId
+          ? item.catalogId === entry.id
+          : !entry.duplicate && item.series === entry.title
+      )
   );
 }
 
@@ -521,9 +533,99 @@ function photoSeriesProgress(member, entry) {
     owned,
     total,
     missing: owned === 0,
+    hasOwned: owned > 0,
     semi: owned > 0 && owned === total - 1,
     complete: total > 0 && owned === total
   };
+}
+
+function sortPhotoRecords(items) {
+  const memberOrder = new Map(
+    photoMemberOptions().map((member, index) => [member.name, index])
+  );
+
+  const catalogs = new Map();
+  const poseOrders = new Map();
+  const unknownMember = memberOrder.size;
+
+  const ranked = items.map((item, index) => {
+    const member = item.member || '';
+
+    if (!catalogs.has(member)) {
+      const entries = memberPhotoSeries(member);
+      const byId = new Map();
+      const byTitle = new Map();
+
+      entries.forEach((entry, position) => {
+        const rankedEntry = { entry, position };
+
+        byId.set(entry.id, rankedEntry);
+
+        if (!byTitle.has(entry.title)) {
+          byTitle.set(entry.title, rankedEntry);
+        }
+      });
+
+      catalogs.set(member, { entries, byId, byTitle });
+    }
+
+    const catalog = catalogs.get(member);
+    const series = item.series || 'シリーズ未設定';
+
+    const match =
+      (item.catalogId && catalog.byId.get(item.catalogId)) ||
+      catalog.byTitle.get(series);
+
+    const poseKey = JSON.stringify([
+      member,
+      match?.entry.id || series
+    ]);
+
+    if (!poseOrders.has(poseKey)) {
+      const poses = match
+        ? photoSeriesPoses(member, match.entry)
+        : standardPhotoPoses;
+
+      poseOrders.set(
+        poseKey,
+        new Map(poses.map((pose, position) => [pose, position]))
+      );
+    }
+
+    const poses = poseOrders.get(poseKey);
+    const pose = item.pose || '';
+    const knownMember = memberOrder.has(member);
+
+    return {
+      item,
+      key: [
+        knownMember ? memberOrder.get(member) : unknownMember,
+        knownMember ? '' : member,
+        match ? match.position : catalog.entries.length,
+        match ? '' : series,
+        poses.has(pose) ? poses.get(pose) : poses.size,
+        poses.has(pose) ? '' : pose,
+        index
+      ]
+    };
+  });
+
+  ranked.sort((a, b) => {
+    for (let index = 0; index < a.key.length; index++) {
+      const left = a.key[index];
+      const right = b.key[index];
+
+      const order = typeof left === 'number'
+        ? left - right
+        : left.localeCompare(right, 'ja', { numeric: true });
+
+      if (order) return order;
+    }
+
+    return 0;
+  });
+
+  return ranked.map((entry) => entry.item);
 }
 
 function currentPhotoSeries() {
@@ -599,17 +701,36 @@ function renderPhotoBrowser() {
 
   $('#photoBrowserTitle').textContent = entry
     ? entry.title
-    : member || 'メンバーを選ぶ';
+    : member || 'メンバー・分類を選ぶ';
 
   $('#photoBrowserCrumb').textContent = entry
     ? `${member} / ${photoInventoryLabel(inventory)}`
     : '生写真コレクション';
 
   const search = $('#photoCatalogSearch');
+
+  photoBrowserSearchOptions.splice(
+    0,
+    photoBrowserSearchOptions.length,
+    ...(!member ? photoMemberOptions() : [])
+  );
+
+  const picker = search.closest('.member-picker');
+
+  if (picker) {
+    picker.hidden = !!entry;
+
+    if (member) {
+      picker.querySelector('.member-suggestions').hidden = true;
+      search.setAttribute('aria-expanded', 'false');
+      search.removeAttribute('aria-activedescendant');
+    }
+  }
+
   search.hidden = !!entry;
   search.placeholder = member
     ? '衣装・シリーズを検索'
-    : 'メンバーを検索';
+    : 'メンバー・分類を検索';
 
   search.setAttribute('aria-label', search.placeholder);
 
@@ -663,7 +784,7 @@ function renderPhotoBrowser() {
   if (!member) {
     const names = [
       ...new Set([
-        ...members.map((item) => item.name),
+        ...photoMemberOptions().map((item) => item.name),
         ...Object.keys(photoCatalogSource),
         ...db.photos.map((item) => item.member).filter(Boolean)
       ])
@@ -671,11 +792,19 @@ function renderPhotoBrowser() {
 
     const visible = names.filter((name) =>
       normalize(
-        `${name} ${members.find((item) => item.name === name)?.kana || ''}`
+        `${name} ${
+          photoMemberOptions().find((item) => item.name === name)?.kana || ''
+        }`
       ).includes(normalize(state.query))
     );
 
-    $('#photoCatalogSummary').textContent = `${visible.length}人`;
+    const groupCount = visible.filter(
+      (name) => photoExtraGroups.some((group) => group.name === name)
+    ).length;
+
+    $('#photoCatalogSummary').textContent = groupCount
+      ? `${visible.length - groupCount}人・${groupCount}分類`
+      : `${visible.length}人`;
 
     container.innerHTML = visible.map((name) => {
       const count = db.photos
@@ -1033,6 +1162,7 @@ function initPhotoBrowser() {
   for (const [value, label] of [
     ['', 'すべて'],
     ['missing', '未所持'],
+    ['hasOwned', '所持'],
     ['semi', 'セミコンプ'],
     ['complete', 'コンプ']
   ]) {
@@ -1058,9 +1188,45 @@ function initPhotoBrowser() {
 
   browser.before(saved);
 
-  $('#photoCatalogSearch').addEventListener('input', (event) => {
-    photoBrowserState.query = event.target.value;
+  const search = $('#photoCatalogSearch');
+
+  photoBrowserSearchOptions.push(...photoMemberOptions());
+
+  attachMemberAutocomplete(search, photoBrowserSearchOptions);
+
+  const picker = search.closest('.member-picker');
+  picker.style.flex = '1 1 220px';
+  picker.style.maxWidth = '420px';
+  picker.style.minWidth = '0';
+
+  const updateSearch = () => {
+    if (photoBrowserState.query === search.value) return;
+
+    photoBrowserState.query = search.value;
     renderPhotoBrowser();
+  };
+
+  search.addEventListener('input', updateSearch);
+  search.addEventListener('change', updateSearch);
+
+  const savedSearch = $('[data-search="photos"]');
+
+  attachMemberAutocomplete(savedSearch, photoMemberOptions());
+
+  savedSearch.placeholder = 'メンバー・シリーズ・メモを検索';
+  savedSearch.closest('.member-picker').style.minWidth = '0';
+
+  let savedQuery = savedSearch.value;
+
+  savedSearch.addEventListener('input', () => {
+    savedQuery = savedSearch.value;
+  });
+
+  savedSearch.addEventListener('change', () => {
+    if (savedQuery === savedSearch.value) return;
+
+    savedQuery = savedSearch.value;
+    renderSavedPhotos();
   });
 
   $('#photoCatalogYear').onchange = (event) => {
