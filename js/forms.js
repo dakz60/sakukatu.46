@@ -139,7 +139,12 @@ function initForms() {
 
       const caption = document.createElement('label');
       caption.htmlFor = input.id;
-      caption.textContent = label + (required ? ' *' : '');
+
+      const fieldLabel = name === 'photos' && key === 'member'
+        ? 'メンバー・分類'
+        : label;
+
+      caption.textContent = fieldLabel + (required ? ' *' : '');
 
       wrap.append(caption, input);
 
@@ -262,7 +267,14 @@ function initForms() {
       }
 
       if (kind === 'member') {
-        attachMemberAutocomplete(input);
+        attachMemberAutocomplete(
+          input,
+          name === 'photos' ? photoMemberOptions() : members
+        );
+
+        if (name === 'photos') {
+          input.placeholder = 'メンバー名・HMV・その他';
+        }
       }
     }
 
@@ -485,11 +497,22 @@ function initForms() {
       }
     }
 
+    const validPhotoMember =
+      collection === 'photos' &&
+      photoMemberOptions().some(
+        (member) => member.name === item.member
+      );
+
     if (
       ['photos', 'reports'].includes(collection) &&
-      !isMember(item.member)
+      !isMember(item.member) &&
+      !validPhotoMember
     ) {
-      toast('候補からメンバーを選んでください');
+      toast(
+        collection === 'photos'
+          ? '候補からメンバー・分類を選んでください'
+          : '候補からメンバーを選んでください'
+      );
       return;
     }
 
@@ -687,9 +710,13 @@ function initForms() {
             : '記録の保存容量が不足しています'
         );
       } else if (stage === 'image') {
-        toast(`画像を保存できませんでした：${error?.message || '不明なエラー'}`);
+        toast(
+          `画像を保存できませんでした：${error?.message || '不明なエラー'}`
+        );
       } else {
-        toast(`記録を保存できませんでした：${error?.message || '不明なエラー'}`);
+        toast(
+          `記録を保存できませんでした：${error?.message || '不明なエラー'}`
+        );
       }
     } finally {
       busy = false;
