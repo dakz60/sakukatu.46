@@ -5,20 +5,16 @@ const $ = (selector) => document.querySelector(selector);
 const escapeHtml = (value = '') =>
   String(value).replace(
     /[&<>"']/g,
-    (char) => ({
+    (character) => ({
       '&': '&amp;',
       '<': '&lt;',
       '>': '&gt;',
       '"': '&quot;',
       "'": '&#39;'
-    })[char]
+    })[character]
   );
 
-const empty = (message) =>
-  `<div class="empty">${escapeHtml(message)}</div>`;
-
 let toastTimer;
-let photoView = 'owned';
 
 function toast(message) {
   $('#toast').textContent = message;
@@ -46,8 +42,11 @@ function go(page, update = render) {
   $('#sidebar').classList.remove('open');
 
   update();
+
   document.dispatchEvent(new Event('pagechange'));
 }
+
+let photoView = 'owned';
 
 function setPhotoView(view) {
   photoView = view;
@@ -57,8 +56,12 @@ function setPhotoView(view) {
   });
 
   $('[data-search="photos"]').value = '';
+
   render();
 }
+
+const empty = (message) =>
+  `<div class="empty">${escapeHtml(message)}</div>`;
 
 function options(selector, values, placeholder) {
   const select = $(selector);
@@ -83,19 +86,20 @@ function renderPhotos() {
 
 function renderSavedPhotos() {
   const inventory = photoView === 'owned' ? 'collection' : photoView;
+  const orderedPhotos = sortPhotoRecords(db.photos);
 
   options(
     '#photoMember',
     [
-      ...members.map((member) => member.name),
+      ...photoMemberOptions().map((member) => member.name),
       ...db.photos.map((item) => item.member)
     ],
-    'すべてのメンバー'
+    'すべてのメンバー・分類'
   );
 
   options(
     '#photoSeries',
-    db.photos
+    orderedPhotos
       .filter((item) => item.inventory === inventory)
       .map((item) => item.series),
     'すべてのシリーズ'
@@ -103,16 +107,18 @@ function renderSavedPhotos() {
 
   const query = $('[data-search="photos"]').value.trim().toLowerCase();
 
-  const items = db.photos.filter((item) =>
-    (!$('#photoFavoritesOnly').checked || item.favorite) &&
-    item.inventory === inventory &&
-    (!$('#photoMember').value || item.member === $('#photoMember').value) &&
-    (!$('#photoSeries').value || item.series === $('#photoSeries').value) &&
-    (!$('#photoCategory').value || item.category === $('#photoCategory').value) &&
-    [item.member, item.series, item.pose, item.note].some((value) =>
-      String(value || '').toLowerCase().includes(query)
-    )
-  );
+  const items = orderedPhotos.filter((item) => {
+    return (
+      (!$('#photoFavoritesOnly').checked || item.favorite) &&
+      item.inventory === inventory &&
+      (!$('#photoMember').value || item.member === $('#photoMember').value) &&
+      (!$('#photoSeries').value || item.series === $('#photoSeries').value) &&
+      (!$('#photoCategory').value || item.category === $('#photoCategory').value) &&
+      [item.member, item.series, item.pose, item.note].some((value) =>
+        String(value || '').toLowerCase().includes(query)
+      )
+    );
+  });
 
   const all = db.photos.filter((item) => item.inventory === inventory);
 
@@ -137,110 +143,115 @@ function renderSavedPhotos() {
     button.setAttribute('aria-pressed', String(active));
   });
 
-  $('#tradeHistory').innerHTML =
-    db.trades.map((trade) => `
+  $('#tradeHistory').innerHTML = db.trades.map((trade) => {
+    const lines = trade.lines.map((line) => `
+      <p>
+        ${escapeHtml(line.member)} /
+        ${escapeHtml(line.series)} /
+        ${escapeHtml(line.pose || '')}：
+        渡した ${line.give}枚・受け取った ${line.receive}枚
+      </p>
+    `).join('');
+
+    return `
       <div class="data-row">
         <div>
-          <strong>${
-            escapeHtml(new Date(trade.date).toLocaleString('ja-JP'))
-          }</strong>
-          ${trade.lines.map((line) => `
-            <p>
-              ${escapeHtml(line.member)} /
-              ${escapeHtml(line.series)} /
-              ${escapeHtml(line.pose || '')}：
-              渡した ${line.give}枚・受け取った ${line.receive}枚
-            </p>
-          `).join('')}
+          <strong>
+            ${escapeHtml(new Date(trade.date).toLocaleString('ja-JP'))}
+          </strong>
+          ${lines}
         </div>
       </div>
-    `).join('') || empty('まだ交換の記録がありません');
+    `;
+  }).join('') || empty('まだ交換の記録がありません');
 
-  $('#photoResults').textContent = `${items.length}種類を表示`;
+  $('#photoResults').textContent = `${items.length}件を表示`;
 
   const list = $('#list-photos');
 
-  list.innerHTML = items.length
-    ? items.map((item) => {
-        const index = db.photos.indexOf(item);
-        const count = photoCount(item);
-        const label = escapeHtml(`${item.member} ${item.pose || ''}`);
+  list.innerHTML = items.map((item) => {
+    const index = db.photos.indexOf(item);
+    const count = photoCount(item);
+    const photoLabel = escapeHtml(
+      [item.member, item.series, item.pose].filter(Boolean).join(' ')
+    );
 
-        return `
-          <article
-            class="photo-card ${count === 0 ? 'unowned' : ''}"
-            tabindex="-1"
-            data-photo-record="${escapeHtml(item.id)}"
-          >
-            <div
-              class="photo-image"
-              data-photo-id="${escapeHtml(item.imageId || item.id)}"
-            >
-              <span>画像なし</span>
-            </div>
+    return `
+      <article
+        class="photo-card ${count === 0 ? 'unowned' : ''}"
+        tabindex="-1"
+        data-photo-record="${escapeHtml(item.id)}"
+      >
+        <div
+          class="photo-image"
+          data-photo-id="${escapeHtml(item.imageId || item.id)}"
+        >
+          <span>画像なし</span>
+        </div>
 
-            <div class="photo-info">
-              <span class="tag">
-                ${escapeHtml(item.category || '分類未設定')}
-              </span>
+        <div class="photo-info">
+          <span class="tag">
+            ${escapeHtml(item.category || '分類未設定')}
+          </span>
 
-              <h3>${escapeHtml(item.member)}</h3>
-              <p>${escapeHtml(item.series)}</p>
-              <p>${escapeHtml(item.pose || 'ポーズ未設定')}</p>
+          <h3>${escapeHtml(item.member)}</h3>
+          <p>${escapeHtml(item.series)}</p>
+          <p>${escapeHtml(item.pose || 'ポーズ未設定')}</p>
 
-              ${
-                item.note
-                  ? `<p class="photo-note">${escapeHtml(item.note)}</p>`
-                  : ''
-              }
+          ${
+            item.note
+              ? `<p class="photo-note">${escapeHtml(item.note)}</p>`
+              : ''
+          }
 
-              <div class="photo-counter">
-                <button
-                  type="button"
-                  data-count="${index}"
-                  data-delta="-1"
-                  aria-label="${label}の所持枚数を減らす"
-                  ${count === 0 ? 'disabled' : ''}
-                >−</button>
+          <div class="photo-counter">
+            <button
+              type="button"
+              data-count="${index}"
+              data-delta="-1"
+              aria-label="${photoLabel}の枚数を減らす"
+              ${count === 0 ? 'disabled' : ''}
+            >−</button>
 
-                <strong>${count}枚</strong>
+            <strong>${count}枚</strong>
 
-                <button
-                  type="button"
-                  data-count="${index}"
-                  data-delta="1"
-                  aria-label="${label}の所持枚数を増やす"
-                >＋</button>
-              </div>
+            <button
+              type="button"
+              data-count="${index}"
+              data-delta="1"
+              aria-label="${photoLabel}の枚数を増やす"
+            >＋</button>
+          </div>
 
-              <div class="photo-actions">
-                <button
-                  type="button"
-                  class="subtle photo-favorite"
-                  data-favorite-photo="${escapeHtml(item.id)}"
-                  aria-pressed="${Boolean(item.favorite)}"
-                >${item.favorite ? '★ お気に入り' : '☆ お気に入り'}</button>
+          <div class="photo-actions">
+            <button
+              type="button"
+              class="subtle photo-favorite"
+              data-favorite-photo="${escapeHtml(item.id)}"
+              aria-pressed="${Boolean(item.favorite)}"
+            >${item.favorite ? '★ お気に入り' : '☆ お気に入り'}</button>
 
-                <button
-                  class="subtle"
-                  data-edit-photo="${index}"
-                >編集</button>
+            <button
+              type="button"
+              class="subtle"
+              data-edit-photo="${index}"
+            >編集</button>
 
-                <button
-                  class="del"
-                  data-delete="photos"
-                  data-index="${index}"
-                >削除</button>
-              </div>
-            </div>
-          </article>
-        `;
-      }).join('')
-    : empty(
-        db.photos.length
-          ? '条件に合う生写真がありません。'
-          : '生写真は未登録です。画像・メンバー・シリーズ・枚数を登録できます。'
-      );
+            <button
+              type="button"
+              class="del"
+              data-delete="photos"
+              data-index="${index}"
+            >削除</button>
+          </div>
+        </div>
+      </article>
+    `;
+  }).join('') || empty(
+    db.photos.length
+      ? '条件に合う生写真がありません。'
+      : '生写真は未登録です。画像・メンバー・シリーズ・枚数を登録できます。'
+  );
 
   list.querySelectorAll('[data-photo-id]').forEach(async (element) => {
     try {
@@ -250,6 +261,7 @@ function renderSavedPhotos() {
         const image = new Image();
         image.src = url;
         image.alt = '登録した生写真';
+
         element.replaceChildren(image);
       }
     } catch {
@@ -278,21 +290,26 @@ function rows(collection, items) {
     items = byRecordDate(items, collection !== 'schedule');
   }
 
-  if (collection === 'tickets' && typeof renderTicketRows === 'function') {
+  if (
+    collection === 'tickets' &&
+    typeof renderTicketRows === 'function'
+  ) {
     return renderTicketRows(items);
   }
 
   return items.map((item) => {
     const index = db[collection].indexOf(item);
 
-    const editButton = [
+    const canEdit = [
       'schedule',
       'lives',
       'goods',
       'money',
       'todos',
       'places'
-    ].includes(collection)
+    ].includes(collection);
+
+    const editButton = canEdit
       ? `
         <button
           type="button"
@@ -303,7 +320,7 @@ function rows(collection, items) {
       `
       : '';
 
-    const details = [
+    const information = [
       item.date,
       collection === 'schedule' ? item.time : '',
       item.type,
@@ -313,43 +330,43 @@ function rows(collection, items) {
       item.amount ? `¥${Number(item.amount).toLocaleString()}` : ''
     ].filter(Boolean).join(' / ');
 
+    const milestoneButton = ['reports', 'lives'].includes(collection)
+      ? `
+        <button
+          type="button"
+          class="subtle"
+          data-create-milestone="${collection}"
+          data-index="${index}"
+        >記念日に追加</button>
+      `
+      : '';
+
+    const doneCheckbox = collection === 'todos'
+      ? `
+        <input
+          type="checkbox"
+          aria-label="完了"
+          data-done="${escapeHtml(item.id)}"
+          ${item.done ? 'checked' : ''}
+        >
+      `
+      : '';
+
     return `
       <div class="data-row">
         <div class="data-main">
-          <strong>${
-            escapeHtml(item.title || item.member || '')
-          }</strong>
-          <small>${escapeHtml(details)}</small>
+          <strong>
+            ${escapeHtml(item.title || item.member || '')}
+          </strong>
+          <small>${escapeHtml(information)}</small>
         </div>
 
-        ${
-          ['reports', 'lives'].includes(collection)
-            ? `
-              <button
-                class="subtle"
-                data-create-milestone="${collection}"
-                data-index="${index}"
-              >記念日に追加</button>
-            `
-            : ''
-        }
-
-        ${
-          collection === 'todos'
-            ? `
-              <input
-                type="checkbox"
-                aria-label="完了"
-                data-done="${escapeHtml(item.id)}"
-                ${item.done ? 'checked' : ''}
-              >
-            `
-            : ''
-        }
-
+        ${milestoneButton}
+        ${doneCheckbox}
         ${editButton}
 
         <button
+          type="button"
           class="del"
           data-delete="${collection}"
           data-index="${index}"
@@ -409,13 +426,12 @@ function render() {
   $('#statEvents').textContent =
     `${upcoming.filter((item) => item.date < endDate).length}件`;
 
-  $('#statDeadlines').textContent = `${
-    db.tickets.filter(
+  $('#statDeadlines').textContent =
+    `${db.tickets.filter(
       (item) =>
         item.date >= date &&
         !['落選', '入金済み'].includes(item.status)
-    ).length
-  }件`;
+    ).length}件`;
 
   $('#statReports').textContent = `${db.reports.length}件`;
 
@@ -424,8 +440,7 @@ function render() {
     .reduce((sum, item) => sum + (Number(item.amount) || 0), 0);
 
   $('#moneyTotal').textContent =
-    $('#statSpend').textContent =
-      `¥${spend.toLocaleString()}`;
+    $('#statSpend').textContent = `¥${spend.toLocaleString()}`;
 
   const favorites = (db.profile.members || [db.profile.name])
     .map((name) => members.find((member) => member.name === name))
@@ -444,11 +459,15 @@ function render() {
     return `
       <div class="favorite-days">
         <span>${escapeHtml(member.name)}</span>
-        <strong>${
-          days == null
-            ? '推し始めた日：未登録'
-            : `推しメンにして${days.toLocaleString()}日が経過しました`
-        }</strong>
+
+        <strong>
+          ${
+            days == null
+              ? '推し始めた日：未登録'
+              : `推しメンにして${days.toLocaleString()}日が経過しました`
+          }
+        </strong>
+
         ${
           days == null
             ? ''
@@ -459,9 +478,8 @@ function render() {
   }).join('');
 
   $('#profileBirthdayText').textContent = favorites.length
-    ? favorites.map(
-        (member) =>
-          `${member.name} ${member.birthday.slice(5).replace('-', '/')}`
+    ? favorites.map((member) =>
+        `${member.name} ${member.birthday.slice(5).replace('-', '/')}`
       ).join(' / ')
     : '未登録';
 
@@ -483,9 +501,11 @@ function render() {
           birthday.setFullYear(birthday.getFullYear() + 1);
         }
 
-        return `${member.name} あと${
-          Math.round((birthday - start) / 86400000)
-        }日`;
+        const remaining = Math.round(
+          (birthday - start) / 86400000
+        );
+
+        return `${member.name} あと${remaining}日`;
       }).join(' / ')
     : '未登録';
 
@@ -503,6 +523,7 @@ function loadImages(container) {
           const image = new Image();
           image.src = url;
           image.alt = '記念日の写真';
+
           element.replaceChildren(image);
         }
       } catch {
@@ -522,13 +543,13 @@ function milestoneCard(item, compact = false) {
       <time>${escapeHtml(item.date)}</time>
       <h3>${escapeHtml(item.title)}</h3>
 
-      <p class="tag">${
-        escapeHtml((item.members || []).join('・'))
-      }</p>
+      <p class="tag">
+        ${escapeHtml((item.members || []).join('・'))}
+      </p>
 
-      <p class="anniversary">${
-        escapeHtml(anniversaryInfo(item.date))
-      }</p>
+      <p class="anniversary">
+        ${escapeHtml(anniversaryInfo(item.date))}
+      </p>
 
       ${
         !compact && item.note
@@ -549,11 +570,13 @@ function milestoneCard(item, compact = false) {
 
       <div class="photo-actions">
         <button
+          type="button"
           class="subtle"
           data-edit-milestone="${index}"
         >編集</button>
 
         <button
+          type="button"
           class="del"
           data-delete="milestones"
           data-index="${index}"
@@ -573,7 +596,10 @@ function renderMilestones() {
     'すべてのメンバー'
   );
 
-  const query = $('[data-search="milestones"]').value.trim().toLowerCase();
+  const query = $('[data-search="milestones"]').value
+    .trim()
+    .toLowerCase();
+
   const filter = $('#milestoneMember').value;
 
   const items = [...db.milestones].sort(
@@ -607,7 +633,7 @@ function renderMilestones() {
 
       return (
         (aDays <= 30 ? aDays : Infinity) -
-        (bDays <= 30 ? bDays : Infinity) ||
+          (bDays <= 30 ? bDays : Infinity) ||
         b.date.localeCompare(a.date)
       );
     });
@@ -652,18 +678,21 @@ function renderReports() {
   ).split(/\s+/).filter(Boolean);
 
   const reports = byRecordDate(db.reports, true).filter((item) => {
-    const kana =
-      members.find((member) => member.name === item.member)?.kana || '';
+    const kana = members.find(
+      (member) => member.name === item.member
+    )?.kana || '';
 
-    const text = normalize([
-      item.member,
-      kana,
-      item.date,
-      item.title,
-      item.note,
-      item.part,
-      ...(item.messages || []).map((message) => message.text || '')
-    ].join(' '));
+    const text = normalize(
+      [
+        item.member,
+        kana,
+        item.date,
+        item.title,
+        item.note,
+        item.part,
+        ...(item.messages || []).map((message) => message.text || '')
+      ].join(' ')
+    );
 
     return reportTerms.every((term) => text.includes(term));
   });
