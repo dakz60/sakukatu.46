@@ -1,6 +1,7 @@
 'use strict';
 
 initPhotoBrowser();
+initGoodsBrowser();
 initForms();
 initTrades();
 initAppearance();
