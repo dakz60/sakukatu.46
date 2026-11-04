@@ -361,10 +361,11 @@ function rows(collection, items) {
 
 function render() {
   renderPhotos();
+  renderGoodsBrowser();
   renderHomeFavorites();
 
   for (const collection of collections.filter(
-    (name) => !['photos', 'milestones', 'reports'].includes(name)
+    (name) => !['photos', 'goods', 'milestones', 'reports'].includes(name)
   )) {
     renderRecordList(collection);
   }
@@ -620,6 +621,11 @@ function renderMilestones() {
 }
 
 function renderRecordList(collection) {
+  if (collection === 'goods') {
+    renderGoodsBrowser();
+    return;
+  }
+
   const list = $(`#list-${collection}`);
 
   if (!list || !Array.isArray(db[collection])) return;
