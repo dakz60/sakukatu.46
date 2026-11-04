@@ -164,22 +164,44 @@ function initForms() {
             .catch(() => {});
         }
 
-        let temporaryURL;
+        let temporaryURL = '';
 
         input.addEventListener('change', () => {
-          if (temporaryURL) URL.revokeObjectURL(temporaryURL);
+          preview.onload = null;
+          preview.onerror = null;
+
+          if (temporaryURL) {
+            URL.revokeObjectURL(temporaryURL);
+            temporaryURL = '';
+          }
 
           const file = input.files[0];
 
-          if (file) {
-            temporaryURL = URL.createObjectURL(file);
-            preview.src = temporaryURL;
-            preview.hidden = false;
-
-            preview.onload = () => {
-              URL.revokeObjectURL(temporaryURL);
-            };
+          if (!file) {
+            preview.removeAttribute('src');
+            preview.hidden = true;
+            return;
           }
+
+          const url = URL.createObjectURL(file);
+          temporaryURL = url;
+
+          const releaseURL = () => {
+            URL.revokeObjectURL(url);
+
+            if (temporaryURL === url) {
+              temporaryURL = '';
+            }
+          };
+
+          preview.onload = releaseURL;
+          preview.onerror = () => {
+            releaseURL();
+            preview.hidden = true;
+          };
+
+          preview.src = url;
+          preview.hidden = false;
         });
 
         wrap.append(preview);
@@ -357,7 +379,9 @@ function initForms() {
               : edit.dataset.editMilestone
       );
 
-      open(name, db[name][index]);
+      const item = db[name][index];
+
+      if (item) open(name, item);
       return;
     }
 
@@ -366,6 +390,8 @@ function initForms() {
     if (source) {
       const sourceCollection = source.dataset.createMilestone;
       const record = db[sourceCollection][Number(source.dataset.index)];
+
+      if (!record) return;
 
       const linked = db.milestones.find(
         (item) =>
@@ -540,6 +566,7 @@ function initForms() {
     if (
       file instanceof File &&
       file.size &&
+      file.type &&
       !file.type.startsWith('image/')
     ) {
       toast('画像ファイルを選んでください');
@@ -556,6 +583,7 @@ function initForms() {
 
     let newImage;
     let persisted = false;
+    let stage = 'image';
 
     try {
       if (collection === 'reports') {
@@ -564,16 +592,24 @@ function initForms() {
 
       if (file instanceof File && file.size) {
         newImage = `image-${crypto.randomUUID()}`;
-        await savePhoto(newImage, file);
+
+        await savePhoto(newImage, file, {
+          compress: ['photos', 'goods'].includes(collection)
+        });
+
         item.imageId = newImage;
       }
 
+      stage = 'record';
+
       if (editing) {
-        db[collection].splice(
-          db[collection].indexOf(editing),
-          1,
-          item
-        );
+        const index = db[collection].indexOf(editing);
+
+        if (index < 0) {
+          throw new Error('編集対象が見つかりません。開き直してください');
+        }
+
+        db[collection].splice(index, 1, item);
       } else {
         db[collection].unshift(item);
       }
@@ -586,6 +622,7 @@ function initForms() {
       }
 
       persisted = true;
+      stage = 'display';
 
       if (collection === 'reports' && editing) {
         reportImageIds(editing)
@@ -620,18 +657,40 @@ function initForms() {
       $('#modalWrap').classList.remove('open');
       form.reset();
       toast('保存しました');
-    } catch {
+    } catch (error) {
+      console.error('記録の保存処理に失敗しました', {
+        collection,
+        stage,
+        error
+      });
+
       if (!persisted) {
         reportImages.forEach((id) => {
           deletePhoto(id).catch(() => {});
         });
+
+        if (newImage) {
+          deletePhoto(newImage).catch(() => {});
+        }
       }
 
-      if (newImage && !persisted) {
-        deletePhoto(newImage).catch(() => {});
+      if (persisted) {
+        $('#modalWrap').classList.remove('open');
+        toast('保存済みですが、表示の更新に失敗しました。再読み込みしてください');
+      } else if (
+        error?.name === 'QuotaExceededError' ||
+        error?.name === 'NS_ERROR_DOM_QUOTA_REACHED'
+      ) {
+        toast(
+          stage === 'image'
+            ? '画像の保存容量が不足しています。登録済み画像の整理が必要です'
+            : '記録の保存容量が不足しています'
+        );
+      } else if (stage === 'image') {
+        toast(`画像を保存できませんでした：${error?.message || '不明なエラー'}`);
+      } else {
+        toast(`記録を保存できませんでした：${error?.message || '不明なエラー'}`);
       }
-
-      toast('保存できませんでした。空き容量と画像を確認してください');
     } finally {
       busy = false;
       submit.disabled = false;
