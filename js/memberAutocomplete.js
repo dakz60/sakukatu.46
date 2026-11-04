@@ -13,8 +13,10 @@ function isMember(value) {
   return members.some((member) => member.name === value);
 }
 
-function attachMemberAutocomplete(input) {
+function attachMemberAutocomplete(input, options = members) {
   if (!input || input.dataset.autocompleteReady) return;
+
+  const candidates = options;
 
   input.dataset.autocompleteReady = 'true';
   input.autocomplete = 'off';
@@ -59,14 +61,17 @@ function attachMemberAutocomplete(input) {
     input.removeAttribute('aria-activedescendant');
 
     const query = normalize(input.value);
-    input.dataset.memberSelected = String(isMember(input.value));
+
+    input.dataset.memberSelected = String(
+      candidates.some((member) => member.name === input.value)
+    );
 
     if (!query) {
       closeSuggestions();
       return;
     }
 
-    const matches = members
+    const matches = candidates
       .filter((member) =>
         normalize(member.name).includes(query) ||
         normalize(member.kana).includes(query)
@@ -75,7 +80,7 @@ function attachMemberAutocomplete(input) {
 
     list.replaceChildren();
 
-    if (matches.length === 0) {
+    if (!matches.length) {
       closeSuggestions();
       return;
     }
@@ -121,19 +126,18 @@ function attachMemberAutocomplete(input) {
   input.addEventListener('keydown', (event) => {
     const options = [...list.querySelectorAll('.member-suggestion')];
 
-    if (list.hidden || options.length === 0) return;
+    if (list.hidden || !options.length) return;
 
     if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
       event.preventDefault();
 
       const direction = event.key === 'ArrowDown' ? 1 : -1;
 
-      activeIndex =
-        activeIndex < 0
-          ? direction > 0
-            ? 0
-            : options.length - 1
-          : (activeIndex + direction + options.length) % options.length;
+      activeIndex = activeIndex < 0
+        ? direction > 0
+          ? 0
+          : options.length - 1
+        : (activeIndex + direction + options.length) % options.length;
 
       input.setAttribute(
         'aria-activedescendant',
@@ -151,7 +155,7 @@ function attachMemberAutocomplete(input) {
       const selectedName =
         options[activeIndex].querySelector('strong').textContent;
 
-      const member = members.find(
+      const member = candidates.find(
         (item) => item.name === selectedName
       );
 
