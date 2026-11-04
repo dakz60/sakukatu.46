@@ -1,3 +1,5 @@
+'use strict';
+
 const labels = {
   schedule: 'スケジュール',
   tickets: '応募・チケット',
@@ -8,7 +10,7 @@ const labels = {
   money: '推し活家計簿',
   todos: '推し活ToDo',
   places: '推し活マップ',
-  milestones: 'メンバー別記念日',
+  milestones: 'メンバー別記念日'
 };
 
 const collections = Object.keys(labels);
@@ -43,7 +45,7 @@ const members = [
   { name: '松本和子', kana: 'まつもとわこ', birthday: '2005-02-06' },
   { name: '目黒陽色', kana: 'めぐろひいろ', birthday: '2006-01-24' },
   { name: '山川宇衣', kana: 'やまかわうい', birthday: '2005-09-19' },
-  { name: '山田桃実', kana: 'やまだももみ', birthday: '2008-07-20' },
+  { name: '山田桃実', kana: 'やまだももみ', birthday: '2008-07-20' }
 ];
 
 const forms = {
@@ -54,9 +56,10 @@ const forms = {
       ['date', '記念日', 'date', true],
       ['title', 'タイトル', 'text', true],
       ['note', '思い出・メモ', 'textarea', false],
-      ['photo', '思い出の画像（任意）', 'file', false],
-    ],
+      ['photo', '思い出の画像（任意）', 'file', false]
+    ]
   },
+
   schedule: {
     title: '予定を追加',
     fields: [
@@ -68,10 +71,21 @@ const forms = {
         '種類',
         'select',
         true,
-        ['ライブ', 'リアミ', 'オンミ', 'トレ', 'テレビ', 'ラジオ', '雑誌', '配信', '発売日', 'その他'],
+        [
+          'ライブ',
+          'リアミ',
+          'オンミ',
+          'トレ',
+          'テレビ',
+          'ラジオ',
+          '雑誌',
+          '配信',
+          '発売日',
+          'その他'
+        ]
       ],
-      ['place', '場所・メモ', 'text', false],
-    ],
+      ['place', '場所・メモ', 'text', false]
+    ]
   },
 
   tickets: {
@@ -84,10 +98,10 @@ const forms = {
         '状況',
         'select',
         true,
-        ['応募前', '申込済み', '当選', '落選', '入金済み'],
+        ['応募前', '申込済み', '当選', '落選', '入金済み']
       ],
-      ['note', 'メモ', 'text', false],
-    ],
+      ['note', 'メモ', 'text', false]
+    ]
   },
 
   goods: {
@@ -99,12 +113,12 @@ const forms = {
         '種類',
         'select',
         true,
-        ['ペンライト', 'アクリルスタンド', 'タオル', 'CD・書籍', 'その他'],
+        ['ペンライト', 'アクリルスタンド', 'タオル', 'CD・書籍', 'その他']
       ],
       ['status', '所持状況', 'select', true, ['所持', '購入予定', '未所持']],
       ['price', '価格（円）', 'number', false],
-      ['note', 'メモ', 'text', false],
-    ],
+      ['note', 'メモ', 'text', false]
+    ]
   },
 
   photos: {
@@ -113,11 +127,17 @@ const forms = {
       ['member', 'メンバー', 'member', true],
       ['category', '分類', 'select', true, ['公式ランダム', 'CD封入']],
       ['series', 'シリーズ・衣装', 'text', true],
-      ['pose', 'ポーズ・種類', 'select', true, ['スワリ', 'ヨリ', 'チュウ', 'ヒキ', 'その他']],
+      [
+        'pose',
+        'ポーズ・種類',
+        'select',
+        true,
+        ['スワリ', 'ヨリ', 'チュウ', 'ヒキ', 'その他']
+      ],
       ['count', '枚数', 'number', true],
       ['photo', '写真画像（任意）', 'file', false],
-      ['note', 'メモ', 'text', false],
-    ],
+      ['note', 'メモ', 'text', false]
+    ]
   },
 
   lives: {
@@ -128,8 +148,8 @@ const forms = {
       ['venue', '会場', 'text', false],
       ['seat', '座席', 'text', false],
       ['setlist', 'セットリスト・印象に残った曲', 'textarea', false],
-      ['note', '感想・思い出', 'textarea', false],
-    ],
+      ['note', '感想・思い出', 'textarea', false]
+    ]
   },
 
   reports: {
@@ -142,8 +162,8 @@ const forms = {
       ['tickets', '使用枚数（任意）', 'number', false],
       ['memberAvatar', 'メンバーのアイコン（任意）', 'file', false],
       ['selfAvatar', '自分のアイコン（任意）', 'file', false],
-      ['note', '感想・メモ', 'textarea', false],
-    ],
+      ['note', '感想・メモ', 'textarea', false]
+    ]
   },
 
   money: {
@@ -157,17 +177,17 @@ const forms = {
         'カテゴリ',
         'select',
         true,
-        ['チケット', 'グッズ', '遠征', 'CD・書籍', 'その他'],
-      ],
-    ],
+        ['チケット', 'グッズ', '遠征', 'CD・書籍', 'その他']
+      ]
+    ]
   },
 
   todos: {
     title: 'ToDoを追加',
     fields: [
       ['title', 'やること', 'text', true],
-      ['date', '期限', 'date', false],
-    ],
+      ['date', '期限', 'date', false]
+    ]
   },
 
   places: {
@@ -179,11 +199,11 @@ const forms = {
         '種類',
         'select',
         true,
-        ['ライブ会場', '聖地巡礼', 'お店', 'その他'],
+        ['ライブ会場', '聖地巡礼', 'お店', 'その他']
       ],
       ['address', '住所・エリア', 'text', false],
       ['url', '地図リンク', 'url', false],
-      ['note', 'メモ', 'textarea', false],
-    ],
-  },
+      ['note', 'メモ', 'textarea', false]
+    ]
+  }
 };
