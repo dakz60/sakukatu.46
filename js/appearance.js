@@ -48,14 +48,7 @@ function initAppearance() {
   }
 
   function deleteUnusedBackground(id) {
-    if (!id) return;
-
-    const usedByCommon = db.appearance?.backgroundId === id;
-    const usedByPage = Object.values(
-      db.appearance?.pages || {}
-    ).some(settings => settings.backgroundId === id);
-
-    if (!usedByCommon && !usedByPage) {
+    if (id && !imageInUse(id)) {
       deletePhoto(id).catch(() => {});
     }
   }
@@ -64,6 +57,7 @@ function initAppearance() {
     if (temporaryURL) {
       URL.revokeObjectURL(temporaryURL);
     }
+
     temporaryURL = '';
   }
 
@@ -91,6 +85,7 @@ function initAppearance() {
 
     preview.style.backgroundSize =
       `${layout.width}px ${layout.height}px`;
+
     preview.style.backgroundPosition =
       `${layout.x}px ${layout.y}px`;
   }
@@ -113,6 +108,7 @@ function initAppearance() {
 
     image.onload = () => {
       if (revision !== previewRevision) return;
+
       previewImage = image;
       updatePreviewCrop();
     };
@@ -167,11 +163,13 @@ function initAppearance() {
 
     try {
       const url = await getPhotoURL(settings.backgroundId);
+
       if (current !== generation) return;
       if (!url) throw new Error('背景画像がありません');
 
       const image = new Image();
       image.src = url;
+
       await image.decode();
 
       if (current !== generation) return;
@@ -189,7 +187,10 @@ function initAppearance() {
       if (current !== generation) return;
 
       clearBackground();
-      toast('背景画像を読み込めませんでした。背景の設定から選び直せます');
+
+      toast(
+        '背景画像を読み込めませんでした。背景の設定から選び直せます'
+      );
     }
   }
 
@@ -198,13 +199,14 @@ function initAppearance() {
       busy || !editingSettings().backgroundId;
 
     cropButton.disabled =
-      busy || (!fileInput.files.length && !editingSettings().backgroundId);
+      busy ||
+      (!fileInput.files.length && !editingSettings().backgroundId);
   }
 
   function setBusy(value) {
     busy = value;
 
-    form.querySelectorAll('button, input').forEach(element => {
+    form.querySelectorAll('button, input').forEach((element) => {
       element.disabled = value;
     });
 
@@ -215,6 +217,7 @@ function initAppearance() {
     if (busy) return;
 
     editingPage = activePage();
+
     const settings = editingSettings();
 
     $('#appearanceTitle').textContent =
@@ -263,7 +266,7 @@ function initAppearance() {
 
   $('#cancelAppearance').onclick = close;
 
-  modal.onclick = event => {
+  modal.onclick = (event) => {
     if (event.target === modal) close();
   };
 
@@ -287,6 +290,7 @@ function initAppearance() {
 
     pendingCrop = null;
     temporaryURL = URL.createObjectURL(file);
+
     setPreview(temporaryURL);
     updateButtons();
   };
@@ -298,11 +302,14 @@ function initAppearance() {
 
     try {
       const settings = editingSettings();
-      const source = fileInput.files[0] || (
-        settings.backgroundId
-          ? await getPhotoURL(settings.backgroundId)
-          : null
-      );
+
+      const source =
+        fileInput.files[0] ||
+        (
+          settings.backgroundId
+            ? await getPhotoURL(settings.backgroundId)
+            : null
+        );
 
       if (
         revision !== previewRevision ||
@@ -330,8 +337,9 @@ function initAppearance() {
     }
   };
 
-  form.onsubmit = async event => {
+  form.onsubmit = async (event) => {
     event.preventDefault();
+
     if (busy) return;
 
     const file = fileInput.files[0];
@@ -355,6 +363,7 @@ function initAppearance() {
 
         const image = new Image();
         image.src = temporaryURL;
+
         await image.decode();
 
         newId = `background-${crypto.randomUUID()}`;
@@ -384,7 +393,9 @@ function initAppearance() {
         deletePhoto(newId).catch(() => {});
       }
 
-      toast('背景を保存できませんでした。画像と空き容量を確認してください');
+      toast(
+        '背景を保存できませんでした。画像と空き容量を確認してください'
+      );
     } finally {
       setBusy(false);
     }
