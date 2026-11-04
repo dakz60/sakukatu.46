@@ -19,7 +19,9 @@ function attachMemberAutocomplete(input) {
   input.dataset.autocompleteReady = 'true';
   input.autocomplete = 'off';
   input.placeholder = 'メンバー名を入力（例：た）';
+  input.setAttribute('role', 'combobox');
   input.setAttribute('aria-autocomplete', 'list');
+  input.setAttribute('aria-expanded', 'false');
 
   const picker = document.createElement('div');
   picker.className = 'member-picker';
@@ -29,7 +31,11 @@ function attachMemberAutocomplete(input) {
 
   const list = document.createElement('div');
   list.className = 'member-suggestions';
+  list.id = `member-suggestions-${crypto.randomUUID()}`;
+  list.setAttribute('role', 'listbox');
   list.hidden = true;
+
+  input.setAttribute('aria-controls', list.id);
   picker.append(list);
 
   let activeIndex = -1;
@@ -37,6 +43,8 @@ function attachMemberAutocomplete(input) {
   function closeSuggestions() {
     list.hidden = true;
     activeIndex = -1;
+    input.setAttribute('aria-expanded', 'false');
+    input.removeAttribute('aria-activedescendant');
   }
 
   function chooseMember(member) {
@@ -47,6 +55,9 @@ function attachMemberAutocomplete(input) {
   }
 
   function showMatches() {
+    activeIndex = -1;
+    input.removeAttribute('aria-activedescendant');
+
     const query = normalize(input.value);
     input.dataset.memberSelected = String(isMember(input.value));
 
@@ -56,12 +67,10 @@ function attachMemberAutocomplete(input) {
     }
 
     const matches = members
-      .filter((member) => {
-        return (
-          normalize(member.name).includes(query) ||
-          normalize(member.kana).includes(query)
-        );
-      })
+      .filter((member) =>
+        normalize(member.name).includes(query) ||
+        normalize(member.kana).includes(query)
+      )
       .slice(0, 8);
 
     list.replaceChildren();
@@ -74,6 +83,7 @@ function attachMemberAutocomplete(input) {
     matches.forEach((member, index) => {
       const option = document.createElement('button');
       option.type = 'button';
+      option.id = `${list.id}-${index}`;
       option.className = 'member-suggestion';
       option.setAttribute('role', 'option');
       option.setAttribute('aria-selected', 'false');
@@ -95,13 +105,10 @@ function attachMemberAutocomplete(input) {
       });
 
       list.append(option);
-
-      if (index === activeIndex) {
-        option.classList.add('active');
-      }
     });
 
     list.hidden = false;
+    input.setAttribute('aria-expanded', 'true');
   }
 
   input.addEventListener('input', showMatches);
@@ -120,20 +127,33 @@ function attachMemberAutocomplete(input) {
       event.preventDefault();
 
       const direction = event.key === 'ArrowDown' ? 1 : -1;
-      activeIndex = (activeIndex + direction + options.length) % options.length;
+
+      activeIndex =
+        activeIndex < 0
+          ? direction > 0
+            ? 0
+            : options.length - 1
+          : (activeIndex + direction + options.length) % options.length;
+
+      input.setAttribute(
+        'aria-activedescendant',
+        options[activeIndex].id
+      );
 
       options.forEach((option, index) => {
         const isActive = index === activeIndex;
         option.classList.toggle('active', isActive);
         option.setAttribute('aria-selected', String(isActive));
       });
-    } else if (event.key === 'Enter' && activeIndex >= 0) {
+    } else if (event.key === 'Enter' && options[activeIndex]) {
       event.preventDefault();
 
       const selectedName =
         options[activeIndex].querySelector('strong').textContent;
 
-      const member = members.find((item) => item.name === selectedName);
+      const member = members.find(
+        (item) => item.name === selectedName
+      );
 
       if (member) {
         chooseMember(member);
