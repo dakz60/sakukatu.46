@@ -10,8 +10,14 @@ try {
   stored = {};
 }
 
-const db = stored && typeof stored === 'object' && !Array.isArray(stored) ? stored : {};
-if (!Array.isArray(db.trades)) db.trades = [];
+const db =
+  stored && typeof stored === 'object' && !Array.isArray(stored)
+    ? stored
+    : {};
+
+if (!Array.isArray(db.trades)) {
+  db.trades = [];
+}
 
 for (const name of collections) {
   if (!Array.isArray(db[name])) {
@@ -19,12 +25,16 @@ for (const name of collections) {
   }
 }
 
-if (!db.profile || typeof db.profile !== 'object' || Array.isArray(db.profile)) {
+if (
+  !db.profile ||
+  typeof db.profile !== 'object' ||
+  Array.isArray(db.profile)
+) {
   db.profile = {
     name: '推しメンバー',
     group: '櫻坂46',
     birthday: '',
-    anniversary: '',
+    anniversary: ''
   };
 }
 
@@ -34,13 +44,49 @@ if (!db.profile.anniversary) {
   db.profile.anniversary = '';
 }
 
+if (
+  db.profile.members != null &&
+  !Array.isArray(db.profile.members)
+) {
+  delete db.profile.members;
+}
+
+db.photos = migratePhotos(db.photos);
+
 function save() {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(db));
 }
 
-if (db.profile.members != null && !Array.isArray(db.profile.members)) delete db.profile.members;
-
-db.photos = migratePhotos(db.photos);
 function imageInUse(id) {
-  return [...db.photos, ...db.milestones].some(item => String(item.imageId || item.id) === String(id)) || db.reports.some(item => [item.memberAvatarId,item.selfAvatarId,...(item.messages || []).map(message => message.imageId)].includes(id));
+  if (id == null || id === '') {
+    return false;
+  }
+
+  const key = String(id);
+
+  const references = [
+    ...db.photos.map((item) => item.imageId || item.id),
+
+    ...db.milestones.map((item) => item.imageId || item.id),
+
+    ...db.reports.flatMap((item) => [
+      item.memberAvatarId,
+      item.selfAvatarId,
+      ...(item.messages || []).map((message) => message.imageId)
+    ]),
+
+    db.appearance?.backgroundId,
+
+    ...Object.values(db.appearance?.pages || {}).map(
+      (item) => item?.backgroundId
+    ),
+
+    ...Object.values(db.photoSeriesIcons || {}).flatMap((icons) =>
+      Object.values(icons).map((icon) => icon?.imageId)
+    )
+  ];
+
+  return references.some(
+    (value) => value != null && String(value) === key
+  );
 }
