@@ -18,6 +18,7 @@ const goodsDefaultTypes = [
   'サクコイ',
   'ユニエア',
   'サクコレ',
+  'ローソン',
   'イオン',
   'HMV',
   'Tower Lecords',
