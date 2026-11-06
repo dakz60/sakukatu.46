@@ -1,5 +1,22 @@
 'use strict';
 
+const goodsDefaultTypes = [
+  'ペンライト',
+  'ミニペンラ',
+  'タオル',
+  'ラババン',
+  'アクスタ',
+  '缶バ',
+  'アクキー',
+  'チャーム',
+  'ワッペン',
+  'クリアカード',
+  'ステッカー',
+  'クリアファイル',
+  'フォトアルバム',
+  'マグカップ'
+];
+
 const goodsBrowserState = {
   member: '',
   type: '',
@@ -78,6 +95,22 @@ function goodsCatalogEntries() {
   return [...entries.values()];
 }
 
+function goodsAvailableTypes(member, catalog = goodsCatalogEntries()) {
+  const configured = db.goodsTypeNames?.[member];
+  const defaults = Array.isArray(configured)
+    ? configured
+    : goodsDefaultTypes;
+
+  return [
+    ...new Set([
+      ...defaults,
+      ...catalog
+        .filter((entry) => entry.member === member)
+        .map((entry) => entry.type)
+    ])
+  ].filter(Boolean);
+}
+
 function currentGoodsEntry(series = goodsBrowserState.series) {
   const state = goodsBrowserState;
 
@@ -110,7 +143,9 @@ function goodsRecords(
 
 function goodsUnit(entry) {
   return entry?.unit || (
-    /カード/.test(entry?.type || goodsBrowserState.type) ? '枚' : '個'
+    /カード/.test(entry?.type || goodsBrowserState.type)
+      ? '枚'
+      : '個'
   );
 }
 
@@ -126,6 +161,7 @@ function commitGoods(records, catalog) {
   } catch {
     db.goods = previous;
     db.goodsCatalog = previousCatalog;
+
     toast('グッズを保存できませんでした。空き容量を確認してください');
     return false;
   }
@@ -135,11 +171,18 @@ function commitGoods(records, catalog) {
 }
 
 function goodsThumbnail(entry) {
-  return `<span class="goods-thumb" aria-hidden="true"${
-    entry?.iconId
-      ? ` data-goods-icon="${escapeHtml(entry.iconId)}" data-goods-crop="${escapeHtml(JSON.stringify(entry.crop || null))}"`
-      : ''
-  }>${entry?.iconId ? '' : '▧'}</span>`;
+  return `
+    <span
+      class="goods-thumb"
+      aria-hidden="true"
+      ${
+        entry?.iconId
+          ? `data-goods-icon="${escapeHtml(entry.iconId)}"
+             data-goods-crop="${escapeHtml(JSON.stringify(entry.crop || null))}"`
+          : ''
+      }
+    >${entry?.iconId ? '' : '▧'}</span>
+  `;
 }
 
 function loadGoodsImages(container) {
@@ -188,10 +231,12 @@ function goodsRow(action, value, title, detail, thumbnail = '') {
       data-goods-${action}="${escapeHtml(value)}"
     >
       ${thumbnail}
+
       <span class="goods-row-main">
         <strong>${escapeHtml(title)}</strong>
         <small>${escapeHtml(detail)}</small>
       </span>
+
       <span aria-hidden="true">›</span>
     </button>
   `;
@@ -208,13 +253,13 @@ function renderGoodsBrowser() {
   $('#page-goods').querySelectorAll('[data-goods-view]').forEach(
     (button) => {
       const active = button.dataset.goodsView === state.inventory;
+
       button.classList.toggle('active', active);
       button.setAttribute('aria-pressed', String(active));
     }
   );
 
   $('#goodsBack').hidden = !state.member;
-
   $('#goodsBack').textContent = state.series
     ? '‹ シリーズへ'
     : state.type
@@ -245,7 +290,6 @@ function renderGoodsBrowser() {
 
   $('#goodsSearch').value = state.query;
   $('#goodsFavoritesOnly').checked = state.favoritesOnly;
-
   $('#goodsAddKind').hidden = !state.member || !!state.type;
   $('#goodsAddSeries').hidden = !state.type || !!state.series;
   $('#goodsAddVariant').hidden = !entry;
@@ -283,16 +327,14 @@ function renderGoodsBrowser() {
 
     const visible = names.filter((name) =>
       normalize(
-        `${name} ${members.find((item) => item.name === name)?.kana || ''}`
+        `${name} ${
+          members.find((item) => item.name === name)?.kana || ''
+        }`
       ).includes(query)
     );
 
     container.innerHTML = visible.map((name) => {
-      const kinds = new Set(
-        catalog
-          .filter((item) => item.member === name)
-          .map((item) => item.type)
-      ).size;
+      const kinds = goodsAvailableTypes(name, catalog).length;
 
       const total = db.goods
         .filter(
@@ -313,17 +355,15 @@ function renderGoodsBrowser() {
     $('#goodsSummary').textContent =
       `${visible.length}人・共通グッズ`;
   } else if (!state.type) {
-    const types = [
-      ...new Set(
-        catalog
-          .filter((item) => item.member === state.member)
-          .map((item) => item.type)
-      )
-    ].filter((type) => normalize(type).includes(query));
+    const types = goodsAvailableTypes(state.member, catalog).filter(
+      (type) => normalize(type).includes(query)
+    );
 
     container.innerHTML = types.map((type) => {
       const entries = catalog.filter(
-        (item) => item.member === state.member && item.type === type
+        (item) =>
+          item.member === state.member &&
+          item.type === type
       );
 
       const thumbnail =
@@ -343,7 +383,9 @@ function renderGoodsBrowser() {
         'type',
         type,
         type,
-        `${entries.filter((item) => item.series).length}シリーズ / ${goodsInventoryLabel(state.inventory)} ${total}点`,
+        `${entries.filter((item) => item.series).length}シリーズ / ${
+          goodsInventoryLabel(state.inventory)
+        } ${total}点`,
         goodsThumbnail(thumbnail)
       );
     }).join('') || empty(
@@ -372,7 +414,9 @@ function renderGoodsBrowser() {
         'series',
         item.series,
         item.series,
-        `${item.variants.length}絵柄 / ${goodsInventoryLabel(state.inventory)} ${total}${goodsUnit(item)}`,
+        `${item.variants.length}絵柄 / ${
+          goodsInventoryLabel(state.inventory)
+        } ${total}${goodsUnit(item)}`,
         goodsThumbnail(item)
       );
     }).join('') || empty(
@@ -389,11 +433,16 @@ function renderGoodsBrowser() {
       );
 
       return (
-        (!state.favoritesOnly || items.some((item) => item.favorite)) &&
-        normalize([
-          variant,
-          ...items.flatMap((item) => [item.title, item.note])
-        ].join(' ')).includes(query)
+        (
+          !state.favoritesOnly ||
+          items.some((item) => item.favorite)
+        ) &&
+        normalize(
+          [
+            variant,
+            ...items.flatMap((item) => [item.title, item.note])
+          ].join(' ')
+        ).includes(query)
       );
     });
 
@@ -404,7 +453,9 @@ function renderGoodsBrowser() {
     ).length;
 
     $('#goodsSummary').textContent =
-      `${goodsInventoryLabel(state.inventory)} ${owned} / ${entry.variants.length}絵柄`;
+      `${goodsInventoryLabel(state.inventory)} ${
+        owned
+      } / ${entry.variants.length}絵柄`;
 
     container.innerHTML = variants.map((variant) => {
       const items = goodsRecords(entry, variant);
@@ -428,11 +479,13 @@ function renderGoodsBrowser() {
             data-goods-edit-variant="${key}"
             aria-label="${key}の画像・登録内容を編集"
           >
-            <span${
-              image
-                ? ` data-goods-image="${escapeHtml(image.imageId)}"`
-                : ''
-            }>${
+            <span
+              ${
+                image
+                  ? `data-goods-image="${escapeHtml(image.imageId)}"`
+                  : ''
+              }
+            >${
               count
                 ? '画像なし'
                 : state.inventory === 'collection'
@@ -518,53 +571,65 @@ function renderGoodsBrowser() {
       (!state.type || goodsType(item) === state.type) &&
       (!state.series || goodsSeries(item) === state.series) &&
       (!state.favoritesOnly || item.favorite) &&
-      normalize([
-        goodsMember(item),
-        goodsType(item),
-        goodsSeries(item),
-        goodsVariant(item),
-        item.note
-      ].join(' ')).includes(query)
+      normalize(
+        [
+          goodsMember(item),
+          goodsType(item),
+          goodsSeries(item),
+          goodsVariant(item),
+          item.note
+        ].join(' ')
+      ).includes(query)
   );
 
-  $('#list-goods').innerHTML = saved.map((item) => `
-    <div class="data-row">
-      <div class="data-main">
-        <strong>${escapeHtml(item.title || goodsVariant(item))}</strong>
+  $('#list-goods').innerHTML = saved.map((item) => {
+    const entry = catalog.find(
+      (entry) => goodsMatches(item, entry)
+    );
 
-        <small>${
-          escapeHtml([
-            goodsMember(item),
-            goodsType(item),
-            goodsSeries(item),
-            goodsVariant(item)
-          ].join(' / '))
-        }</small>
+    return `
+      <div class="data-row">
+        <div class="data-main">
+          <strong>
+            ${escapeHtml(item.title || goodsVariant(item))}
+          </strong>
 
-        <small>
-          ${goodsCount(item)}${
-            escapeHtml(
-              goodsUnit(catalog.find((entry) => goodsMatches(item, entry)))
-            )
+          <small>
+            ${escapeHtml(
+              [
+                goodsMember(item),
+                goodsType(item),
+                goodsSeries(item),
+                goodsVariant(item)
+              ].join(' / ')
+            )}
+          </small>
+
+          <small>
+            ${goodsCount(item)}${escapeHtml(goodsUnit(entry))}
+          </small>
+
+          ${
+            item.note
+              ? `<small>${escapeHtml(item.note)}</small>`
+              : ''
           }
-        </small>
+        </div>
 
-        ${item.note ? `<small>${escapeHtml(item.note)}</small>` : ''}
+        <button
+          type="button"
+          class="subtle"
+          data-goods-edit="${escapeHtml(item.id)}"
+        >編集</button>
+
+        <button
+          type="button"
+          class="del"
+          data-goods-delete="${escapeHtml(item.id)}"
+        >削除</button>
       </div>
-
-      <button
-        type="button"
-        class="subtle"
-        data-goods-edit="${escapeHtml(item.id)}"
-      >編集</button>
-
-      <button
-        type="button"
-        class="del"
-        data-goods-delete="${escapeHtml(item.id)}"
-      >削除</button>
-    </div>
-  `).join('') || empty('この条件の登録はありません');
+    `;
+  }).join('') || empty('この条件の登録はありません');
 
   loadGoodsImages($('#page-goods'));
 }
@@ -602,7 +667,16 @@ function addGoodsGroup(level) {
 
   let entry = catalog.find((item) => item.id === id);
 
-  if (level !== 'variant' && entry) {
+  if (
+    level !== 'variant' &&
+    (
+      entry ||
+      (
+        level === 'type' &&
+        goodsAvailableTypes(state.member, catalog).includes(name)
+      )
+    )
+  ) {
     toast('同じ名前は登録済みです');
     return;
   }
@@ -645,7 +719,10 @@ function changeGoodsCount(variant, delta, favorite = false) {
     0
   );
 
-  if (!favorite && (total + delta < 0 || total + delta > 99999)) {
+  if (
+    !favorite &&
+    (total + delta < 0 || total + delta > 99999)
+  ) {
     return;
   }
 
@@ -655,7 +732,9 @@ function changeGoodsCount(variant, delta, favorite = false) {
     ? items.find((item) => goodsCount(item) > 0)
     : items[0];
 
-  let row = target && records.find((item) => item.id === target.id);
+  let row = target && records.find(
+    (item) => item.id === target.id
+  );
 
   if (!row) {
     row = {
@@ -698,7 +777,10 @@ function changeGoodsCount(variant, delta, favorite = false) {
       .find(
         (button) =>
           button.getAttribute(attribute) === variant &&
-          (favorite || Number(button.dataset.delta) === delta)
+          (
+            favorite ||
+            Number(button.dataset.delta) === delta
+          )
       )
       ?.focus({ preventScroll: true });
   }
@@ -722,19 +804,18 @@ function renameGoodsGroup(variant = null) {
 
   const catalog = goodsCatalogEntries();
 
-  if (
-    variant
-      ? currentGoodsEntry()?.variants.includes(next)
-      : catalog.some(
+  const duplicate = variant
+    ? currentGoodsEntry()?.variants.includes(next)
+    : state.series
+      ? catalog.some(
           (entry) =>
             entry.member === state.member &&
-            (
-              state.series
-                ? entry.type === state.type && entry.series === next
-                : entry.type === next
-            )
+            entry.type === state.type &&
+            entry.series === next
         )
-  ) {
+      : goodsAvailableTypes(state.member, catalog).includes(next);
+
+  if (duplicate) {
     toast('その名前は登録済みです');
     return;
   }
@@ -777,7 +858,23 @@ function renameGoodsGroup(variant = null) {
       entry.type = next;
     }
 
-    entry.id = goodsCatalogId(entry.member, entry.type, entry.series);
+    entry.id = goodsCatalogId(
+      entry.member,
+      entry.type,
+      entry.series
+    );
+  }
+
+  const previousTypeNames = db.goodsTypeNames;
+  const renamingType = !variant && !state.series;
+
+  if (renamingType) {
+    db.goodsTypeNames = {
+      ...previousTypeNames,
+      [state.member]: goodsAvailableTypes(state.member).map(
+        (name) => name === old ? next : name
+      )
+    };
   }
 
   if (commitGoods(records, catalog)) {
@@ -792,6 +889,12 @@ function renameGoodsGroup(variant = null) {
     }
 
     toast('名前を変更しました');
+  } else if (renamingType) {
+    if (previousTypeNames === undefined) {
+      delete db.goodsTypeNames;
+    } else {
+      db.goodsTypeNames = previousTypeNames;
+    }
   }
 }
 
@@ -824,11 +927,15 @@ function removeGoodsVariant(variant) {
 
   if (
     commitGoods(
-      db.goods.filter((item) => !goodsMatches(item, entry, variant)),
+      db.goods.filter(
+        (item) => !goodsMatches(item, entry, variant)
+      ),
       catalog
     )
   ) {
-    removed.forEach((item) => cleanupGoodsImage(item.imageId));
+    removed.forEach(
+      (item) => cleanupGoodsImage(item.imageId)
+    );
   }
 }
 
@@ -861,7 +968,9 @@ async function editGoodsIcon(file = null) {
 
   try {
     const source = file || (
-      previous?.iconId ? await getPhotoURL(previous.iconId) : null
+      previous?.iconId
+        ? await getPhotoURL(previous.iconId)
+        : null
     );
 
     if (!source) return;
@@ -879,6 +988,7 @@ async function editGoodsIcon(file = null) {
     }
 
     const catalog = goodsCatalogEntries();
+
     let entry = catalog.find((entry) => entry.id === id);
 
     if (!entry) {
@@ -915,7 +1025,9 @@ async function editGoodsIcon(file = null) {
 }
 
 function removeGoodsIcon() {
-  const entry = currentGoodsEntry(goodsBrowserState.series || '');
+  const entry = currentGoodsEntry(
+    goodsBrowserState.series || ''
+  );
 
   if (!entry?.iconId) return;
 
@@ -1010,29 +1122,41 @@ function openGoodsForm(item = null, defaults = {}) {
       entry.series === values.series
   );
 
-  form.elements.unit.value =
-    goodsUnit(entry || { type: values.type });
+  form.elements.unit.value = goodsUnit(
+    entry || { type: values.type }
+  );
 
   $('#goodsRemoveImageLabel').hidden = !item?.imageId;
 
   const entries = goodsCatalogEntries();
 
-  for (const [field, list] of [
-    ['type', 'goodsTypeOptions'],
-    ['series', 'goodsSeriesOptions']
-  ]) {
-    $('#' + list).replaceChildren(
-      ...[
-        ...new Set(
-          entries.map((item) => item[field]).filter(Boolean)
-        )
-      ].map((value) => {
+  const updateTypeOptions = () => {
+    $('#goodsTypeOptions').replaceChildren(
+      ...goodsAvailableTypes(
+        form.elements.member.value,
+        entries
+      ).map((value) => {
         const option = document.createElement('option');
         option.value = value;
         return option;
       })
     );
-  }
+  };
+
+  form.elements.member.onchange = updateTypeOptions;
+  updateTypeOptions();
+
+  $('#goodsSeriesOptions').replaceChildren(
+    ...[
+      ...new Set(
+        entries.map((entry) => entry.series).filter(Boolean)
+      )
+    ].map((value) => {
+      const option = document.createElement('option');
+      option.value = value;
+      return option;
+    })
+  );
 
   $('#goodsModal').classList.add('open');
   form.elements.type.focus();
@@ -1048,7 +1172,9 @@ function editGoodsVariant(
   const items = goodsRecords(entry, variant, inventory);
 
   openGoodsForm(
-    items.find((item) => goodsCount(item) > 0) || items[0] || null,
+    items.find((item) => goodsCount(item) > 0) ||
+    items[0] ||
+    null,
     { variant, inventory }
   );
 }
@@ -1062,6 +1188,7 @@ async function saveGoodsForm(event) {
   if (!form.reportValidity()) return;
 
   const data = new FormData(form);
+
   const original = db.goods.find(
     (item) => item.id === goodsEditingId
   );
@@ -1143,7 +1270,12 @@ async function saveGoodsForm(event) {
     }
 
     const catalog = goodsCatalogEntries();
-    const id = goodsCatalogId(item.member, item.type, item.series);
+
+    const id = goodsCatalogId(
+      item.member,
+      item.type,
+      item.series
+    );
 
     let entry = catalog.find((entry) => entry.id === id);
 
@@ -1167,7 +1299,9 @@ async function saveGoodsForm(event) {
     entry.unit = unit;
 
     const records = original
-      ? db.goods.map((row) => row.id === original.id ? item : row)
+      ? db.goods.map(
+          (row) => row.id === original.id ? item : row
+        )
       : [item, ...db.goods];
 
     persisted = commitGoods(records, catalog);
@@ -1186,7 +1320,10 @@ async function saveGoodsForm(event) {
     $('#goodsModal').classList.remove('open');
     renderGoodsBrowser();
 
-    if (original?.imageId && original.imageId !== item.imageId) {
+    if (
+      original?.imageId &&
+      original.imageId !== item.imageId
+    ) {
       cleanupGoodsImage(original.imageId);
     }
 
@@ -1224,11 +1361,13 @@ function initGoodsBrowser() {
         class="secondary"
         data-goods-view="collection"
       >所持</button>
+
       <button
         type="button"
         class="secondary"
         data-goods-view="offer"
       >提供</button>
+
       <button
         type="button"
         class="secondary"
@@ -1254,31 +1393,40 @@ function initGoodsBrowser() {
           placeholder="メンバーを検索"
           aria-label="メンバーを検索"
         >
+
         <label>
           <input type="checkbox" id="goodsFavoritesOnly">
           お気に入りのみ（絵柄一覧）
         </label>
       </div>
 
-      <div class="goods-icon-controls" id="goodsIconControls" hidden>
+      <div
+        class="goods-icon-controls"
+        id="goodsIconControls"
+        hidden
+      >
         <span id="goodsIconPreview"></span>
         <span>一覧用アイコン</span>
+
         <input
           type="file"
           id="goodsIconFile"
           accept="image/*"
           hidden
         >
+
         <button
           type="button"
           class="subtle"
           id="goodsChooseIcon"
         >画像を選ぶ・変更</button>
+
         <button
           type="button"
           class="subtle"
           id="goodsCropIcon"
         >切り取り</button>
+
         <button
           type="button"
           class="subtle"
@@ -1301,24 +1449,28 @@ function initGoodsBrowser() {
           id="goodsAddKind"
           hidden
         >＋ 種類を追加</button>
+
         <button
           type="button"
           class="subtle"
           id="goodsAddSeries"
           hidden
         >＋ シリーズを追加</button>
+
         <button
           type="button"
           class="subtle"
           id="goodsAddVariant"
           hidden
         >＋ 追加</button>
+
         <button
           type="button"
           class="subtle"
           id="goodsRenameGroup"
           hidden
         >名前を変更</button>
+
         <button
           type="button"
           class="primary"
@@ -1446,7 +1598,10 @@ function initGoodsBrowser() {
               id="goodsFieldPhoto"
               accept="image/*"
             >
-            <small>画像を選ばなければ現在の画像を保持します。</small>
+
+            <small>
+              画像を選ばなければ現在の画像を保持します。
+            </small>
 
             <label id="goodsRemoveImageLabel" hidden>
               <input type="checkbox" name="removeImage">
@@ -1456,7 +1611,10 @@ function initGoodsBrowser() {
 
           <div class="field full">
             <label for="goodsFieldNote">メモ</label>
-            <textarea name="note" id="goodsFieldNote"></textarea>
+            <textarea
+              name="note"
+              id="goodsFieldNote"
+            ></textarea>
           </div>
         </div>
 
@@ -1466,7 +1624,11 @@ function initGoodsBrowser() {
             class="secondary"
             id="goodsCancel"
           >キャンセル</button>
-          <button type="submit" class="primary">保存する</button>
+
+          <button
+            type="submit"
+            class="primary"
+          >保存する</button>
         </div>
       </form>
     </div>
@@ -1510,6 +1672,7 @@ function initGoodsBrowser() {
     }
 
     state.query = '';
+
     renderGoodsBrowser();
     $('#goodsTitle').focus();
   };
@@ -1519,7 +1682,10 @@ function initGoodsBrowser() {
   $('#goodsAddVariant').onclick = () => addGoodsGroup('variant');
   $('#goodsRenameGroup').onclick = () => renameGoodsGroup();
 
-  $('#goodsChooseIcon').onclick = () => $('#goodsIconFile').click();
+  $('#goodsChooseIcon').onclick = () => {
+    $('#goodsIconFile').click();
+  };
+
   $('#goodsCropIcon').onclick = () => editGoodsIcon();
   $('#goodsRemoveIcon').onclick = removeGoodsIcon;
 
