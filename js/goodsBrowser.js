@@ -17,6 +17,9 @@ const goodsDefaultTypes = [
   'サクコイ',
   'ユニエア',
   'サクコレ',
+  'イオン',
+  'HMV',
+  'Tower Lecords',
   'Line music'
   '直筆',
   '雑誌',
