@@ -17,6 +17,7 @@ const goodsDefaultTypes = [
   'サクコイ',
   'ユニエア',
   'サクコレ',
+  'Line music'
   '直筆',
   '雑誌',
   'ステッカー',
