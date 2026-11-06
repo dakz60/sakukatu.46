@@ -22,7 +22,7 @@ const goodsDefaultTypes = [
   'イオン',
   'HMV',
   'Tower Lecords',
-  'Line music'
+  'Line music',
   '直筆',
   '雑誌',
   'ステッカー',
