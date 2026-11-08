@@ -58,9 +58,7 @@ function save() {
 }
 
 function imageInUse(id) {
-  if (id == null || id === '') {
-    return false;
-  }
+  if (id == null || id === '') return false;
 
   const key = String(id);
 
@@ -70,6 +68,14 @@ function imageInUse(id) {
     ...db.goods.map((item) => item.imageId),
 
     ...(db.goodsCatalog || []).map((item) => item.iconId),
+
+    ...db.places.flatMap((item) => [
+      item.imageId,
+      ...(Array.isArray(item.visits) ? item.visits : []).flatMap(
+        (visit) =>
+          Array.isArray(visit.imageIds) ? visit.imageIds : []
+      )
+    ]),
 
     ...db.milestones.map((item) => item.imageId || item.id),
 
@@ -81,12 +87,13 @@ function imageInUse(id) {
 
     db.appearance?.backgroundId,
 
-    ...Object.values(db.appearance?.pages || {}).map(
+    ...Object.values(db.appearance?.pages || []).map(
       (item) => item?.backgroundId
     ),
 
-    ...Object.values(db.photoSeriesIcons || {}).flatMap((icons) =>
-      Object.values(icons).map((icon) => icon?.imageId)
+    ...Object.values(db.photoSeriesIcons || {}).flatMap(
+      (icons) =>
+        Object.values(icons).map((icon) => icon?.imageId)
     )
   ];
 
