@@ -17,11 +17,7 @@ function ticketDeadlineHint(item, now = new Date()) {
   const days = Math.round(
     (
       Date.UTC(year, month - 1, day) -
-      Date.UTC(
-        now.getFullYear(),
-        now.getMonth(),
-        now.getDate()
-      )
+      Date.UTC(now.getFullYear(), now.getMonth(), now.getDate())
     ) / 86400000
   );
 
@@ -54,55 +50,55 @@ function renderTicketRows(items) {
       (a.date || '9999').localeCompare(b.date || '9999')
   );
 
-  return sorted.map((item) => {
-    const index = db.tickets.indexOf(item);
-    const hint = ticketDeadlineHint(item);
+  return sorted
+    .map((item) => {
+      const index = db.tickets.indexOf(item);
+      const hint = ticketDeadlineHint(item);
 
-    return `
-      <article class="ticket-row">
-        <div class="ticket-heading">
-          <h3>${escapeHtml(item.title || '名称未登録')}</h3>
+      return `
+        <article class="ticket-row">
+          <div class="ticket-heading">
+            <h3>${escapeHtml(item.title || '名称未登録')}</h3>
 
-          <span class="ticket-status">
-            状況：${escapeHtml(item.status || '未設定')}
-          </span>
-        </div>
+            <span class="ticket-status">
+              状況：${escapeHtml(item.status || '未設定')}
+            </span>
+          </div>
 
-        <div class="ticket-deadline">
-          <span>締切・入金期限</span>
+          <div class="ticket-deadline">
+            <span>締切・入金期限</span>
 
-          <time datetime="${escapeHtml(item.date || '')}">
-            ${escapeHtml(
-              item.date?.replaceAll('-', '/') || '未設定'
-            )}
-          </time>
+            <time datetime="${escapeHtml(item.date || '')}">
+              ${escapeHtml(item.date?.replaceAll('-', '/') || '未設定')}
+            </time>
 
-          ${hint ? `<strong>${hint}</strong>` : ''}
-        </div>
+            ${hint ? `<strong>${hint}</strong>` : ''}
+          </div>
 
-        ${
-          item.note
-            ? `<p class="ticket-note">${escapeHtml(item.note)}</p>`
-            : ''
-        }
+          ${
+            item.note
+              ? `<p class="ticket-note">${escapeHtml(item.note)}</p>`
+              : ''
+          }
 
-        <div class="ticket-actions">
-          <button
-            type="button"
-            class="secondary"
-            data-edit-ticket="${index}"
-            aria-label="${escapeHtml(item.title || '応募')}を編集"
-          >編集</button>
+          <div class="ticket-actions">
+            <button
+              type="button"
+              class="secondary"
+              data-edit-ticket="${index}"
+              aria-label="${escapeHtml(item.title || '応募')}を編集"
+            >編集</button>
 
-          <button
-            type="button"
-            class="del"
-            data-delete="tickets"
-            data-index="${index}"
-            aria-label="${escapeHtml(item.title || '応募')}を削除"
-          >削除</button>
-        </div>
-      </article>
-    `;
-  }).join('');
+            <button
+              type="button"
+              class="del"
+              data-delete="tickets"
+              data-index="${index}"
+              aria-label="${escapeHtml(item.title || '応募')}を削除"
+            >削除</button>
+          </div>
+        </article>
+      `;
+    })
+    .join('');
 }
