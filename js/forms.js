@@ -115,13 +115,13 @@ function initForms() {
         const date = new Date();
         const today = new Date(
           date.getTime() - date.getTimezoneOffset() * 60000
-        ).toISOString().slice(0, 10);
+        )
+          .toISOString()
+          .slice(0, 10);
 
         input.value = values[key] ?? (required ? today : '');
       } else {
-        input.value = values[key] ?? (
-          kind === 'select' ? choices[0] : ''
-        );
+        input.value = values[key] ?? (kind === 'select' ? choices[0] : '');
       }
 
       if (name === 'reports' && key === 'tickets') {
@@ -140,9 +140,8 @@ function initForms() {
       const caption = document.createElement('label');
       caption.htmlFor = input.id;
 
-      const fieldLabel = name === 'photos' && key === 'member'
-        ? 'メンバー・分類'
-        : label;
+      const fieldLabel =
+        name === 'photos' && key === 'member' ? 'メンバー・分類' : label;
 
       caption.textContent = fieldLabel + (required ? ' *' : '');
 
@@ -157,11 +156,7 @@ function initForms() {
         if (item) {
           getPhotoURL(item.imageId || item.id)
             .then((url) => {
-              if (
-                url &&
-                preview.isConnected &&
-                !input.files.length
-              ) {
+              if (url && preview.isConnected && !input.files.length) {
                 preview.src = url;
                 preview.hidden = false;
               }
@@ -214,8 +209,7 @@ function initForms() {
 
       if (key === 'photo' && item) {
         const hint = document.createElement('small');
-        hint.textContent =
-          '画像を選ばなければ現在の画像を保持します';
+        hint.textContent = '画像を選ばなければ現在の画像を保持します';
         wrap.append(hint);
       }
 
@@ -254,16 +248,8 @@ function initForms() {
 
       box.append(wrap);
 
-      if (
-        name === 'reports' &&
-        ['memberAvatar', 'selfAvatar'].includes(key)
-      ) {
-        attachAvatarCrop(
-          input,
-          wrap,
-          values[`${key}Id`],
-          values[`${key}Crop`]
-        );
+      if (name === 'reports' && ['memberAvatar', 'selfAvatar'].includes(key)) {
+        attachAvatarCrop(input, wrap, values[`${key}Id`], values[`${key}Crop`]);
       }
 
       if (kind === 'member') {
@@ -309,14 +295,13 @@ function initForms() {
         for (const entry of entries) {
           const option = document.createElement('option');
           option.value = entry.id;
-          option.textContent =
-            `同名項目 ${entry.occurrence}（原文の順番）`;
+          option.textContent = `同名項目 ${entry.occurrence}（原文の順番）`;
           select.append(option);
         }
 
-        select.value = entries.some(
-          (entry) => entry.id === current
-        ) ? current : '';
+        select.value = entries.some((entry) => entry.id === current)
+          ? current
+          : '';
 
         wrap.hidden = entries.length < 2;
       };
@@ -324,8 +309,7 @@ function initForms() {
       select.onchange = () => {
         form.dataset.catalogId = select.value;
         form.dataset.catalogMember = $('#field-member').value;
-        form.dataset.catalogSeries =
-          $('#field-series').value.trim();
+        form.dataset.catalogSeries = $('#field-series').value.trim();
       };
 
       $('#field-member').addEventListener('change', updateLink);
@@ -336,9 +320,7 @@ function initForms() {
       updateLink();
     }
 
-    conversation = name === 'reports'
-      ? createReportEditor(box, values)
-      : [];
+    conversation = name === 'reports' ? createReportEditor(box, values) : [];
 
     $('#modalWrap').classList.add('open');
   }
@@ -357,8 +339,9 @@ function initForms() {
 
     if (
       recordEdit &&
-      ['schedule', 'lives', 'goods', 'money', 'todos', 'places']
-        .includes(recordEdit.dataset.editRecord)
+      ['schedule', 'lives', 'goods', 'money', 'todos', 'places'].includes(
+        recordEdit.dataset.editRecord
+      )
     ) {
       const name = recordEdit.dataset.editRecord;
       const item = db[name][Number(recordEdit.dataset.index)];
@@ -369,7 +352,7 @@ function initForms() {
 
     const edit = event.target.closest(
       '[data-edit-photo], [data-edit-milestone], ' +
-      '[data-edit-report], [data-edit-ticket]'
+        '[data-edit-report], [data-edit-ticket]'
     );
 
     if (edit) {
@@ -424,15 +407,18 @@ function initForms() {
           ...(record.messages || []).map((message) => {
             if (message.kind === 'image') return '（画像）';
 
-            const speaker = message.kind === 'member'
-              ? record.member
-              : message.kind === 'self'
-                ? '自分'
-                : 'メモ';
+            const speaker =
+              message.kind === 'member'
+                ? record.member
+                : message.kind === 'self'
+                  ? '自分'
+                  : 'メモ';
 
             return `${speaker}：${message.text}`;
           })
-        ].filter(Boolean).join('\n'),
+        ]
+          .filter(Boolean)
+          .join('\n'),
         members: record.member ? [record.member] : [],
         sourceId: String(record.id),
         sourceCollection
@@ -447,9 +433,7 @@ function initForms() {
       open(
         add.dataset.add,
         null,
-        add.hasAttribute('data-wish')
-          ? { inventory: 'want', count: 1 }
-          : {}
+        add.hasAttribute('data-wish') ? { inventory: 'want', count: 1 } : {}
       );
     }
   });
@@ -499,9 +483,7 @@ function initForms() {
 
     const validPhotoMember =
       collection === 'photos' &&
-      photoMemberOptions().some(
-        (member) => member.name === item.member
-      );
+      photoMemberOptions().some((member) => member.name === item.member);
 
     if (
       ['photos', 'reports'].includes(collection) &&
@@ -649,11 +631,7 @@ function initForms() {
 
       if (collection === 'reports' && editing) {
         reportImageIds(editing)
-          .filter(
-            (id) =>
-              !reportImageIds(item).includes(id) &&
-              !imageInUse(id)
-          )
+          .filter((id) => !reportImageIds(item).includes(id) && !imageInUse(id))
           .forEach((id) => {
             deletePhoto(id).catch(() => {});
           });
@@ -667,9 +645,8 @@ function initForms() {
         }
       }
 
-      const targetView = item.inventory === 'collection'
-        ? 'owned'
-        : item.inventory;
+      const targetView =
+        item.inventory === 'collection' ? 'owned' : item.inventory;
 
       if (collection === 'photos' && targetView !== photoView) {
         setPhotoView(targetView);
@@ -699,7 +676,9 @@ function initForms() {
 
       if (persisted) {
         $('#modalWrap').classList.remove('open');
-        toast('保存済みですが、表示の更新に失敗しました。再読み込みしてください');
+        toast(
+          '保存済みですが、表示の更新に失敗しました。再読み込みしてください'
+        );
       } else if (
         error?.name === 'QuotaExceededError' ||
         error?.name === 'NS_ERROR_DOM_QUOTA_REACHED'
