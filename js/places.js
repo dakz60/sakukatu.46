@@ -71,10 +71,16 @@ function placeLink(url, label) {
     : '';
 }
 
-function placePhoto(id, className = '') {
+function placePhoto(id, className = '', crop = undefined) {
   return `
     <span
       class="places-photo ${className}"
+      ${
+        crop !== undefined
+          ? `style="position: relative"
+             data-place-crop="${escapeHtml(JSON.stringify(crop))}"`
+          : ''
+      }
       ${id ? `data-place-image="${escapeHtml(id)}"` : ''}
     >
       <span>${id ? '読み込み中' : '⌖'}</span>
@@ -96,8 +102,22 @@ function loadPlaceImages(container) {
 
       const image = new Image();
       image.alt = '場所・訪問記録の写真';
-      image.src = url;
 
+      if (element.hasAttribute('data-place-crop')) {
+        image.onload = () => {
+          if (!element.isConnected) return;
+
+          let crop = null;
+
+          try {
+            crop = JSON.parse(element.dataset.placeCrop || 'null');
+          } catch {}
+
+          applyAvatarCrop(image, crop);
+        };
+      }
+
+      image.src = url;
       element.replaceChildren(image);
     } catch {
       if (element.isConnected) {
@@ -126,7 +146,6 @@ function placeFilterOptions(selector, values, label, value) {
 
 function filteredPlaces() {
   const state = placesState;
-
   const terms = normalize(state.query).split(/\s+/).filter(Boolean);
 
   return db.places.filter((item) => {
@@ -178,7 +197,6 @@ function renderPlaces() {
   ].sort((a, b) => a.localeCompare(b, 'ja'));
 
   placeFilterOptions('#placesMember', names, 'すべてのメンバー', state.member);
-
   placeFilterOptions('#placesRegion', regions, 'すべての地域', state.region);
 
   $('#placesStatus').value = state.status;
@@ -208,7 +226,7 @@ function renderPlaces() {
       data-place-open="${escapeHtml(placeKey(item))}"
       aria-pressed="${placeKey(item) === state.selected}"
     >
-      ${placePhoto(item.imageId)}
+      ${placePhoto(item.imageId, '', item.iconCrop || null)}
 
       <span class="places-row-main">
         <strong>${escapeHtml(item.title || '名称未登録')}</strong>
@@ -229,7 +247,9 @@ function renderPlaces() {
 
         <small>
           ${
-            placeVisits(item).length ? `訪問 ${placeVisits(item).length}回` : ''
+            placeVisits(item).length
+              ? `訪問 ${placeVisits(item).length}回`
+              : ''
           }
         </small>
       </span>
@@ -301,6 +321,37 @@ function renderPlaceDetail() {
 
     ${item.imageId ? placePhoto(item.imageId, 'places-cover') : ''}
 
+    <div
+      class="places-actions"
+      role="group"
+      aria-label="一覧アイコンの編集"
+    >
+      <input
+        type="file"
+        id="placeIconFile"
+        accept="image/*"
+        hidden
+      >
+
+      <button
+        type="button"
+        class="subtle"
+        data-place-action="icon-choose"
+      >アイコン画像を変更</button>
+
+      <button
+        type="button"
+        class="subtle"
+        data-place-action="icon-crop"
+        ${!item.imageId ? 'disabled' : ''}
+      >アイコンの切り取り</button>
+    </div>
+
+    <p class="field-hint">
+      一覧アイコンは場所の写真を使います。
+      切り取り位置は一覧アイコンだけに反映します。
+    </p>
+
     <dl class="places-info">
       <div>
         <dt>関連メンバー</dt>
@@ -361,7 +412,9 @@ function renderPlaceDetail() {
           <article class="places-visit">
             <div class="places-visit-head">
               <time datetime="${escapeHtml(visit.date || '')}">
-                ${escapeHtml(visit.date?.replaceAll('-', '/') || '日付未登録')}
+                ${escapeHtml(
+                  visit.date?.replaceAll('-', '/') || '日付未登録'
+                )}
               </time>
 
               <span class="places-actions">
@@ -398,7 +451,99 @@ function renderPlaceDetail() {
     </div>
   `;
 
+  $('#placeIconFile').onchange = (event) => {
+    const file = event.target.files[0];
+    event.target.value = '';
+
+    if (file) editPlaceIcon(file);
+  };
+
   loadPlaceImages(container);
+}
+
+async function editPlaceIcon(file = null) {
+  if (placesState.busy) return;
+
+  const original = selectedPlace();
+  if (!original) return;
+
+  const controls = [
+    ...$('#placesDetail').querySelectorAll('[data-place-action^="icon-"]')
+  ];
+
+  const disabledStates = controls.map((button) => button.disabled);
+
+  placesState.busy = true;
+
+  controls.forEach((button) => {
+    button.disabled = true;
+  });
+
+  const ids = [];
+  let persisted = false;
+
+  try {
+    if (
+      file &&
+      (!file.size || (file.type && !file.type.startsWith('image/')))
+    ) {
+      throw new Error('画像ファイルを選んでください');
+    }
+
+    const source =
+      file || (original.imageId ? await getPhotoURL(original.imageId) : null);
+
+    if (!source) {
+      toast('アイコンにする画像を選んでください');
+      return;
+    }
+
+    const crop = await chooseImageCrop(source, {
+      initialCrop: file ? null : original.iconCrop || null
+    });
+
+    if (!crop) return;
+
+    if (!db.places.includes(original)) {
+      throw new Error('場所を開き直してください');
+    }
+
+    const item = { ...original, iconCrop: crop };
+
+    if (file) {
+      await savePlaceImages([file], ids);
+      item.imageId = ids[0];
+    }
+
+    persisted = commitPlaces(
+      db.places.map((row) => (row === original ? item : row))
+    );
+
+    if (!persisted) return;
+
+    renderPlaces();
+    cleanupPlaceImages(placeImageIds(original));
+
+    toast('アイコンを保存しました');
+  } catch (error) {
+    console.error('場所のアイコンを保存できませんでした', error);
+
+    toast(
+      persisted
+        ? '保存済みですが表示を更新できませんでした。再読み込みしてください'
+        : `アイコンを保存できませんでした：${error.message || '不明なエラー'}`
+    );
+  } finally {
+    try {
+      if (!persisted) cleanupPlaceImages(ids);
+    } finally {
+      placesState.busy = false;
+
+      controls.forEach((button, index) => {
+        button.disabled = disabledStates[index];
+      });
+    }
+  }
 }
 
 function commitPlaces(next) {
@@ -466,9 +611,7 @@ function openPlaceForm(item = null) {
   }
 
   form.elements.status.value = item ? placeStatus(item) : 'want';
-
   form.elements.removeImage.closest('label').hidden = !item?.imageId;
-
   form.elements.status.disabled = !!placeVisits(item).length;
 
   $('#placeMembers').innerHTML =
@@ -531,7 +674,8 @@ function openVisitForm(index = null) {
   $('#placeVisitFormTitle').textContent =
     index === null ? '訪問を記録' : '訪問記録を編集';
 
-  form.elements.removeImages.closest('label').hidden = !visit?.imageIds?.length;
+  form.elements.removeImages.closest('label').hidden =
+    !visit?.imageIds?.length;
 
   $('#placeVisitCurrentImages').innerHTML = (visit?.imageIds || [])
     .map((id) => placePhoto(id))
@@ -634,8 +778,10 @@ async function submitPlaceForm(event) {
       if (file) {
         await savePlaceImages([file], ids);
         item.imageId = ids[0];
+        delete item.iconCrop;
       } else if (form.elements.removeImage.checked) {
         delete item.imageId;
+        delete item.iconCrop;
       }
     },
     '#placeModal'
@@ -951,6 +1097,7 @@ function initPlaces() {
               id="placeMembers"
               class="member-checkboxes"
             ></fieldset>
+
             <small>
               関連するメンバーを複数選べます。
               選ばずに登録することもできます。
@@ -1115,7 +1262,8 @@ function initPlaces() {
     element.addEventListener('click', (event) => {
       if (
         !placesState.busy &&
-        (event.target === element || event.target.closest('[data-place-close]'))
+        (event.target === element ||
+          event.target.closest('[data-place-close]'))
       ) {
         closePlaceModal(element);
       }
@@ -1130,7 +1278,9 @@ function initPlaces() {
       if (event.key !== 'Tab') return;
 
       const controls = [
-        ...element.querySelectorAll('button, input, select, textarea, a[href]')
+        ...element.querySelectorAll(
+          'button, input, select, textarea, a[href]'
+        )
       ].filter((input) => !input.disabled && input.getClientRects().length);
 
       const first = controls[0];
@@ -1180,6 +1330,14 @@ function initPlaces() {
       deletePlaceVisit(Number(button.dataset.placeVisitDelete));
     } else {
       const action = button.dataset.placeAction;
+
+      if (action === 'icon-choose') {
+        $('#placeIconFile').click();
+      }
+
+      if (action === 'icon-crop') {
+        editPlaceIcon();
+      }
 
       if (action === 'add') {
         openPlaceForm();
