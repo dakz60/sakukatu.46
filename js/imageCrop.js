@@ -65,9 +65,7 @@ async function chooseImageCrop(
 
   const previousFocus = document.activeElement;
   const owner = document.activeElement?.closest('.modal-wrap');
-  const localURL = source instanceof Blob
-    ? URL.createObjectURL(source)
-    : null;
+  const localURL = source instanceof Blob ? URL.createObjectURL(source) : null;
 
   const image = new Image();
   image.src = localURL || source;
@@ -140,17 +138,10 @@ async function chooseImageCrop(
     crop = layout.crop;
 
     context.clearRect(0, 0, width, height);
-    context.drawImage(
-      image,
-      layout.x,
-      layout.y,
-      layout.width,
-      layout.height
-    );
+    context.drawImage(image, layout.x, layout.y, layout.width, layout.height);
 
     zoom.value = crop.zoom;
-    $('#cropZoomValue').textContent =
-      `${Math.round(crop.zoom * 100)}%`;
+    $('#cropZoomValue').textContent = `${Math.round(crop.zoom * 100)}%`;
   }
 
   draw();
@@ -211,18 +202,13 @@ async function chooseImageCrop(
         ) {
           event.preventDefault();
 
-          controls[
-            event.shiftKey ? controls.length - 1 : 0
-          ].focus();
+          controls[event.shiftKey ? controls.length - 1 : 0].focus();
         }
       }
     }
 
     canvas.onpointerdown = (event) => {
-      if (
-        drag ||
-        (event.pointerType === 'mouse' && event.button !== 0)
-      ) {
+      if (drag || (event.pointerType === 'mouse' && event.button !== 0)) {
         return;
       }
 
@@ -319,8 +305,8 @@ function attachAvatarCrop(input, wrap, existingId, initialCrop) {
   let revision = 0;
 
   async function source() {
-    return input.files[0] || (
-      existingId ? await getPhotoURL(existingId) : null
+    return (
+      input.files[0] || (existingId ? await getPhotoURL(existingId) : null)
     );
   }
 
@@ -332,9 +318,7 @@ function attachAvatarCrop(input, wrap, existingId, initialCrop) {
 
     if (selectedURL) URL.revokeObjectURL(selectedURL);
 
-    selectedURL = value instanceof Blob
-      ? URL.createObjectURL(value)
-      : null;
+    selectedURL = value instanceof Blob ? URL.createObjectURL(value) : null;
 
     const url = selectedURL || value;
 
