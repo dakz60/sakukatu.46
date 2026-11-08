@@ -21,9 +21,7 @@ function homeFavoritePhotos() {
     return all.slice(0, homeFavoriteLimit);
   }
 
-  const records = new Map(
-    all.map((item) => [String(item.id), item])
-  );
+  const records = new Map(all.map((item) => [String(item.id), item]));
 
   return [...new Set(db.homeFavoritePhotoIds.map(String))]
     .map((id) => records.get(id))
@@ -32,14 +30,13 @@ function homeFavoritePhotos() {
 }
 
 function favoritePhotoLabel(item) {
-  return [item.member, item.series, item.pose]
-    .filter(Boolean)
-    .join(' / ');
+  return [item.member, item.series, item.pose].filter(Boolean).join(' / ');
 }
 
 function loadFavoriteImages(container) {
-  container.querySelectorAll('[data-favorite-image]').forEach(
-    async (element) => {
+  container
+    .querySelectorAll('[data-favorite-image]')
+    .forEach(async (element) => {
       try {
         const url = await getPhotoURL(element.dataset.favoriteImage);
 
@@ -55,14 +52,11 @@ function loadFavoriteImages(container) {
           element.textContent = '画像を読み込めませんでした';
         }
       }
-    }
-  );
+    });
 }
 
 function togglePhotoFavorite(id) {
-  const item = db.photos.find(
-    (photo) => String(photo.id) === String(id)
-  );
+  const item = db.photos.find((photo) => String(photo.id) === String(id));
 
   if (!item) return;
 
@@ -84,21 +78,16 @@ function togglePhotoFavorite(id) {
 
   render();
 
-  const card = [
-    ...document.querySelectorAll('[data-photo-record]')
-  ].find(
+  const card = [...document.querySelectorAll('[data-photo-record]')].find(
     (element) => element.dataset.photoRecord === String(id)
   );
 
   (
-    card?.querySelector('[data-favorite-photo]') ||
-    $('#photoFavoritesOnly')
+    card?.querySelector('[data-favorite-photo]') || $('#photoFavoritesOnly')
   )?.focus({ preventScroll: true });
 
   toast(
-    item.favorite
-      ? 'お気に入りに追加しました'
-      : 'お気に入りを解除しました'
+    item.favorite ? 'お気に入りに追加しました' : 'お気に入りを解除しました'
   );
 }
 
@@ -109,13 +98,17 @@ function renderHomeFavorites() {
   const items = homeFavoritePhotos();
   const manual = Array.isArray(db.homeFavoritePhotoIds);
 
-  $('#homeFavoritesSummary').textContent = all.length || manual
-    ? `${items.length} / ${homeFavoriteLimit}枚を表示${
-        manual ? '（自分で選択）' : ''
-      } / お気に入り${all.length}件`
-    : '';
+  $('#homeFavoritesSummary').textContent =
+    all.length || manual
+      ? `${items.length} / ${homeFavoriteLimit}枚を表示${
+          manual ? '（自分で選択）' : ''
+        } / お気に入り${all.length}件`
+      : '';
 
-  $('#homeFavorites').innerHTML = items.map((item) => `
+  $('#homeFavorites').innerHTML =
+    items
+      .map(
+        (item) => `
     <button
       type="button"
       class="home-favorite"
@@ -134,18 +127,23 @@ function renderHomeFavorites() {
 
       <small>
         ${escapeHtml(item.pose || '')} ·
-        ${escapeHtml({
-          collection: 'コレクション',
-          offer: '提供用',
-          want: '希望'
-        }[item.inventory] || '')}
+        ${escapeHtml(
+          {
+            collection: 'コレクション',
+            offer: '提供用',
+            want: '希望'
+          }[item.inventory] || ''
+        )}
       </small>
     </button>
-  `).join('') || empty(
-    manual
-      ? '「表示する写真を編集」から、ホームに表示する写真を選べます。'
-      : '生写真で「☆ お気に入り」を選ぶと、ここに表示されます。'
-  );
+  `
+      )
+      .join('') ||
+    empty(
+      manual
+        ? '「表示する写真を編集」から、ホームに表示する写真を選べます。'
+        : '生写真で「☆ お気に入り」を選ぶと、ここに表示されます。'
+    );
 
   loadFavoriteImages($('#homeFavorites'));
 }
@@ -264,8 +262,8 @@ function initHomeFavoriteEditor() {
       renderHomeFavoriteSelection();
 
       $('#homeFavoriteSelected')
-        .querySelectorAll('[data-home-selected-row]')[next]
-        ?.querySelector('[data-home-favorite-remove]')
+        .querySelectorAll('[data-home-selected-row]')
+        [next]?.querySelector('[data-home-favorite-remove]')
         ?.focus({ preventScroll: true });
     } else if (remove) {
       homeFavoriteEditorState.ids.splice(
@@ -288,12 +286,8 @@ function initHomeFavoriteEditor() {
 
     if (event.key !== 'Tab') return;
 
-    const controls = [
-      ...modal.querySelectorAll('button, input')
-    ].filter(
-      (element) =>
-        !element.disabled &&
-        element.getClientRects().length
+    const controls = [...modal.querySelectorAll('button, input')].filter(
+      (element) => !element.disabled && element.getClientRects().length
     );
 
     const first = controls[0];
@@ -339,26 +333,22 @@ function initHomeFavoriteEditor() {
         ids.push(id);
       }
     } else {
-      homeFavoriteEditorState.ids = ids.filter(
-        (value) => value !== id
-      );
+      homeFavoriteEditorState.ids = ids.filter((value) => value !== id);
     }
 
     renderHomeFavoriteSelection();
 
-    modal.querySelectorAll('[data-home-favorite-choice]').forEach(
-      (choice) => {
-        choice.checked = homeFavoriteEditorState.ids.includes(
-          choice.dataset.homeFavoriteChoice
-        );
-      }
-    );
+    modal.querySelectorAll('[data-home-favorite-choice]').forEach((choice) => {
+      choice.checked = homeFavoriteEditorState.ids.includes(
+        choice.dataset.homeFavoriteChoice
+      );
+    });
   });
 }
 
 function openHomeFavoriteEditor() {
-  homeFavoriteEditorState.ids = homeFavoritePhotos().map(
-    (item) => String(item.id)
+  homeFavoriteEditorState.ids = homeFavoritePhotos().map((item) =>
+    String(item.id)
   );
 
   homeFavoriteEditorState.query = '';
@@ -388,12 +378,14 @@ function renderHomeFavoriteSelection() {
   $('#homeFavoriteSelectedCount').textContent =
     `選択中 ${ids.length} / ${homeFavoriteLimit}枚`;
 
-  $('#homeFavoriteSelected').innerHTML = ids.map((id, index) => {
-    const item = records.get(id);
+  $('#homeFavoriteSelected').innerHTML =
+    ids
+      .map((id, index) => {
+        const item = records.get(id);
 
-    if (!item) return '';
+        if (!item) return '';
 
-    return `
+        return `
       <div
         class="data-row"
         data-home-selected-row
@@ -413,9 +405,7 @@ function renderHomeFavoriteSelection() {
         >
           <strong>${index + 1}. ${escapeHtml(item.member)}</strong>
           <small>
-            ${escapeHtml(
-              [item.series, item.pose].filter(Boolean).join(' / ')
-            )}
+            ${escapeHtml([item.series, item.pose].filter(Boolean).join(' / '))}
           </small>
         </div>
 
@@ -450,7 +440,9 @@ function renderHomeFavoriteSelection() {
         </div>
       </div>
     `;
-  }).join('') || `
+      })
+      .join('') ||
+    `
     <p class="field-hint">
       下のお気に入りから写真を選んでください。
     </p>
@@ -465,9 +457,8 @@ function renderHomeFavoriteCandidates() {
   const all = favoritePhotos();
 
   const matches = all.filter((item) => {
-    const kana = members.find(
-      (member) => member.name === item.member
-    )?.kana || '';
+    const kana =
+      members.find((member) => member.name === item.member)?.kana || '';
 
     const text = normalize(
       [item.member, kana, item.series, item.pose, item.note]
@@ -483,10 +474,12 @@ function renderHomeFavoriteCandidates() {
   $('#homeFavoriteCandidateCount').textContent =
     `${visible.length} / ${matches.length}件を表示`;
 
-  $('#homeFavoriteMore').hidden =
-    visible.length >= matches.length;
+  $('#homeFavoriteMore').hidden = visible.length >= matches.length;
 
-  $('#homeFavoriteCandidates').innerHTML = visible.map((item) => `
+  $('#homeFavoriteCandidates').innerHTML =
+    visible
+      .map(
+        (item) => `
     <label
       class="data-row"
       style="gap: 10px; cursor: pointer; min-height: 64px"
@@ -512,28 +505,28 @@ function renderHomeFavoriteCandidates() {
       >
         <strong>${escapeHtml(item.member)}</strong>
         <small>
-          ${escapeHtml(
-            [item.series, item.pose].filter(Boolean).join(' / ')
-          )}
+          ${escapeHtml([item.series, item.pose].filter(Boolean).join(' / '))}
         </small>
       </span>
     </label>
-  `).join('') || empty(
-    all.length
-      ? '条件に合うお気に入りはありません'
-      : '先に生写真をお気に入りに登録してください'
-  );
+  `
+      )
+      .join('') ||
+    empty(
+      all.length
+        ? '条件に合うお気に入りはありません'
+        : '先に生写真をお気に入りに登録してください'
+    );
 
   loadFavoriteImages($('#homeFavoriteCandidates'));
 }
 
 function saveHomeFavoriteSelection() {
-  const valid = new Set(
-    favoritePhotos().map((item) => String(item.id))
-  );
+  const valid = new Set(favoritePhotos().map((item) => String(item.id)));
 
-  const next = [...new Set(homeFavoriteEditorState.ids)]
-    .filter((id) => valid.has(id));
+  const next = [...new Set(homeFavoriteEditorState.ids)].filter((id) =>
+    valid.has(id)
+  );
 
   if (next.length > homeFavoriteLimit) {
     toast('選べるのは6枚までです');
@@ -570,25 +563,19 @@ function saveHomeFavoriteSelection() {
 }
 
 function openFavoritePhoto(id) {
-  const item = db.photos.find(
-    (photo) => String(photo.id) === String(id)
-  );
+  const item = db.photos.find((photo) => String(photo.id) === String(id));
 
   if (!item) return;
 
   $('#photoFavoritesOnly').checked = false;
   photoBrowserState.status = '';
 
-  setPhotoView(
-    item.inventory === 'collection' ? 'owned' : item.inventory
-  );
+  setPhotoView(item.inventory === 'collection' ? 'owned' : item.inventory);
 
   openPhotoCatalogRecord(item);
   go('photos');
 
-  const card = [
-    ...document.querySelectorAll('[data-photo-record]')
-  ].find(
+  const card = [...document.querySelectorAll('[data-photo-record]')].find(
     (element) => element.dataset.photoRecord === String(id)
   );
 
