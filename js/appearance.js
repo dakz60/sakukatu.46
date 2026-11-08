@@ -83,11 +83,8 @@ function initAppearance() {
       pendingCrop
     );
 
-    preview.style.backgroundSize =
-      `${layout.width}px ${layout.height}px`;
-
-    preview.style.backgroundPosition =
-      `${layout.x}px ${layout.y}px`;
+    preview.style.backgroundSize = `${layout.width}px ${layout.height}px`;
+    preview.style.backgroundPosition = `${layout.x}px ${layout.y}px`;
   }
 
   function setPreview(url) {
@@ -177,30 +174,22 @@ function initAppearance() {
       backgroundImage = image;
       positionBackground();
 
-      document.body.style.setProperty(
-        '--user-background',
-        `url("${url}")`
-      );
-
+      document.body.style.setProperty('--user-background', `url("${url}")`);
       document.body.classList.add('has-custom-background');
     } catch {
       if (current !== generation) return;
 
       clearBackground();
 
-      toast(
-        '背景画像を読み込めませんでした。背景の設定から選び直せます'
-      );
+      toast('背景画像を読み込めませんでした。背景の設定から選び直せます');
     }
   }
 
   function updateButtons() {
-    $('#removeBackground').disabled =
-      busy || !editingSettings().backgroundId;
+    $('#removeBackground').disabled = busy || !editingSettings().backgroundId;
 
     cropButton.disabled =
-      busy ||
-      (!fileInput.files.length && !editingSettings().backgroundId);
+      busy || (!fileInput.files.length && !editingSettings().backgroundId);
   }
 
   function setBusy(value) {
@@ -247,10 +236,7 @@ function initAppearance() {
         setPreview(url);
       }
     } catch {
-      if (
-        revision === previewRevision &&
-        modal.classList.contains('open')
-      ) {
+      if (revision === previewRevision && modal.classList.contains('open')) {
         toast('背景画像を読み込めませんでした');
       }
     }
@@ -305,16 +291,11 @@ function initAppearance() {
 
       const source =
         fileInput.files[0] ||
-        (
-          settings.backgroundId
-            ? await getPhotoURL(settings.backgroundId)
-            : null
-        );
+        (settings.backgroundId
+          ? await getPhotoURL(settings.backgroundId)
+          : null);
 
-      if (
-        revision !== previewRevision ||
-        !modal.classList.contains('open')
-      ) {
+      if (revision !== previewRevision || !modal.classList.contains('open')) {
         return;
       }
 
@@ -393,9 +374,7 @@ function initAppearance() {
         deletePhoto(newId).catch(() => {});
       }
 
-      toast(
-        '背景を保存できませんでした。画像と空き容量を確認してください'
-      );
+      toast('背景を保存できませんでした。画像と空き容量を確認してください');
     } finally {
       setBusy(false);
     }
