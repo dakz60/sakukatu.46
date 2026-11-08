@@ -72,9 +72,10 @@ function attachMemberAutocomplete(input, options = members) {
     }
 
     const matches = candidates
-      .filter((member) =>
-        normalize(member.name).includes(query) ||
-        normalize(member.kana).includes(query)
+      .filter(
+        (member) =>
+          normalize(member.name).includes(query) ||
+          normalize(member.kana).includes(query)
       )
       .slice(0, 8);
 
@@ -133,11 +134,12 @@ function attachMemberAutocomplete(input, options = members) {
 
       const direction = event.key === 'ArrowDown' ? 1 : -1;
 
-      activeIndex = activeIndex < 0
-        ? direction > 0
-          ? 0
-          : options.length - 1
-        : (activeIndex + direction + options.length) % options.length;
+      activeIndex =
+        activeIndex < 0
+          ? direction > 0
+            ? 0
+            : options.length - 1
+          : (activeIndex + direction + options.length) % options.length;
 
       input.setAttribute(
         'aria-activedescendant',
