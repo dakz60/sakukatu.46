@@ -2,6 +2,7 @@
 
 initPhotoBrowser();
 initGoodsBrowser();
+initPlaces();
 initForms();
 initTrades();
 initAppearance();
@@ -114,7 +115,11 @@ $('#menuBtn').onclick = () => {
 
 $('#todayBtn').onclick = () => {
   go('home', render);
-  window.scrollTo({ top: 0, behavior: 'smooth' });
+
+  window.scrollTo({
+    top: 0,
+    behavior: 'smooth'
+  });
 };
 
 document.body.addEventListener('change', (event) => {
@@ -139,11 +144,7 @@ document.body.addEventListener('change', (event) => {
 
     render();
 
-    toast(
-      item.done
-        ? 'ToDoを完了にしました'
-        : 'ToDoを未完了に戻しました'
-    );
+    toast(item.done ? 'ToDoを完了にしました' : 'ToDoを未完了に戻しました');
   }
 
   if (event.target.matches('[data-filter], [data-photo-filter]')) {
@@ -180,11 +181,10 @@ const profileMembers = $('#profileMembers');
 
 $('#editProfile').onclick = () => {
   const selected = new Set(
-    db.profile.members || (
-      members.some((member) => member.name === db.profile.name)
+    db.profile.members ||
+      (members.some((member) => member.name === db.profile.name)
         ? [db.profile.name]
-        : []
-    )
+        : [])
   );
 
   profileMembers.replaceChildren();
@@ -219,16 +219,14 @@ $('#editProfile').onclick = () => {
     const since = document.createElement('input');
     since.type = 'date';
     since.dataset.favoriteSince = member.name;
-    since.setAttribute(
-      'aria-label',
-      `${member.name}を推し始めた日`
-    );
+
+    since.setAttribute('aria-label', `${member.name}を推し始めた日`);
 
     const today = new Date();
 
-    since.max = new Date(
-      today.getTime() - today.getTimezoneOffset() * 60000
-    ).toISOString().slice(0, 10);
+    since.max = new Date(today.getTime() - today.getTimezoneOffset() * 60000)
+      .toISOString()
+      .slice(0, 10);
 
     since.value = db.profile.startDates?.[member.name] || '';
 
@@ -262,17 +260,15 @@ profileModal.onclick = (event) => {
 $('#profileForm').onsubmit = (event) => {
   event.preventDefault();
 
-  const selected = [
-    ...profileMembers.querySelectorAll('input:checked')
-  ].map((input) => input.value);
+  const selected = [...profileMembers.querySelectorAll('input:checked')].map(
+    (input) => input.value
+  );
 
   const startDates = { ...db.profile.startDates };
 
-  for (
-    const field of profileMembers.querySelectorAll(
-      '[data-favorite-since]:not(:disabled)'
-    )
-  ) {
+  for (const field of profileMembers.querySelectorAll(
+    '[data-favorite-since]:not(:disabled)'
+  )) {
     if (field.value && supportingDays(field.value) == null) {
       toast('推し始めた日は今日以前の日付を指定してください');
       return;
@@ -287,9 +283,7 @@ $('#profileForm').onsubmit = (event) => {
 
   const previous = db.profile;
 
-  const first = members.find(
-    (member) => member.name === selected[0]
-  );
+  const first = members.find((member) => member.name === selected[0]);
 
   db.profile = {
     ...db.profile,
