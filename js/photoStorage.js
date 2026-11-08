@@ -139,17 +139,12 @@ async function savePhoto(id, file, options = {}) {
     const shouldCompress =
       options.compress ?? key.startsWith('goods-image-');
 
-    const image = shouldCompress
-      ? await compressPhoto(file)
-      : file;
+    const image = shouldCompress ? await compressPhoto(file) : file;
 
     const database = await openDatabase();
 
     await new Promise((resolve, reject) => {
-      const transaction = database.transaction(
-        STORE_NAME,
-        'readwrite'
-      );
+      const transaction = database.transaction(STORE_NAME, 'readwrite');
 
       transaction.oncomplete = () => {
         resolve();
@@ -182,10 +177,7 @@ async function getPhotoURL(id) {
   const database = await openDatabase();
 
   const file = await new Promise((resolve, reject) => {
-    const transaction = database.transaction(
-      STORE_NAME,
-      'readonly'
-    );
+    const transaction = database.transaction(STORE_NAME, 'readonly');
 
     const request = transaction.objectStore(STORE_NAME).get(key);
     let result;
@@ -230,10 +222,7 @@ async function deletePhoto(id) {
   const database = await openDatabase();
 
   await new Promise((resolve, reject) => {
-    const transaction = database.transaction(
-      STORE_NAME,
-      'readwrite'
-    );
+    const transaction = database.transaction(STORE_NAME, 'readwrite');
 
     transaction.oncomplete = () => {
       resolve();
