@@ -62,8 +62,7 @@ function createReportEditor(box, item) {
     } else {
       input.value = value.text || '';
       input.rows = 2;
-      input.placeholder =
-        kind === 'note' ? '（用紙を出す）など' : '会話を入力';
+      input.placeholder = kind === 'note' ? '（用紙を出す）など' : '会話を入力';
     }
 
     const actions = document.createElement('div');
@@ -104,10 +103,7 @@ function createReportEditor(box, item) {
 
           if (target < 0 || target >= blocks.length) return;
 
-          [blocks[index], blocks[target]] = [
-            blocks[target],
-            blocks[index]
-          ];
+          [blocks[index], blocks[target]] = [blocks[target], blocks[index]];
         }
 
         update();
@@ -187,16 +183,13 @@ async function prepareReport(item, form, blocks, created) {
       item[`${name}Id`] = await store(file);
     }
 
-    item[`${name}Crop`] =
-      form.elements[name].imageCrop || null;
+    item[`${name}Crop`] = form.elements[name].imageCrop || null;
   }
 
   for (const block of blocks) {
     if (block.kind === 'image') {
       const file = block.input.files[0];
-      const imageId = file
-        ? await store(file)
-        : block.value.imageId;
+      const imageId = file ? await store(file) : block.value.imageId;
 
       if (imageId) {
         item.messages.push({ kind: 'image', imageId });
@@ -219,25 +212,26 @@ const avatar = (id, name, large = false, crop = null) => `
 `;
 
 function reportCard(item, index) {
-  const messages = (item.messages || []).map((message) => {
-    if (message.kind === 'image') {
-      return `
+  const messages = (item.messages || [])
+    .map((message) => {
+      if (message.kind === 'image') {
+        return `
         <div
           class="report-inline-image"
           data-report-image="${escapeHtml(message.imageId)}"
         ></div>
       `;
-    }
+      }
 
-    if (message.kind === 'note') {
-      return `
+      if (message.kind === 'note') {
+        return `
         <p class="report-stage">${escapeHtml(message.text)}</p>
       `;
-    }
+      }
 
-    const self = message.kind === 'self';
+      const self = message.kind === 'self';
 
-    return `
+      return `
       <div class="report-message ${self ? 'from-self' : ''}">
         ${avatar(
           self ? item.selfAvatarId : item.memberAvatarId,
@@ -251,34 +245,24 @@ function reportCard(item, index) {
         }：</span>${escapeHtml(message.text)}</div>
       </div>
     `;
-  }).join('');
+    })
+    .join('');
 
   return `
     <article class="report-card">
       <header class="report-header">
-        ${avatar(
-          item.memberAvatarId,
-          item.member,
-          true,
-          item.memberAvatarCrop
-        )}
+        ${avatar(item.memberAvatarId, item.member, true, item.memberAvatarCrop)}
 
         <h3>${escapeHtml(item.member)}</h3>
         <time>${escapeHtml(item.date)}</time>
 
         <div>
           ${escapeHtml(item.part || '')}${
-            item.tickets
-              ? ` · ${escapeHtml(item.tickets)}枚`
-              : ''
+            item.tickets ? ` · ${escapeHtml(item.tickets)}枚` : ''
           }
         </div>
 
-        ${
-          item.title
-            ? `<p>${escapeHtml(item.title)}</p>`
-            : ''
-        }
+        ${item.title ? `<p>${escapeHtml(item.title)}</p>` : ''}
       </header>
 
       <div class="report-conversation">${messages}</div>
@@ -317,42 +301,36 @@ function reportCard(item, index) {
 }
 
 function loadReportImages(container) {
-  container.querySelectorAll('[data-report-image]').forEach(
-    async (element) => {
-      try {
-        const url = await getPhotoURL(
-          element.dataset.reportImage
-        );
+  container.querySelectorAll('[data-report-image]').forEach(async (element) => {
+    try {
+      const url = await getPhotoURL(element.dataset.reportImage);
 
-        if (url && element.isConnected) {
-          const image = new Image();
+      if (url && element.isConnected) {
+        const image = new Image();
 
-          if (element.classList.contains('report-avatar')) {
-            image.onload = () => {
-              let crop;
+        if (element.classList.contains('report-avatar')) {
+          image.onload = () => {
+            let crop;
 
-              try {
-                crop = JSON.parse(
-                  element.dataset.imageCrop || 'null'
-                );
-              } catch {}
+            try {
+              crop = JSON.parse(element.dataset.imageCrop || 'null');
+            } catch {}
 
-              applyAvatarCrop(image, crop);
-            };
-          }
-
-          image.src = url;
-          image.alt = element.classList.contains('report-avatar')
-            ? 'プロフィール画像'
-            : '会話中の画像';
-
-          element.replaceChildren(image);
+            applyAvatarCrop(image, crop);
+          };
         }
-      } catch {
-        if (element.isConnected) {
-          element.textContent = '画像を読み込めませんでした';
-        }
+
+        image.src = url;
+        image.alt = element.classList.contains('report-avatar')
+          ? 'プロフィール画像'
+          : '会話中の画像';
+
+        element.replaceChildren(image);
+      }
+    } catch {
+      if (element.isConnected) {
+        element.textContent = '画像を読み込めませんでした';
       }
     }
-  );
+  });
 }
