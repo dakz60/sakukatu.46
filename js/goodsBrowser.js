@@ -112,9 +112,7 @@ function goodsCatalogEntries() {
 
 function goodsAvailableTypes(member, catalog = goodsCatalogEntries()) {
   const configured = db.goodsTypeNames?.[member];
-  const defaults = Array.isArray(configured)
-    ? configured
-    : goodsDefaultTypes;
+  const defaults = Array.isArray(configured) ? configured : goodsDefaultTypes;
 
   return [
     ...new Set([
@@ -130,8 +128,7 @@ function currentGoodsEntry(series = goodsBrowserState.series) {
   const state = goodsBrowserState;
 
   return goodsCatalogEntries().find(
-    (entry) =>
-      entry.id === goodsCatalogId(state.member, state.type, series)
+    (entry) => entry.id === goodsCatalogId(state.member, state.type, series)
   );
 }
 
@@ -151,16 +148,14 @@ function goodsRecords(
 ) {
   return db.goods.filter(
     (item) =>
-      goodsMatches(item, entry, variant) &&
-      goodsInventory(item) === inventory
+      goodsMatches(item, entry, variant) && goodsInventory(item) === inventory
   );
 }
 
 function goodsUnit(entry) {
-  return entry?.unit || (
-    /カード/.test(entry?.type || goodsBrowserState.type)
-      ? '枚'
-      : '個'
+  return (
+    entry?.unit ||
+    (/カード/.test(entry?.type || goodsBrowserState.type) ? '枚' : '個')
   );
 }
 
@@ -201,41 +196,41 @@ function goodsThumbnail(entry) {
 }
 
 function loadGoodsImages(container) {
-  container.querySelectorAll(
-    '[data-goods-image], [data-goods-icon]'
-  ).forEach(async (element) => {
-    try {
-      const url = await getPhotoURL(
-        element.dataset.goodsImage || element.dataset.goodsIcon
-      );
+  container
+    .querySelectorAll('[data-goods-image], [data-goods-icon]')
+    .forEach(async (element) => {
+      try {
+        const url = await getPhotoURL(
+          element.dataset.goodsImage || element.dataset.goodsIcon
+        );
 
-      if (!url || !element.isConnected) return;
+        if (!url || !element.isConnected) return;
 
-      const image = new Image();
-      image.alt = element.dataset.goodsIcon ? '' : '登録したグッズ';
+        const image = new Image();
+        image.alt = element.dataset.goodsIcon ? '' : '登録したグッズ';
 
-      if (element.dataset.goodsIcon) {
-        image.onload = () => {
-          let crop = null;
+        if (element.dataset.goodsIcon) {
+          image.onload = () => {
+            let crop = null;
 
-          try {
-            crop = JSON.parse(element.dataset.goodsCrop || 'null');
-          } catch {}
+            try {
+              crop = JSON.parse(element.dataset.goodsCrop || 'null');
+            } catch {}
 
-          if (element.isConnected) {
-            applyAvatarCrop(image, crop);
-          }
-        };
+            if (element.isConnected) {
+              applyAvatarCrop(image, crop);
+            }
+          };
+        }
+
+        image.src = url;
+        element.replaceChildren(image);
+      } catch {
+        if (element.isConnected) {
+          element.textContent = '画像を読み込めませんでした';
+        }
       }
-
-      image.src = url;
-      element.replaceChildren(image);
-    } catch {
-      if (element.isConnected) {
-        element.textContent = '画像を読み込めませんでした';
-      }
-    }
-  });
+    });
 }
 
 function goodsRow(action, value, title, detail, thumbnail = '') {
@@ -265,14 +260,14 @@ function renderGoodsBrowser() {
   const catalog = goodsCatalogEntries();
   const entry = state.series ? currentGoodsEntry() : null;
 
-  $('#page-goods').querySelectorAll('[data-goods-view]').forEach(
-    (button) => {
+  $('#page-goods')
+    .querySelectorAll('[data-goods-view]')
+    .forEach((button) => {
       const active = button.dataset.goodsView === state.inventory;
 
       button.classList.toggle('active', active);
       button.setAttribute('aria-pressed', String(active));
-    }
-  );
+    });
 
   $('#goodsBack').hidden = !state.member;
   $('#goodsBack').textContent = state.series
@@ -288,7 +283,9 @@ function renderGoodsBrowser() {
     state.member,
     state.type,
     state.series ? goodsInventoryLabel(state.inventory) : ''
-  ].filter(Boolean).join(' / ');
+  ]
+    .filter(Boolean)
+    .join(' / ');
 
   $('#goodsSearch').placeholder = !state.member
     ? 'メンバーを検索'
@@ -298,10 +295,7 @@ function renderGoodsBrowser() {
         ? 'シリーズを検索'
         : '絵柄・商品・メモを検索';
 
-  $('#goodsSearch').setAttribute(
-    'aria-label',
-    $('#goodsSearch').placeholder
-  );
+  $('#goodsSearch').setAttribute('aria-label', $('#goodsSearch').placeholder);
 
   $('#goodsSearch').value = state.query;
   $('#goodsFavoritesOnly').checked = state.favoritesOnly;
@@ -311,21 +305,17 @@ function renderGoodsBrowser() {
   $('#goodsRenameGroup').hidden = !state.type;
   $('#goodsIconControls').hidden = !state.type;
 
-  const iconEntry = state.type
-    ? currentGoodsEntry(state.series || '')
-    : null;
+  const iconEntry = state.type ? currentGoodsEntry(state.series || '') : null;
 
   $('#goodsIconPreview').innerHTML = state.type
     ? goodsThumbnail(iconEntry)
     : '';
 
-  $('#goodsRemoveIcon').disabled =
-    goodsBrowserBusy || !iconEntry?.iconId;
+  $('#goodsRemoveIcon').disabled = goodsBrowserBusy || !iconEntry?.iconId;
 
   $('#goodsChooseIcon').disabled = goodsBrowserBusy;
 
-  $('#goodsCropIcon').disabled =
-    goodsBrowserBusy || !iconEntry?.iconId;
+  $('#goodsCropIcon').disabled = goodsBrowserBusy || !iconEntry?.iconId;
 
   container.classList.toggle('goods-variant-grid', !!entry);
 
@@ -342,70 +332,70 @@ function renderGoodsBrowser() {
 
     const visible = names.filter((name) =>
       normalize(
-        `${name} ${
-          members.find((item) => item.name === name)?.kana || ''
-        }`
+        `${name} ${members.find((item) => item.name === name)?.kana || ''}`
       ).includes(query)
     );
 
-    container.innerHTML = visible.map((name) => {
-      const kinds = goodsAvailableTypes(name, catalog).length;
+    container.innerHTML =
+      visible
+        .map((name) => {
+          const kinds = goodsAvailableTypes(name, catalog).length;
 
-      const total = db.goods
-        .filter(
-          (item) =>
-            goodsMember(item) === name &&
-            goodsInventory(item) === state.inventory
-        )
-        .reduce((sum, item) => sum + goodsCount(item), 0);
+          const total = db.goods
+            .filter(
+              (item) =>
+                goodsMember(item) === name &&
+                goodsInventory(item) === state.inventory
+            )
+            .reduce((sum, item) => sum + goodsCount(item), 0);
 
-      return goodsRow(
-        'member',
-        name,
-        name,
-        `${kinds}種類 / ${goodsInventoryLabel(state.inventory)} ${total}点`
-      );
-    }).join('') || empty('メンバーが見つかりません');
+          return goodsRow(
+            'member',
+            name,
+            name,
+            `${kinds}種類 / ${goodsInventoryLabel(state.inventory)} ${total}点`
+          );
+        })
+        .join('') || empty('メンバーが見つかりません');
 
-    $('#goodsSummary').textContent =
-      `${visible.length}人・共通グッズ`;
+    $('#goodsSummary').textContent = `${visible.length}人・共通グッズ`;
   } else if (!state.type) {
-    const types = goodsAvailableTypes(state.member, catalog).filter(
-      (type) => normalize(type).includes(query)
+    const types = goodsAvailableTypes(state.member, catalog).filter((type) =>
+      normalize(type).includes(query)
     );
 
-    container.innerHTML = types.map((type) => {
-      const entries = catalog.filter(
-        (item) =>
-          item.member === state.member &&
-          item.type === type
-      );
+    container.innerHTML =
+      types
+        .map((type) => {
+          const entries = catalog.filter(
+            (item) => item.member === state.member && item.type === type
+          );
 
-      const thumbnail =
-        entries.find((item) => !item.series && item.iconId) ||
-        entries.find((item) => item.iconId);
+          const thumbnail =
+            entries.find((item) => !item.series && item.iconId) ||
+            entries.find((item) => item.iconId);
 
-      const total = db.goods
-        .filter(
-          (item) =>
-            goodsMember(item) === state.member &&
-            goodsType(item) === type &&
-            goodsInventory(item) === state.inventory
-        )
-        .reduce((sum, item) => sum + goodsCount(item), 0);
+          const total = db.goods
+            .filter(
+              (item) =>
+                goodsMember(item) === state.member &&
+                goodsType(item) === type &&
+                goodsInventory(item) === state.inventory
+            )
+            .reduce((sum, item) => sum + goodsCount(item), 0);
 
-      return goodsRow(
-        'type',
-        type,
-        type,
-        `${entries.filter((item) => item.series).length}シリーズ / ${
-          goodsInventoryLabel(state.inventory)
-        } ${total}点`,
-        goodsThumbnail(thumbnail)
-      );
-    }).join('') || empty(
-      '「種類を追加」から、缶バッジやクリアカードなどを登録できます。'
-    );
+          return goodsRow(
+            'type',
+            type,
+            type,
+            `${entries.filter((item) => item.series).length}シリーズ / ${goodsInventoryLabel(
+              state.inventory
+            )} ${total}点`,
+            goodsThumbnail(thumbnail)
+          );
+        })
+        .join('') ||
+      empty('「種類を追加」から、缶バッジやクリアカードなどを登録できます。');
 
     $('#goodsSummary').textContent = `${types.length}種類`;
   } else if (!entry) {
@@ -417,74 +407,63 @@ function renderGoodsBrowser() {
         normalize(item.series).includes(query)
     );
 
-    container.innerHTML = entries.map((item) => {
-      const records = goodsRecords(item);
+    container.innerHTML =
+      entries
+        .map((item) => {
+          const records = goodsRecords(item);
 
-      const total = records.reduce(
-        (sum, row) => sum + goodsCount(row),
-        0
-      );
+          const total = records.reduce((sum, row) => sum + goodsCount(row), 0);
 
-      return goodsRow(
-        'series',
-        item.series,
-        item.series,
-        `${item.variants.length}絵柄 / ${
-          goodsInventoryLabel(state.inventory)
-        } ${total}${goodsUnit(item)}`,
-        goodsThumbnail(item)
-      );
-    }).join('') || empty(
-      '「シリーズを追加」から、ツアー名や商品シリーズを登録できます。'
-    );
+          return goodsRow(
+            'series',
+            item.series,
+            item.series,
+            `${item.variants.length}絵柄 / ${goodsInventoryLabel(
+              state.inventory
+            )} ${total}${goodsUnit(item)}`,
+            goodsThumbnail(item)
+          );
+        })
+        .join('') ||
+      empty('「シリーズを追加」から、ツアー名や商品シリーズを登録できます。');
 
     $('#goodsSummary').textContent = `${entries.length}シリーズ`;
   } else {
     const records = goodsRecords(entry);
 
     const variants = entry.variants.filter((variant) => {
-      const items = records.filter(
-        (item) => goodsVariant(item) === variant
-      );
+      const items = records.filter((item) => goodsVariant(item) === variant);
 
       return (
-        (
-          !state.favoritesOnly ||
-          items.some((item) => item.favorite)
-        ) &&
+        (!state.favoritesOnly || items.some((item) => item.favorite)) &&
         normalize(
-          [
-            variant,
-            ...items.flatMap((item) => [item.title, item.note])
-          ].join(' ')
+          [variant, ...items.flatMap((item) => [item.title, item.note])].join(
+            ' '
+          )
         ).includes(query)
       );
     });
 
     const owned = entry.variants.filter((variant) =>
-      goodsRecords(entry, variant).some(
-        (item) => goodsCount(item) > 0
-      )
+      goodsRecords(entry, variant).some((item) => goodsCount(item) > 0)
     ).length;
 
-    $('#goodsSummary').textContent =
-      `${goodsInventoryLabel(state.inventory)} ${
-        owned
-      } / ${entry.variants.length}絵柄`;
+    $('#goodsSummary').textContent = `${goodsInventoryLabel(state.inventory)} ${
+      owned
+    } / ${entry.variants.length}絵柄`;
 
-    container.innerHTML = variants.map((variant) => {
-      const items = goodsRecords(entry, variant);
+    container.innerHTML =
+      variants
+        .map((variant) => {
+          const items = goodsRecords(entry, variant);
 
-      const count = items.reduce(
-        (sum, item) => sum + goodsCount(item),
-        0
-      );
+          const count = items.reduce((sum, item) => sum + goodsCount(item), 0);
 
-      const image = items.find((item) => item.imageId);
-      const favorite = items.some((item) => item.favorite);
-      const key = escapeHtml(variant);
+          const image = items.find((item) => item.imageId);
+          const favorite = items.some((item) => item.favorite);
+          const key = escapeHtml(variant);
 
-      return `
+          return `
         <article class="goods-variant">
           <h4>${key}</h4>
 
@@ -495,11 +474,7 @@ function renderGoodsBrowser() {
             aria-label="${key}の画像・登録内容を編集"
           >
             <span
-              ${
-                image
-                  ? `data-goods-image="${escapeHtml(image.imageId)}"`
-                  : ''
-              }
+              ${image ? `data-goods-image="${escapeHtml(image.imageId)}"` : ''}
             >${
               count
                 ? '画像なし'
@@ -574,9 +549,8 @@ function renderGoodsBrowser() {
           }
         </article>
       `;
-    }).join('') || empty(
-      '絵柄がありません。「追加」から登録できます。'
-    );
+        })
+        .join('') || empty('絵柄がありません。「追加」から登録できます。');
   }
 
   const saved = db.goods.filter(
@@ -597,12 +571,12 @@ function renderGoodsBrowser() {
       ).includes(query)
   );
 
-  $('#list-goods').innerHTML = saved.map((item) => {
-    const entry = catalog.find(
-      (entry) => goodsMatches(item, entry)
-    );
+  $('#list-goods').innerHTML =
+    saved
+      .map((item) => {
+        const entry = catalog.find((entry) => goodsMatches(item, entry));
 
-    return `
+        return `
       <div class="data-row">
         <div class="data-main">
           <strong>
@@ -624,11 +598,7 @@ function renderGoodsBrowser() {
             ${goodsCount(item)}${escapeHtml(goodsUnit(entry))}
           </small>
 
-          ${
-            item.note
-              ? `<small>${escapeHtml(item.note)}</small>`
-              : ''
-          }
+          ${item.note ? `<small>${escapeHtml(item.note)}</small>` : ''}
         </div>
 
         <button
@@ -644,7 +614,8 @@ function renderGoodsBrowser() {
         >削除</button>
       </div>
     `;
-  }).join('') || empty('この条件の登録はありません');
+      })
+      .join('') || empty('この条件の登録はありません');
 
   loadGoodsImages($('#page-goods'));
 }
@@ -671,11 +642,8 @@ function addGoodsGroup(level) {
 
   const type = level === 'type' ? name : state.type;
 
-  const series = level === 'type'
-    ? ''
-    : level === 'series'
-      ? name
-      : state.series;
+  const series =
+    level === 'type' ? '' : level === 'series' ? name : state.series;
 
   const catalog = goodsCatalogEntries();
   const id = goodsCatalogId(state.member, type, series);
@@ -684,13 +652,9 @@ function addGoodsGroup(level) {
 
   if (
     level !== 'variant' &&
-    (
-      entry ||
-      (
-        level === 'type' &&
-        goodsAvailableTypes(state.member, catalog).includes(name)
-      )
-    )
+    (entry ||
+      (level === 'type' &&
+        goodsAvailableTypes(state.member, catalog).includes(name)))
   ) {
     toast('同じ名前は登録済みです');
     return;
@@ -729,27 +693,18 @@ function changeGoodsCount(variant, delta, favorite = false) {
 
   const items = goodsRecords(entry, variant);
 
-  const total = items.reduce(
-    (sum, item) => sum + goodsCount(item),
-    0
-  );
+  const total = items.reduce((sum, item) => sum + goodsCount(item), 0);
 
-  if (
-    !favorite &&
-    (total + delta < 0 || total + delta > 99999)
-  ) {
+  if (!favorite && (total + delta < 0 || total + delta > 99999)) {
     return;
   }
 
   const records = db.goods.map((item) => ({ ...item }));
 
-  const target = delta < 0
-    ? items.find((item) => goodsCount(item) > 0)
-    : items[0];
+  const target =
+    delta < 0 ? items.find((item) => goodsCount(item) > 0) : items[0];
 
-  let row = target && records.find(
-    (item) => item.id === target.id
-  );
+  let row = target && records.find((item) => item.id === target.id);
 
   if (!row) {
     row = {
@@ -784,18 +739,13 @@ function changeGoodsCount(variant, delta, favorite = false) {
   }
 
   if (commitGoods(records, goodsCatalogEntries())) {
-    const attribute = favorite
-      ? 'data-goods-favorite'
-      : 'data-goods-count';
+    const attribute = favorite ? 'data-goods-favorite' : 'data-goods-count';
 
     [...$('#goodsContent').querySelectorAll(`[${attribute}]`)]
       .find(
         (button) =>
           button.getAttribute(attribute) === variant &&
-          (
-            favorite ||
-            Number(button.dataset.delta) === delta
-          )
+          (favorite || Number(button.dataset.delta) === delta)
       )
       ?.focus({ preventScroll: true });
   }
@@ -844,14 +794,10 @@ function renameGoodsGroup(variant = null) {
     if (!match) return item;
 
     if (variant) {
-      return goodsVariant(item) === variant
-        ? { ...item, variant: next }
-        : item;
+      return goodsVariant(item) === variant ? { ...item, variant: next } : item;
     }
 
-    return state.series
-      ? { ...item, series: next }
-      : { ...item, type: next };
+    return state.series ? { ...item, series: next } : { ...item, type: next };
   });
 
   for (const entry of catalog) {
@@ -864,8 +810,8 @@ function renameGoodsGroup(variant = null) {
     }
 
     if (variant) {
-      entry.variants = entry.variants.map(
-        (name) => name === variant ? next : name
+      entry.variants = entry.variants.map((name) =>
+        name === variant ? next : name
       );
     } else if (state.series) {
       entry.series = next;
@@ -873,11 +819,7 @@ function renameGoodsGroup(variant = null) {
       entry.type = next;
     }
 
-    entry.id = goodsCatalogId(
-      entry.member,
-      entry.type,
-      entry.series
-    );
+    entry.id = goodsCatalogId(entry.member, entry.type, entry.series);
   }
 
   const previousTypeNames = db.goodsTypeNames;
@@ -886,8 +828,8 @@ function renameGoodsGroup(variant = null) {
   if (renamingType) {
     db.goodsTypeNames = {
       ...previousTypeNames,
-      [state.member]: goodsAvailableTypes(state.member).map(
-        (name) => name === old ? next : name
+      [state.member]: goodsAvailableTypes(state.member).map((name) =>
+        name === old ? next : name
       )
     };
   }
@@ -924,33 +866,26 @@ function removeGoodsVariant(variant) {
   if (!entry) return;
 
   if (
-    !confirm(
-      `「${variant}」の絵柄と、所持・提供・希望の登録を削除しますか？`
-    )
+    !confirm(`「${variant}」の絵柄と、所持・提供・希望の登録を削除しますか？`)
   ) {
     return;
   }
 
-  const removed = db.goods.filter(
-    (item) => goodsMatches(item, entry, variant)
-  );
+  const removed = db.goods.filter((item) => goodsMatches(item, entry, variant));
 
   const catalog = goodsCatalogEntries();
 
-  catalog.find((item) => item.id === entry.id).variants =
-    entry.variants.filter((name) => name !== variant);
+  catalog.find((item) => item.id === entry.id).variants = entry.variants.filter(
+    (name) => name !== variant
+  );
 
   if (
     commitGoods(
-      db.goods.filter(
-        (item) => !goodsMatches(item, entry, variant)
-      ),
+      db.goods.filter((item) => !goodsMatches(item, entry, variant)),
       catalog
     )
   ) {
-    removed.forEach(
-      (item) => cleanupGoodsImage(item.imageId)
-    );
+    removed.forEach((item) => cleanupGoodsImage(item.imageId));
   }
 }
 
@@ -960,15 +895,9 @@ async function editGoodsIcon(file = null) {
   const state = { ...goodsBrowserState };
   if (!state.type) return;
 
-  const id = goodsCatalogId(
-    state.member,
-    state.type,
-    state.series || ''
-  );
+  const id = goodsCatalogId(state.member, state.type, state.series || '');
 
-  const previous = goodsCatalogEntries().find(
-    (entry) => entry.id === id
-  );
+  const previous = goodsCatalogEntries().find((entry) => entry.id === id);
 
   if (file && !file.type.startsWith('image/')) {
     toast('画像を選んでください');
@@ -982,11 +911,8 @@ async function editGoodsIcon(file = null) {
   let persisted = false;
 
   try {
-    const source = file || (
-      previous?.iconId
-        ? await getPhotoURL(previous.iconId)
-        : null
-    );
+    const source =
+      file || (previous?.iconId ? await getPhotoURL(previous.iconId) : null);
 
     if (!source) return;
 
@@ -1040,16 +966,12 @@ async function editGoodsIcon(file = null) {
 }
 
 function removeGoodsIcon() {
-  const entry = currentGoodsEntry(
-    goodsBrowserState.series || ''
-  );
+  const entry = currentGoodsEntry(goodsBrowserState.series || '');
 
   if (!entry?.iconId) return;
 
   if (
-    !confirm(
-      '一覧用のアイコンを解除しますか？商品の画像と個数は残ります。'
-    )
+    !confirm('一覧用のアイコンを解除しますか？商品の画像と個数は残ります。')
   ) {
     return;
   }
@@ -1095,8 +1017,7 @@ function openGoodsForm(item = null, defaults = {}) {
   const form = $('#goodsForm');
   form.reset();
 
-  $('#goodsModalTitle').textContent =
-    item ? 'グッズを編集' : 'グッズを登録';
+  $('#goodsModalTitle').textContent = item ? 'グッズを編集' : 'グッズを登録';
 
   const memberSelect = form.elements.member;
 
@@ -1137,9 +1058,7 @@ function openGoodsForm(item = null, defaults = {}) {
       entry.series === values.series
   );
 
-  form.elements.unit.value = goodsUnit(
-    entry || { type: values.type }
-  );
+  form.elements.unit.value = goodsUnit(entry || { type: values.type });
 
   $('#goodsRemoveImageLabel').hidden = !item?.imageId;
 
@@ -1147,14 +1066,13 @@ function openGoodsForm(item = null, defaults = {}) {
 
   const updateTypeOptions = () => {
     $('#goodsTypeOptions').replaceChildren(
-      ...goodsAvailableTypes(
-        form.elements.member.value,
-        entries
-      ).map((value) => {
-        const option = document.createElement('option');
-        option.value = value;
-        return option;
-      })
+      ...goodsAvailableTypes(form.elements.member.value, entries).map(
+        (value) => {
+          const option = document.createElement('option');
+          option.value = value;
+          return option;
+        }
+      )
     );
   };
 
@@ -1162,34 +1080,27 @@ function openGoodsForm(item = null, defaults = {}) {
   updateTypeOptions();
 
   $('#goodsSeriesOptions').replaceChildren(
-    ...[
-      ...new Set(
-        entries.map((entry) => entry.series).filter(Boolean)
-      )
-    ].map((value) => {
-      const option = document.createElement('option');
-      option.value = value;
-      return option;
-    })
+    ...[...new Set(entries.map((entry) => entry.series).filter(Boolean))].map(
+      (value) => {
+        const option = document.createElement('option');
+        option.value = value;
+        return option;
+      }
+    )
   );
 
   $('#goodsModal').classList.add('open');
   form.elements.type.focus();
 }
 
-function editGoodsVariant(
-  variant,
-  inventory = goodsBrowserState.inventory
-) {
+function editGoodsVariant(variant, inventory = goodsBrowserState.inventory) {
   const entry = currentGoodsEntry();
   if (!entry) return;
 
   const items = goodsRecords(entry, variant, inventory);
 
   openGoodsForm(
-    items.find((item) => goodsCount(item) > 0) ||
-    items[0] ||
-    null,
+    items.find((item) => goodsCount(item) > 0) || items[0] || null,
     { variant, inventory }
   );
 }
@@ -1204,9 +1115,7 @@ async function saveGoodsForm(event) {
 
   const data = new FormData(form);
 
-  const original = db.goods.find(
-    (item) => item.id === goodsEditingId
-  );
+  const original = db.goods.find((item) => item.id === goodsEditingId);
 
   const item = {
     ...original,
@@ -1286,11 +1195,7 @@ async function saveGoodsForm(event) {
 
     const catalog = goodsCatalogEntries();
 
-    const id = goodsCatalogId(
-      item.member,
-      item.type,
-      item.series
-    );
+    const id = goodsCatalogId(item.member, item.type, item.series);
 
     let entry = catalog.find((entry) => entry.id === id);
 
@@ -1314,9 +1219,7 @@ async function saveGoodsForm(event) {
     entry.unit = unit;
 
     const records = original
-      ? db.goods.map(
-          (row) => row.id === original.id ? item : row
-        )
+      ? db.goods.map((row) => (row.id === original.id ? item : row))
       : [item, ...db.goods];
 
     persisted = commitGoods(records, catalog);
@@ -1335,10 +1238,7 @@ async function saveGoodsForm(event) {
     $('#goodsModal').classList.remove('open');
     renderGoodsBrowser();
 
-    if (
-      original?.imageId &&
-      original.imageId !== item.imageId
-    ) {
+    if (original?.imageId && original.imageId !== item.imageId) {
       cleanupGoodsImage(original.imageId);
     }
 
@@ -1745,28 +1645,20 @@ function initGoodsBrowser() {
       renderGoodsBrowser();
       $('#goodsTitle').focus();
     } else if (button.hasAttribute('data-goods-count')) {
-      changeGoodsCount(
-        button.dataset.goodsCount,
-        Number(button.dataset.delta)
-      );
+      changeGoodsCount(button.dataset.goodsCount, Number(button.dataset.delta));
     } else if (button.hasAttribute('data-goods-favorite')) {
       changeGoodsCount(button.dataset.goodsFavorite, 0, true);
     } else if (button.hasAttribute('data-goods-edit-variant')) {
       editGoodsVariant(button.dataset.goodsEditVariant);
     } else if (button.hasAttribute('data-goods-inventory')) {
-      editGoodsVariant(
-        button.dataset.variant,
-        button.dataset.goodsInventory
-      );
+      editGoodsVariant(button.dataset.variant, button.dataset.goodsInventory);
     } else if (button.hasAttribute('data-goods-rename-variant')) {
       renameGoodsGroup(button.dataset.goodsRenameVariant);
     } else if (button.hasAttribute('data-goods-remove-variant')) {
       removeGoodsVariant(button.dataset.goodsRemoveVariant);
     } else if (button.hasAttribute('data-goods-edit')) {
       openGoodsForm(
-        db.goods.find(
-          (item) => String(item.id) === button.dataset.goodsEdit
-        )
+        db.goods.find((item) => String(item.id) === button.dataset.goodsEdit)
       );
     } else if (button.hasAttribute('data-goods-delete')) {
       const item = db.goods.find(
@@ -1775,9 +1667,7 @@ function initGoodsBrowser() {
 
       if (
         !item ||
-        !confirm(
-          'このグッズの登録を削除しますか？絵柄は一覧に残ります。'
-        )
+        !confirm('このグッズの登録を削除しますか？絵柄は一覧に残ります。')
       ) {
         return;
       }
