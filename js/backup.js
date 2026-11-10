@@ -28,7 +28,11 @@
   }
 
   function validateData(data) {
-    if (!data || typeof data !== 'object' || Array.isArray(data)) {
+    if (
+      !data ||
+      typeof data !== 'object' ||
+      Array.isArray(data)
+    ) {
       throw new Error('記録データの形式が正しくありません');
     }
 
@@ -45,7 +49,9 @@
       if (!value || typeof value !== 'object') continue;
 
       for (const [key, child] of Object.entries(value)) {
-        if (['__proto__', 'constructor', 'prototype'].includes(key)) {
+        if (
+          ['__proto__', 'constructor', 'prototype'].includes(key)
+        ) {
           throw new Error('読み込めない項目が含まれています');
         }
 
@@ -103,9 +109,10 @@
 
   async function digest(blob) {
     const buffer = await blob.arrayBuffer();
-    const hash = await crypto.subtle.digest('SHA-256', buffer);
 
-    return new Uint8Array(hash);
+    return new Uint8Array(
+      await crypto.subtle.digest('SHA-256', buffer)
+    );
   }
 
   function hex(bytes) {
@@ -163,7 +170,11 @@
 
   function snapshotImages(database) {
     return new Promise((resolve, reject) => {
-      const transaction = database.transaction(STORE, 'readonly');
+      const transaction = database.transaction(
+        STORE,
+        'readonly'
+      );
+
       const images = [];
       const request = transaction.objectStore(STORE).openCursor();
 
@@ -234,7 +245,12 @@
         sha256: hex(await digest(image.blob))
       });
 
-      progress(onProgress, 'export', index + 1, images.length);
+      progress(
+        onProgress,
+        'export',
+        index + 1,
+        images.length
+      );
     }
 
     if (
@@ -263,7 +279,12 @@
     const header = new Uint8Array(HEADER_SIZE);
 
     header.set(MAGIC);
-    new DataView(header.buffer).setUint32(8, manifest.size);
+
+    new DataView(header.buffer).setUint32(
+      8,
+      manifest.size
+    );
+
     header.set(await digest(manifest), 12);
 
     return new Blob(
@@ -272,12 +293,17 @@
         manifest,
         ...images.map((image) => image.blob)
       ],
-      { type: 'application/octet-stream' }
+      {
+        type: 'application/octet-stream'
+      }
     );
   }
 
   async function inspect(file, onProgress) {
-    if (!(file instanceof Blob) || file.size < HEADER_SIZE) {
+    if (
+      !(file instanceof Blob) ||
+      file.size < HEADER_SIZE
+    ) {
       throw new Error('引き継ぎファイルを選んでください');
     }
 
@@ -291,14 +317,18 @@
       );
     }
 
-    const length = new DataView(header.buffer).getUint32(8);
+    const length = new DataView(
+      header.buffer
+    ).getUint32(8);
 
     if (
       !length ||
       length > MAX_MANIFEST ||
       HEADER_SIZE + length > file.size
     ) {
-      throw new Error('引き継ぎファイルが途中で切れています');
+      throw new Error(
+        '引き継ぎファイルが途中で切れています'
+      );
     }
 
     const metadata = file.slice(
@@ -306,7 +336,12 @@
       HEADER_SIZE + length
     );
 
-    if (!sameBytes(await digest(metadata), header.slice(12))) {
+    if (
+      !sameBytes(
+        await digest(metadata),
+        header.slice(12)
+      )
+    ) {
       throw new Error('記録データが破損しています');
     }
 
@@ -315,7 +350,9 @@
     try {
       manifest = JSON.parse(await metadata.text());
     } catch {
-      throw new Error('記録データを読み込めませんでした');
+      throw new Error(
+        '記録データを読み込めませんでした'
+      );
     }
 
     if (
@@ -329,7 +366,9 @@
 
     validateData(manifest.data);
 
-    if (Object.hasOwn(manifest.data, '__photoDatabase')) {
+    if (
+      Object.hasOwn(manifest.data, '__photoDatabase')
+    ) {
       throw new Error(
         '読み込めない保存先情報が含まれています'
       );
@@ -340,7 +379,11 @@
 
     let offset = HEADER_SIZE + length;
 
-    for (let index = 0; index < manifest.images.length; index++) {
+    for (
+      let index = 0;
+      index < manifest.images.length;
+      index++
+    ) {
       const entry = manifest.images[index];
 
       if (
@@ -367,7 +410,9 @@
         entry.type
       );
 
-      if (hex(await digest(blob)) !== entry.sha256) {
+      if (
+        hex(await digest(blob)) !== entry.sha256
+      ) {
         throw new Error(
           '写真データが破損しています。元のファイルを保存し直してください'
         );
@@ -389,7 +434,9 @@
     }
 
     if (offset !== file.size) {
-      throw new Error('ファイルの長さが正しくありません');
+      throw new Error(
+        'ファイルの長さが正しくありません'
+      );
     }
 
     return {
@@ -400,14 +447,29 @@
     };
   }
 
+  function withTimeout(
+    promise,
+    milliseconds,
+    message
+  ) {
+    let timer;
+
+    return Promise.race([
+      promise,
+      new Promise((resolve, reject) => {
+        timer = setTimeout(() => {
+          reject(new Error(message));
+        }, milliseconds);
+      })
+    ]).finally(() => clearTimeout(timer));
+  }
+
   function deleteDatabase(name) {
-    return new Promise((resolve) => {
+    try {
       const request = indexedDB.deleteDatabase(name);
 
-      request.onsuccess =
-        request.onerror =
-        request.onblocked = () => resolve();
-    });
+      request.onerror = () => {};
+    } catch {}
   }
 
   async function restoreFile(file, onProgress) {
@@ -415,9 +477,20 @@
       const previous = localStorage.getItem(KEY);
       const parsed = await inspect(file, onProgress);
 
-      const estimate = await navigator.storage
-        ?.estimate?.()
-        .catch(() => null);
+      progress(
+        onProgress,
+        'capacity',
+        0,
+        parsed.images.length
+      );
+
+      const estimate = await withTimeout(
+        Promise.resolve().then(
+          () => navigator.storage?.estimate?.()
+        ),
+        3000,
+        '容量確認が応答しませんでした'
+      ).catch(() => null);
 
       const bytes = parsed.images.reduce(
         (sum, image) => sum + image.blob.size,
@@ -440,38 +513,131 @@
 
       let database;
       let committed = false;
+      let abandoned = false;
 
       try {
-        database = await openImages(name);
+        progress(
+          onProgress,
+          'prepare',
+          0,
+          parsed.images.length
+        );
 
-        await new Promise((resolve, reject) => {
-          const transaction = database.transaction(
-            STORE,
-            'readwrite'
+        const opening = openImages(name).then(
+          (result) => {
+            if (abandoned) {
+              result.close();
+              deleteDatabase(name);
+            }
+
+            return result;
+          }
+        );
+
+        database = await withTimeout(
+          opening,
+          30000,
+          '写真の保存先を開けませんでした。ページを再読み込みしてお試しください'
+        );
+
+        for (
+          let offset = 0;
+          offset < parsed.images.length;
+          offset += 10
+        ) {
+          const batch = parsed.images.slice(
+            offset,
+            offset + 10
           );
 
-          transaction.oncomplete = resolve;
+          const copies = [];
 
-          transaction.onerror = transaction.onabort = () => {
-            reject(
-              transaction.error ||
-              new Error('写真を保存できませんでした')
+          for (const image of batch) {
+            const buffer = await withTimeout(
+              image.blob.arrayBuffer(),
+              30000,
+              '写真の読み込みが応答しません。ファイルを端末に保存してからお試しください'
             );
-          };
 
-          const store = transaction.objectStore(STORE);
-
-          try {
-            for (const image of parsed.images) {
-              store.put(image.blob, image.key);
-            }
-          } catch (error) {
-            transaction.abort();
-            reject(error);
+            copies.push({
+              key: image.key,
+              blob: new Blob(
+                [buffer],
+                { type: image.blob.type }
+              )
+            });
           }
-        });
 
-        if (localStorage.getItem(KEY) !== previous) {
+          await new Promise((resolve, reject) => {
+            const transaction = database.transaction(
+              STORE,
+              'readwrite'
+            );
+
+            const timer = setTimeout(() => {
+              try {
+                transaction.abort();
+              } catch {}
+
+              reject(
+                new Error(
+                  '写真の保存が応答しません。元の記録は変更していません'
+                )
+              );
+            }, 30000);
+
+            transaction.oncomplete = () => {
+              clearTimeout(timer);
+              resolve();
+            };
+
+            transaction.onerror =
+              transaction.onabort = () => {
+                clearTimeout(timer);
+
+                reject(
+                  transaction.error ||
+                  new Error(
+                    '写真を保存できませんでした。元の記録は変更していません'
+                  )
+                );
+              };
+
+            try {
+              const store = transaction.objectStore(STORE);
+
+              for (const image of copies) {
+                store.put(image.blob, image.key);
+              }
+            } catch (error) {
+              clearTimeout(timer);
+
+              try {
+                transaction.abort();
+              } catch {}
+
+              reject(error);
+            }
+          });
+
+          progress(
+            onProgress,
+            'save',
+            offset + batch.length,
+            parsed.images.length
+          );
+        }
+
+        progress(
+          onProgress,
+          'commit',
+          parsed.images.length,
+          parsed.images.length
+        );
+
+        if (
+          localStorage.getItem(KEY) !== previous
+        ) {
           throw new Error(
             '読み込み中に記録が更新されました。もう一度お試しください'
           );
@@ -482,7 +648,10 @@
           __photoDatabase: name
         };
 
-        localStorage.setItem(KEY, JSON.stringify(next));
+        localStorage.setItem(
+          KEY,
+          JSON.stringify(next)
+        );
 
         committed = true;
 
@@ -491,17 +660,32 @@
           database: name
         };
       } finally {
+        abandoned = true;
         database?.close();
 
         if (!committed) {
-          await deleteDatabase(name);
+          deleteDatabase(name);
         }
       }
     };
 
-    return navigator.locks?.request
-      ? navigator.locks.request('sakukatu46-restore', run)
-      : run();
+    if (!navigator.locks?.request) {
+      return run();
+    }
+
+    return navigator.locks.request(
+      'sakukatu46-restore',
+      { ifAvailable: true },
+      (lock) => {
+        if (!lock) {
+          throw new Error(
+            '別のタブで引き継ぎ中です。ほかのタブを閉じてからお試しください'
+          );
+        }
+
+        return run();
+      }
+    );
   }
 
   window.OshiBackup = Object.freeze({
