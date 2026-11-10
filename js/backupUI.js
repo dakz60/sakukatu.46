@@ -6,6 +6,7 @@
   if (!anchor || !window.OshiBackup) return;
 
   const open = document.createElement('button');
+
   open.type = 'button';
   open.className = 'subtle';
   open.textContent = 'データ引き継ぎ';
@@ -27,7 +28,9 @@
   `;
 
   dialog.innerHTML = `
-    <h2 style="margin-top: 0">データ引き継ぎ</h2>
+    <h2 style="margin-top: 0">
+      データ引き継ぎ
+    </h2>
 
     <p>
       写真・記録・設定を、ひとつのファイルにまとめます。
@@ -65,7 +68,9 @@
       現在の記録も先にファイルへ保存してください。
     </p>
 
-    <button type="button" data-close>閉じる</button>
+    <button type="button" data-close>
+      閉じる
+    </button>
   `;
 
   document.body.append(dialog);
@@ -80,14 +85,25 @@
   function setBusy(value) {
     busy = value;
 
-    dialog.querySelectorAll('button, input').forEach((element) => {
-      element.disabled = value;
-    });
+    dialog
+      .querySelectorAll('button, input')
+      .forEach((element) => {
+        element.disabled = value;
+      });
   }
 
-  function report({ current, total }) {
+  function report({ phase, current, total }) {
+    const messages = {
+      capacity: '空き容量を確認しています…',
+      prepare: '写真の保存先を準備しています…',
+      save: `写真を保存しています ${current} / ${total}枚`,
+      commit: '記録・設定を反映しています…',
+      export: `写真を書き出しています ${current} / ${total}枚`,
+      inspect: `写真を確認しています ${current} / ${total}枚`
+    };
+
     status.textContent =
-      `写真を確認しています ${current} / ${total}枚`;
+      messages[phase] || '処理しています…';
   }
 
   window.addEventListener('beforeunload', (event) => {
@@ -113,14 +129,21 @@
 
   dialog.querySelector('[data-export]').onclick = async () => {
     setBusy(true);
-    status.textContent = '引き継ぎファイルを作成しています…';
+
+    status.textContent =
+      '引き継ぎファイルを作成しています…';
 
     try {
-      const blob = await OshiBackup.exportFile(db, report);
+      const blob = await OshiBackup.exportFile(
+        db,
+        report
+      );
+
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
 
       link.href = url;
+
       link.download =
         `sakukatu46-${new Date().toISOString().slice(0, 10)}.sakubackup`;
 
@@ -137,7 +160,8 @@
         '保存操作を開始しました。ファイルが保存されたことを確認してください。';
     } catch (error) {
       status.textContent =
-        error.message || 'ファイルを作成できませんでした';
+        error.message ||
+        'ファイルを作成できませんでした';
     } finally {
       setBusy(false);
     }
@@ -154,11 +178,17 @@
     setBusy(true);
 
     try {
-      const preview = await OshiBackup.inspect(file, report);
+      const preview = await OshiBackup.inspect(
+        file,
+        report
+      );
 
       const records = Object.values(preview.data)
         .filter(Array.isArray)
-        .reduce((sum, items) => sum + items.length, 0);
+        .reduce(
+          (sum, items) => sum + items.length,
+          0
+        );
 
       status.textContent =
         `写真 ${preview.images.length}枚・一覧データ ${records}件を確認しました。`;
@@ -187,7 +217,10 @@
     setBusy(true);
 
     try {
-      await OshiBackup.restoreFile(selected, report);
+      await OshiBackup.restoreFile(
+        selected,
+        report
+      );
 
       busy = false;
 
