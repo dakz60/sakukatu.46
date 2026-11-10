@@ -3768,3 +3768,11 @@ First Showcase ロゴTシャツ
 「5th YEAR ANNIVERSARY LIVE」白黒衣装
 2025年 年末水色衣装
 2026年 ハロウィン`.split('\n');
+
+if (!Array.isArray(photoCatalogSource['その他'])) {
+  photoCatalogSource['その他'] = [];
+}
+
+if (!photoCatalogSource['その他'].includes('見つけて櫻坂うさぎ')) {
+  photoCatalogSource['その他'].push('見つけて櫻坂うさぎ');
+}
