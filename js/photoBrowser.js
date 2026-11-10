@@ -71,6 +71,7 @@ const photoUsagiGroups = [
 ];
 
 let photoSeriesIconBusy = false;
+let photoMemberIconBusy = false;
 
 function photoMemberOptions() {
   return [...members, ...photoExtraGroups];
@@ -85,6 +86,288 @@ const photoInventoryLabel = (inventory) =>
     offer: '提供',
     want: '希望'
   })[inventory] || '所持';
+
+function photoMemberThumbnail(member) {
+  const icon = db.photoMemberIcons?.[member];
+
+  return `
+    <span
+      class="catalog-member-thumb"
+      ${
+        icon?.imageId
+          ? `
+            data-series-thumbnail="${escapeHtml(icon.imageId)}"
+            data-series-crop="${escapeHtml(
+              JSON.stringify(icon.crop || null)
+            )}"
+          `
+          : ''
+      }
+      aria-hidden="true"
+    >${escapeHtml(member.slice(0, 1))}</span>
+  `;
+}
+
+function storeMemberIcon(member, icon) {
+  const previous = db.photoMemberIcons;
+  const icons = { ...previous };
+
+  if (icon) {
+    icons[member] = icon;
+  } else {
+    delete icons[member];
+  }
+
+  db.photoMemberIcons = icons;
+
+  try {
+    save();
+  } catch (error) {
+    db.photoMemberIcons = previous;
+    throw error;
+  }
+}
+
+function deleteUnusedMemberIcon(id) {
+  if (!id?.startsWith('member-icon-')) return;
+
+  const shared = Object.values(
+    db.photoMemberIcons || {}
+  ).some((icon) => icon?.imageId === id);
+
+  if (shared) return;
+
+  if (!imageInUse(id)) {
+    deletePhoto(id).catch(() => {});
+  }
+}
+
+function renderMemberIconEditor() {
+  let controls = $('#photoMemberIconEditor');
+
+  if (!controls) {
+    controls = document.createElement('div');
+    controls.id = 'photoMemberIconEditor';
+    controls.className =
+      'catalog-icon-editor catalog-member-icon-editor';
+
+    $('#photoCatalogSummary').before(controls);
+
+    controls.addEventListener('click', (event) => {
+      const button = event.target.closest(
+        '[data-member-icon-action]'
+      );
+
+      if (!button || photoMemberIconBusy) return;
+
+      const action = button.dataset.memberIconAction;
+
+      if (action === 'choose') {
+        $('#photoMemberIconFile').click();
+      } else if (action === 'crop') {
+        editMemberIcon();
+      } else if (action === 'remove') {
+        removeMemberIcon();
+      }
+    });
+
+    controls.addEventListener('change', (event) => {
+      if (event.target.id !== 'photoMemberIconFile') {
+        return;
+      }
+
+      const file = event.target.files[0];
+
+      event.target.value = '';
+
+      if (file) {
+        editMemberIcon(file);
+      }
+    });
+  }
+
+  const member = photoBrowserState.member;
+
+  controls.hidden = !member;
+
+  if (!member) return;
+
+  const icon = db.photoMemberIcons?.[member];
+
+  controls.innerHTML = `
+    ${photoMemberThumbnail(member)}
+
+    <span class="catalog-icon-caption">
+      ${escapeHtml(member)}のアイコン
+    </span>
+
+    <input
+      type="file"
+      id="photoMemberIconFile"
+      accept="image/*"
+      aria-label="メンバーのアイコン画像"
+      hidden
+    >
+
+    <button
+      type="button"
+      class="secondary"
+      data-member-icon-action="choose"
+    >${icon?.imageId ? '画像を変更' : '画像を選ぶ'}</button>
+
+    <button
+      type="button"
+      class="secondary"
+      data-member-icon-action="crop"
+      ${icon?.imageId ? '' : 'disabled'}
+    >切り取り</button>
+
+    <button
+      type="button"
+      class="subtle"
+      data-member-icon-action="remove"
+      ${icon?.imageId ? '' : 'disabled'}
+    >解除</button>
+  `;
+
+  if (photoMemberIconBusy) {
+    controls.querySelectorAll('button, input').forEach(
+      (element) => {
+        element.disabled = true;
+      }
+    );
+  }
+
+  loadSeriesThumbnails(controls);
+}
+
+async function editMemberIcon(file = null) {
+  if (photoMemberIconBusy) return;
+
+  const member = photoBrowserState.member;
+
+  if (!member) return;
+
+  if (
+    file &&
+    file.type &&
+    !file.type.startsWith('image/')
+  ) {
+    toast('画像ファイルを選んでください');
+    return;
+  }
+
+  const previous = db.photoMemberIcons?.[member];
+
+  photoMemberIconBusy = true;
+
+  let newId;
+  let persisted = false;
+
+  renderMemberIconEditor();
+
+  try {
+    const source =
+      file ||
+      (
+        previous?.imageId
+          ? await getPhotoURL(previous.imageId)
+          : null
+      );
+
+    if (!source) {
+      toast('アイコン画像を選んでください');
+      return;
+    }
+
+    const crop = await chooseImageCrop(source, {
+      round: true,
+      initialCrop: file ? null : previous?.crop
+    });
+
+    if (!crop) return;
+
+    if (file) {
+      newId = `member-icon-${crypto.randomUUID()}`;
+
+      await savePhoto(newId, file, {
+        compress: true
+      });
+    }
+
+    storeMemberIcon(member, {
+      imageId: newId || previous.imageId,
+      crop
+    });
+
+    persisted = true;
+
+    renderPhotoBrowser();
+
+    if (newId) {
+      deleteUnusedMemberIcon(previous?.imageId);
+    }
+
+    toast('メンバーのアイコンを保存しました');
+  } catch (error) {
+    if (newId && !persisted) {
+      deleteUnusedMemberIcon(newId);
+    }
+
+    toast(
+      error.message || 'アイコンを保存できませんでした'
+    );
+  } finally {
+    photoMemberIconBusy = false;
+    renderMemberIconEditor();
+  }
+}
+
+function removeMemberIcon() {
+  if (photoMemberIconBusy) return;
+
+  const member = photoBrowserState.member;
+  const previous = db.photoMemberIcons?.[member];
+
+  if (!previous?.imageId) return;
+
+  if (
+    !confirm(`${member}のアイコンを解除しますか？`)
+  ) {
+    return;
+  }
+
+  try {
+    storeMemberIcon(member, null);
+  } catch (error) {
+    toast(
+      error.message || 'アイコンを解除できませんでした'
+    );
+    return;
+  }
+
+  renderPhotoBrowser();
+  deleteUnusedMemberIcon(previous.imageId);
+
+  toast('アイコンを解除しました');
+}
+
+function closePhotoPoseMenus(
+  except = null,
+  restoreFocus = false
+) {
+  document
+    .querySelectorAll('.catalog-pose-menu[open]')
+    .forEach((menu) => {
+      if (menu === except) return;
+
+      menu.open = false;
+
+      if (restoreFocus) {
+        menu.querySelector('summary')?.focus();
+      }
+    });
+}
 
 function photoSeriesId(title, occurrence) {
   return `${encodeURIComponent(title)}:${occurrence}`;
@@ -112,7 +395,11 @@ function memberPhotoSeries(name) {
     };
   });
 
-  for (const item of db.photos.filter((item) => item.member === name)) {
+  for (
+    const item of db.photos.filter(
+      (item) => item.member === name
+    )
+  ) {
     const title = item.series || 'シリーズ未設定';
 
     if (!entries.some((entry) => entry.title === title)) {
@@ -128,7 +415,11 @@ function memberPhotoSeries(name) {
   return entries;
 }
 
-function seriesPhotoRecords(name, entry, inventory = photoInventory()) {
+function seriesPhotoRecords(
+  name,
+  entry,
+  inventory = photoInventory()
+) {
   return db.photos.filter(
     (item) =>
       item.member === name &&
@@ -142,15 +433,23 @@ function seriesPhotoRecords(name, entry, inventory = photoInventory()) {
 }
 
 function photoSeriesGroups(name, entry) {
-  return name === 'その他' && entry?.title === '見つけて櫻坂うさぎ'
+  return (
+    name === 'その他' &&
+    entry?.title === '見つけて櫻坂うさぎ'
+  )
     ? photoUsagiGroups
     : [];
 }
 
 function photoSeriesPoses(name, entry) {
-  const configured = db.photoCatalogPoses?.[name]?.[entry.id];
-  const saved = db.photoCatalogCustom?.[name]?.[entry.id] || [];
-  const hidden = db.photoCatalogHiddenPoses?.[name]?.[entry.id] || [];
+  const configured =
+    db.photoCatalogPoses?.[name]?.[entry.id];
+
+  const saved =
+    db.photoCatalogCustom?.[name]?.[entry.id] || [];
+
+  const hidden =
+    db.photoCatalogHiddenPoses?.[name]?.[entry.id] || [];
 
   const existing = db.photos
     .filter(
@@ -165,11 +464,14 @@ function photoSeriesPoses(name, entry) {
     .filter(Boolean);
 
   const defaults =
-    name === 'その他' && entry.title === '見つけて櫻坂うさぎ'
+    name === 'その他' &&
+    entry.title === '見つけて櫻坂うさぎ'
       ? photoUsagiGroups.flatMap((group) => group.poses)
       : standardPhotoPoses;
 
-  const base = Array.isArray(configured) ? configured : defaults;
+  const base = Array.isArray(configured)
+    ? configured
+    : defaults;
 
   return [
     ...new Set([
@@ -205,7 +507,11 @@ function renderPhotoSeriesGroups(
   inventory
 ) {
   const poses = photoSeriesPoses(member, entry);
-  const records = seriesPhotoRecords(member, entry, inventory);
+  const records = seriesPhotoRecords(
+    member,
+    entry,
+    inventory
+  );
 
   container.classList.remove('pose-grid');
 
@@ -230,11 +536,13 @@ function renderPhotoSeriesGroups(
         >
           <span class="catalog-series-main">
             <strong>${escapeHtml(group.title)}</strong>
+
             <small>
               ${photoInventoryLabel(inventory)}
               ${owned} / ${visible.length}種類
             </small>
           </span>
+
           <span aria-hidden="true">›</span>
         </button>
       `;
@@ -261,7 +569,10 @@ function sortPhotoRecords(items) {
 
   function recordPosition(item) {
     if (!seriesCache.has(item.member)) {
-      seriesCache.set(item.member, memberPhotoSeries(item.member));
+      seriesCache.set(
+        item.member,
+        memberPhotoSeries(item.member)
+      );
     }
 
     const entries = seriesCache.get(item.member);
@@ -276,10 +587,16 @@ function sortPhotoRecords(items) {
     let poses = standardPhotoPoses;
 
     if (entry) {
-      const key = JSON.stringify([item.member, entry.id]);
+      const key = JSON.stringify([
+        item.member,
+        entry.id
+      ]);
 
       if (!poseCache.has(key)) {
-        poseCache.set(key, photoSeriesPoses(item.member, entry));
+        poseCache.set(
+          key,
+          photoSeriesPoses(item.member, entry)
+        );
       }
 
       poses = poseCache.get(key);
@@ -310,7 +627,11 @@ function sortPhotoRecords(items) {
     .map((record) => record.item);
 }
 
-function storePhotoPoses(poses, rename = null, hidden = null) {
+function storePhotoPoses(
+  poses,
+  rename = null,
+  hidden = null
+) {
   const name = photoBrowserState.member;
   const entry = currentPhotoSeries();
 
@@ -375,12 +696,18 @@ function editPhotoPose(pose) {
 
   if (!entry) return;
 
-  const value = prompt('新しい種類名を入力してください', pose);
+  const value = prompt(
+    '新しい種類名を入力してください',
+    pose
+  );
 
   if (value === null) return;
 
   const next = value.trim();
-  const poses = photoSeriesPoses(photoBrowserState.member, entry);
+  const poses = photoSeriesPoses(
+    photoBrowserState.member,
+    entry
+  );
 
   if (!next || next.length > 80) {
     toast('種類名は1〜80文字で入力してください');
@@ -446,9 +773,10 @@ function removePhotoPose(pose) {
 
   if (
     storePhotoPoses(
-      photoSeriesPoses(photoBrowserState.member, entry).filter(
-        (value) => value !== pose
-      ),
+      photoSeriesPoses(
+        photoBrowserState.member,
+        entry
+      ).filter((value) => value !== pose),
       null,
       hidden
     )
@@ -465,10 +793,12 @@ function photoSeriesThumbnail(member, entry) {
       class="catalog-series-thumb"
       ${
         icon?.imageId
-          ? `data-series-thumbnail="${escapeHtml(icon.imageId)}"
-             data-series-crop="${escapeHtml(
-               JSON.stringify(icon.crop || null)
-             )}"`
+          ? `
+            data-series-thumbnail="${escapeHtml(icon.imageId)}"
+            data-series-crop="${escapeHtml(
+              JSON.stringify(icon.crop || null)
+            )}"
+          `
           : ''
       }
       aria-hidden="true"
@@ -481,7 +811,9 @@ function loadSeriesThumbnails(container) {
     .querySelectorAll('[data-series-thumbnail]')
     .forEach(async (element) => {
       try {
-        const url = await getPhotoURL(element.dataset.seriesThumbnail);
+        const url = await getPhotoURL(
+          element.dataset.seriesThumbnail
+        );
 
         if (!url || !element.isConnected) return;
 
@@ -494,7 +826,9 @@ function loadSeriesThumbnails(container) {
           let crop = null;
 
           try {
-            crop = JSON.parse(element.dataset.seriesCrop || 'null');
+            crop = JSON.parse(
+              element.dataset.seriesCrop || 'null'
+            );
           } catch {}
 
           applyAvatarCrop(image, crop);
@@ -530,7 +864,10 @@ function storeSeriesIcon(member, seriesId, icon) {
 }
 
 function deleteUnusedSeriesIcon(id) {
-  if (id?.startsWith('series-icon-') && !imageInUse(id)) {
+  if (
+    id?.startsWith('series-icon-') &&
+    !imageInUse(id)
+  ) {
     deletePhoto(id).catch(() => {});
   }
 }
@@ -546,27 +883,35 @@ function renderSeriesIconEditor() {
     $('#photoCatalogSummary').before(controls);
 
     controls.addEventListener('click', (event) => {
-      const button = event.target.closest('[data-series-icon-action]');
+      const button = event.target.closest(
+        '[data-series-icon-action]'
+      );
 
       if (!button || photoSeriesIconBusy) return;
 
-      if (button.dataset.seriesIconAction === 'choose') {
+      const action = button.dataset.seriesIconAction;
+
+      if (action === 'choose') {
         $('#photoSeriesIconFile').click();
-      } else if (button.dataset.seriesIconAction === 'crop') {
+      } else if (action === 'crop') {
         editSeriesIcon();
-      } else if (button.dataset.seriesIconAction === 'remove') {
+      } else if (action === 'remove') {
         removeSeriesIcon();
       }
     });
 
     controls.addEventListener('change', (event) => {
-      if (event.target.id !== 'photoSeriesIconFile') return;
+      if (event.target.id !== 'photoSeriesIconFile') {
+        return;
+      }
 
       const file = event.target.files[0];
 
       event.target.value = '';
 
-      if (file) editSeriesIcon(file);
+      if (file) {
+        editSeriesIcon(file);
+      }
     });
   }
 
@@ -577,7 +922,9 @@ function renderSeriesIconEditor() {
   if (!entry) return;
 
   const icon =
-    db.photoSeriesIcons?.[photoBrowserState.member]?.[entry.id];
+    db.photoSeriesIcons
+      ?.[photoBrowserState.member]
+      ?.[entry.id];
 
   controls.innerHTML = `
     ${photoSeriesThumbnail(photoBrowserState.member, entry)}
@@ -604,21 +951,23 @@ function renderSeriesIconEditor() {
       type="button"
       class="secondary"
       data-series-icon-action="crop"
-      ${!icon?.imageId ? 'disabled' : ''}
+      ${icon?.imageId ? '' : 'disabled'}
     >切り取り</button>
 
     <button
       type="button"
       class="subtle"
       data-series-icon-action="remove"
-      ${!icon?.imageId ? 'disabled' : ''}
+      ${icon?.imageId ? '' : 'disabled'}
     >解除</button>
   `;
 
   if (photoSeriesIconBusy) {
-    controls.querySelectorAll('input, button').forEach((element) => {
-      element.disabled = true;
-    });
+    controls.querySelectorAll('input, button').forEach(
+      (element) => {
+        element.disabled = true;
+      }
+    );
   }
 
   loadSeriesThumbnails(controls);
@@ -632,12 +981,17 @@ async function editSeriesIcon(file = null) {
 
   if (!entry) return;
 
-  if (file && file.type && !file.type.startsWith('image/')) {
+  if (
+    file &&
+    file.type &&
+    !file.type.startsWith('image/')
+  ) {
     toast('画像ファイルを選んでください');
     return;
   }
 
-  const previous = db.photoSeriesIcons?.[member]?.[entry.id];
+  const previous =
+    db.photoSeriesIcons?.[member]?.[entry.id];
 
   photoSeriesIconBusy = true;
 
@@ -697,7 +1051,6 @@ async function editSeriesIcon(file = null) {
     );
   } finally {
     photoSeriesIconBusy = false;
-
     renderSeriesIconEditor();
   }
 }
@@ -707,6 +1060,7 @@ function removeSeriesIcon() {
 
   const member = photoBrowserState.member;
   const entry = currentPhotoSeries();
+
   const previous =
     entry && db.photoSeriesIcons?.[member]?.[entry.id];
 
@@ -736,12 +1090,20 @@ function removeSeriesIcon() {
 function photoPoseCount(records, pose) {
   return records
     .filter((item) => item.pose === pose)
-    .reduce((total, item) => total + photoCount(item), 0);
+    .reduce(
+      (total, item) => total + photoCount(item),
+      0
+    );
 }
 
 function photoSeriesProgress(member, entry) {
   const poses = photoSeriesPoses(member, entry);
-  const records = seriesPhotoRecords(member, entry, 'collection');
+
+  const records = seriesPhotoRecords(
+    member,
+    entry,
+    'collection'
+  );
 
   const owned = poses.filter(
     (pose) => photoPoseCount(records, pose) > 0
@@ -760,24 +1122,37 @@ function photoSeriesProgress(member, entry) {
 }
 
 function currentPhotoSeries() {
-  return memberPhotoSeries(photoBrowserState.member).find(
-    (entry) => entry.id === photoBrowserState.seriesId
+  return memberPhotoSeries(
+    photoBrowserState.member
+  ).find(
+    (entry) =>
+      entry.id === photoBrowserState.seriesId
   );
 }
 
-function photoDefaults(entry, pose, inventory = photoInventory()) {
+function photoDefaults(
+  entry,
+  pose,
+  inventory = photoInventory()
+) {
   return {
     member: photoBrowserState.member,
     series: entry.title,
     pose,
     inventory,
     count: 1,
-    category: /封入$/.test(entry.title) ? 'CD封入' : '公式ランダム',
+    category: /封入$/.test(entry.title)
+      ? 'CD封入'
+      : '公式ランダム',
     catalogId: entry.id
   };
 }
 
-function requestPhotoForm(entry, pose, inventory = photoInventory()) {
+function requestPhotoForm(
+  entry,
+  pose,
+  inventory = photoInventory()
+) {
   if (!entry) return;
 
   const records = seriesPhotoRecords(
@@ -794,7 +1169,11 @@ function requestPhotoForm(entry, pose, inventory = photoInventory()) {
     new CustomEvent('photoformrequest', {
       detail: {
         item,
-        defaults: photoDefaults(entry, pose, inventory)
+        defaults: photoDefaults(
+          entry,
+          pose,
+          inventory
+        )
       }
     })
   );
@@ -804,7 +1183,9 @@ function openPhotoCatalogRecord(item) {
   photoBrowserState.member = item.member;
   photoBrowserState.groupId = '';
 
-  const entry = memberPhotoSeries(item.member).find((entry) =>
+  const entry = memberPhotoSeries(
+    item.member
+  ).find((entry) =>
     item.catalogId
       ? entry.id === item.catalogId
       : !entry.duplicate && entry.title === item.series
@@ -839,7 +1220,8 @@ function renderPhotoCollectionSummary(
   const summary = $('#photoCatalogSummary');
 
   if (inventory !== 'collection') {
-    summary.textContent = `${visibleCount}シリーズを表示`;
+    summary.textContent =
+      `${visibleCount}シリーズを表示`;
     return;
   }
 
@@ -870,8 +1252,11 @@ function renderPhotoCollectionSummary(
   summary.innerHTML = `
     <span class="photo-progress-heading">
       <span>
-        収集率 ${owned.toLocaleString()} / ${total.toLocaleString()}種類
+        収集率
+        ${owned.toLocaleString()} /
+        ${total.toLocaleString()}種類
       </span>
+
       <strong>${rate.toFixed(1)}％</strong>
     </span>
 
@@ -952,7 +1337,9 @@ function renderPhotoBrowseMode() {
     $('#photoBrowserBack').before(controls);
 
     controls.addEventListener('click', (event) => {
-      const button = event.target.closest('[data-photo-browse]');
+      const button = event.target.closest(
+        '[data-photo-browse]'
+      );
 
       if (!button || !controls.contains(button)) return;
 
@@ -973,13 +1360,20 @@ function renderPhotoBrowseMode() {
     });
   }
 
-  controls.querySelectorAll('[data-photo-browse]').forEach((button) => {
-    const active =
-      button.dataset.photoBrowse === photoBrowserState.browseMode;
+  controls
+    .querySelectorAll('[data-photo-browse]')
+    .forEach((button) => {
+      const active =
+        button.dataset.photoBrowse ===
+        photoBrowserState.browseMode;
 
-    button.setAttribute('aria-pressed', String(active));
-    button.classList.toggle('active', active);
-  });
+      button.setAttribute(
+        'aria-pressed',
+        String(active)
+      );
+
+      button.classList.toggle('active', active);
+    });
 }
 
 function renderSeriesFirstBrowser() {
@@ -1002,7 +1396,8 @@ function renderSeriesFirstBrowser() {
   renderSeriesIconEditor();
 
   $('#photoBrowserBack').hidden = !selected;
-  $('#photoBrowserBack').textContent = '‹ シリーズ・衣装へ';
+  $('#photoBrowserBack').textContent =
+    '‹ シリーズ・衣装へ';
 
   $('#photoBrowserTitle').textContent = selected
     ? `${selected.title}：メンバーを選ぶ`
@@ -1029,7 +1424,11 @@ function renderSeriesFirstBrowser() {
     ? 'メンバーを検索'
     : 'シリーズ・衣装を検索';
 
-  search.setAttribute('aria-label', search.placeholder);
+  search.setAttribute(
+    'aria-label',
+    search.placeholder
+  );
+
   search.value = state.query;
 
   const years = [
@@ -1062,11 +1461,14 @@ function renderSeriesFirstBrowser() {
   const options = selected
     ? selected.members.map(
         (name) =>
-          memberOptions.find((item) => item.name === name) ||
-          { name, kana: '' }
+          memberOptions.find(
+            (item) => item.name === name
+          ) || { name, kana: '' }
       )
     : [
-        ...new Set(entries.map((entry) => entry.title))
+        ...new Set(
+          entries.map((entry) => entry.title)
+        )
       ].map((name) => ({
         name,
         kana: ''
@@ -1092,11 +1494,16 @@ function renderSeriesFirstBrowser() {
     content.innerHTML =
       visible
         .map((item) => {
-          const series = memberPhotoSeries(item.name).find(
+          const series = memberPhotoSeries(
+            item.name
+          ).find(
             (entry) => entry.id === selected.id
           );
 
-          const poses = photoSeriesPoses(item.name, series);
+          const poses = photoSeriesPoses(
+            item.name,
+            series
+          );
 
           const records = seriesPhotoRecords(
             item.name,
@@ -1114,12 +1521,11 @@ function renderSeriesFirstBrowser() {
               class="catalog-member"
               data-catalog-member="${escapeHtml(item.name)}"
             >
-              <span class="catalog-initial" aria-hidden="true">
-                ${escapeHtml(item.name.slice(0, 1))}
-              </span>
+              ${photoMemberThumbnail(item.name)}
 
               <span>
                 <strong>${escapeHtml(item.name)}</strong>
+
                 <small>
                   ${photoInventoryLabel(inventory)}
                   ${owned} / ${poses.length}種類
@@ -1133,14 +1539,19 @@ function renderSeriesFirstBrowser() {
         .join('') ||
       empty('条件に合うメンバー・分類はありません');
 
+    loadSeriesThumbnails(content);
+
     return;
   }
 
   const visible = entries.filter((entry) => {
-    const itemYears = entry.title.match(/20\d{2}/g) || [];
+    const itemYears =
+      entry.title.match(/20\d{2}/g) || [];
 
     return (
-      normalize(entry.title).includes(normalize(state.query)) &&
+      normalize(entry.title).includes(
+        normalize(state.query)
+      ) &&
       (
         !state.year ||
         (
@@ -1185,6 +1596,7 @@ function renderSeriesFirstBrowser() {
 }
 
 function renderPhotoBrowser() {
+  renderMemberIconEditor();
   renderPhotoBrowseMode();
 
   if (
@@ -1205,6 +1617,7 @@ function renderPhotoBrowser() {
   }
 
   const groups = photoSeriesGroups(member, entry);
+
   const group = groups.find(
     (item) => item.id === state.groupId
   );
@@ -1252,7 +1665,10 @@ function renderPhotoBrowser() {
     ? '衣装・シリーズを検索'
     : 'メンバー・分類を検索';
 
-  search.setAttribute('aria-label', search.placeholder);
+  search.setAttribute(
+    'aria-label',
+    search.placeholder
+  );
 
   if (search.value !== state.query) {
     search.value = state.query;
@@ -1276,13 +1692,15 @@ function renderPhotoBrowser() {
       ? [
           ...new Set(
             memberPhotoSeries(member).flatMap(
-              (series) => series.title.match(/20\d{2}/g) || []
+              (series) =>
+                series.title.match(/20\d{2}/g) || []
             )
           )
         ].sort().reverse()
       : [];
 
-  $('#photoCatalogYearField').hidden = !member || !!entry;
+  $('#photoCatalogYearField').hidden =
+    !member || !!entry;
 
   const yearSelect = $('#photoCatalogYear');
 
@@ -1341,7 +1759,9 @@ function renderPhotoBrowser() {
 
     const visible = names.filter((name) => {
       const kana =
-        memberOptions.find((item) => item.name === name)?.kana || '';
+        memberOptions.find(
+          (item) => item.name === name
+        )?.kana || '';
 
       return normalize(`${name} ${kana}`).includes(
         normalize(state.query)
@@ -1373,7 +1793,10 @@ function renderPhotoBrowser() {
                 item.member === name &&
                 item.inventory === inventory
             )
-            .reduce((sum, item) => sum + photoCount(item), 0);
+            .reduce(
+              (sum, item) => sum + photoCount(item),
+              0
+            );
 
           return `
             <button
@@ -1381,12 +1804,11 @@ function renderPhotoBrowser() {
               class="catalog-member"
               data-catalog-member="${escapeHtml(name)}"
             >
-              <span class="catalog-initial" aria-hidden="true">
-                ${escapeHtml(name.slice(0, 1))}
-              </span>
+              ${photoMemberThumbnail(name)}
 
               <span>
                 <strong>${escapeHtml(name)}</strong>
+
                 <small>
                   ${memberPhotoSeries(name).length}シリーズ /
                   ${photoInventoryLabel(inventory)} ${count}枚
@@ -1400,6 +1822,8 @@ function renderPhotoBrowser() {
         .join('') ||
       empty('メンバー・分類が見つかりません');
 
+    loadSeriesThumbnails(container);
+
     return;
   }
 
@@ -1407,11 +1831,12 @@ function renderPhotoBrowser() {
     const all = memberPhotoSeries(member);
 
     const visible = all.filter((item) => {
-      const itemYears = item.title.match(/20\d{2}/g) || [];
+      const itemYears =
+        item.title.match(/20\d{2}/g) || [];
 
-      const matchesQuery = normalize(item.title).includes(
-        normalize(state.query)
-      );
+      const matchesQuery = normalize(
+        item.title
+      ).includes(normalize(state.query));
 
       const matchesYear =
         !state.year ||
@@ -1424,9 +1849,16 @@ function renderPhotoBrowser() {
       const matchesStatus =
         !state.status ||
         inventory !== 'collection' ||
-        photoSeriesProgress(member, item)[state.status] === true;
+        photoSeriesProgress(
+          member,
+          item
+        )[state.status] === true;
 
-      return matchesQuery && matchesYear && matchesStatus;
+      return (
+        matchesQuery &&
+        matchesYear &&
+        matchesStatus
+      );
     });
 
     renderPhotoCollectionSummary(
@@ -1439,8 +1871,15 @@ function renderPhotoBrowser() {
     container.innerHTML =
       visible
         .map((item) => {
-          const records = seriesPhotoRecords(member, item);
-          const poses = photoSeriesPoses(member, item);
+          const records = seriesPhotoRecords(
+            member,
+            item
+          );
+
+          const poses = photoSeriesPoses(
+            member,
+            item
+          );
 
           const complete = poses.filter(
             (pose) => photoPoseCount(records, pose) > 0
@@ -1504,6 +1943,7 @@ function renderPhotoBrowser() {
                 <small>
                   ${photoInventoryLabel(inventory)}
                   ${complete} / ${poses.length}種類
+
                   ${
                     inventory === 'collection'
                       ? `・${Number(rate.toFixed(1))}％`
@@ -1566,7 +2006,10 @@ function renderPhotoBrowser() {
   container.innerHTML =
     poses
       .map((pose) => {
-        const items = records.filter((item) => item.pose === pose);
+        const items = records.filter(
+          (item) => item.pose === pose
+        );
+
         const count = photoPoseCount(records, pose);
 
         const item =
@@ -1578,6 +2021,7 @@ function renderPhotoBrowser() {
           items[0];
 
         const key = escapeHtml(pose);
+
         const label = escapeHtml(
           `${member} ${entry.title} ${pose}`
         );
@@ -1610,7 +2054,68 @@ function renderPhotoBrowser() {
               aria-label="${label}の画像と登録内容を編集"
             >${imageContent}</button>
 
-            <h4>${key}</h4>
+            <div class="catalog-pose-heading">
+              <h4>${key}</h4>
+
+              <button
+                type="button"
+                class="catalog-favorite"
+                data-catalog-favorite="${key}"
+                aria-label="${label}のお気に入り"
+                aria-pressed="${!!favorite?.favorite}"
+              >${favorite?.favorite ? '★' : '☆'}</button>
+
+              <details class="catalog-pose-menu">
+                <summary
+                  aria-label="${label}の管理操作"
+                >︙</summary>
+
+                <div class="catalog-pose-menu-panel">
+                  <button
+                    type="button"
+                    data-catalog-inventory="offer"
+                    data-pose="${key}"
+                  >提供に登録</button>
+
+                  <button
+                    type="button"
+                    data-catalog-inventory="want"
+                    data-pose="${key}"
+                  >希望に登録</button>
+
+                  <hr>
+
+                  <button
+                    type="button"
+                    data-catalog-edit="${key}"
+                  >編集・画像</button>
+
+                  ${
+                    items.length
+                      ? `
+                        <button
+                          type="button"
+                          data-catalog-records="${key}"
+                        >登録内容</button>
+                      `
+                      : ''
+                  }
+
+                  <button
+                    type="button"
+                    data-catalog-rename="${key}"
+                  >種類名を変更</button>
+
+                  <hr>
+
+                  <button
+                    type="button"
+                    class="catalog-menu-remove"
+                    data-catalog-remove="${key}"
+                  >種類を外す</button>
+                </div>
+              </details>
+            </div>
 
             <div class="catalog-counter">
               <button
@@ -1630,57 +2135,6 @@ function renderPhotoBrowser() {
                 aria-label="${label}を1枚増やす"
                 ${count >= 99999 ? 'disabled' : ''}
               >＋</button>
-            </div>
-
-            <div class="catalog-pose-actions">
-              <button
-                type="button"
-                data-catalog-inventory="offer"
-                data-pose="${key}"
-              >提供</button>
-
-              <button
-                type="button"
-                data-catalog-inventory="want"
-                data-pose="${key}"
-              >希望</button>
-
-              <button
-                type="button"
-                data-catalog-favorite="${key}"
-                aria-label="${label}のお気に入り"
-                aria-pressed="${!!favorite?.favorite}"
-              >${favorite?.favorite ? '★' : '☆'}</button>
-            </div>
-
-            <div class="catalog-pose-actions">
-              <button
-                type="button"
-                data-catalog-edit="${key}"
-              >編集・画像</button>
-
-              ${
-                items.length
-                  ? `
-                    <button
-                      type="button"
-                      data-catalog-records="${key}"
-                    >登録内容</button>
-                  `
-                  : ''
-              }
-            </div>
-
-            <div class="catalog-pose-actions">
-              <button
-                type="button"
-                data-catalog-rename="${key}"
-              >種類名を変更</button>
-
-              <button
-                type="button"
-                data-catalog-remove="${key}"
-              >種類を外す</button>
             </div>
 
             ${
@@ -1703,25 +2157,33 @@ function renderPhotoBrowser() {
     .querySelectorAll('[data-catalog-image]')
     .forEach(async (element) => {
       try {
-        const url = await getPhotoURL(element.dataset.catalogImage);
+        const url = await getPhotoURL(
+          element.dataset.catalogImage
+        );
 
         if (url && element.isConnected) {
           const image = new Image();
 
           image.src = url;
-          image.alt = `${member} ${entry.title}の生写真`;
+          image.alt =
+            `${member} ${entry.title}の生写真`;
 
           element.replaceChildren(image);
         }
       } catch {
         if (element.isConnected) {
-          element.textContent = '画像を読み込めませんでした';
+          element.textContent =
+            '画像を読み込めませんでした';
         }
       }
     });
 }
 
-function changeCatalogCount(pose, delta, favorite = false) {
+function changeCatalogCount(
+  pose,
+  delta,
+  favorite = false
+) {
   const entry = currentPhotoSeries();
 
   if (!entry) return;
@@ -1749,7 +2211,9 @@ function changeCatalogCount(pose, delta, favorite = false) {
     return;
   }
 
-  const previous = db.photos.map((item) => ({ ...item }));
+  const previous = db.photos.map(
+    (item) => ({ ...item })
+  );
 
   let item =
     delta < 0
@@ -1768,7 +2232,9 @@ function changeCatalogCount(pose, delta, favorite = false) {
   }
 
   if (favorite) {
-    item.favorite = !records.some((record) => record.favorite);
+    item.favorite = !records.some(
+      (record) => record.favorite
+    );
 
     item.favoriteAt = item.favorite
       ? Date.now()
@@ -1790,7 +2256,9 @@ function changeCatalogCount(pose, delta, favorite = false) {
   } catch {
     db.photos = previous;
 
-    toast('保存できませんでした。空き容量を確認してください');
+    toast(
+      '保存できませんでした。空き容量を確認してください'
+    );
 
     return;
   }
@@ -1824,12 +2292,78 @@ function initPhotoBrowser() {
 
   content.dataset.browserReady = 'true';
 
+  content.addEventListener(
+    'toggle',
+    (event) => {
+      const menu = event.target;
+
+      if (
+        !menu.matches?.('.catalog-pose-menu') ||
+        !menu.open
+      ) {
+        return;
+      }
+
+      closePhotoPoseMenus(menu);
+
+      requestAnimationFrame(() => {
+        if (!menu.open || !menu.isConnected) return;
+
+        const panel = menu.querySelector(
+          '.catalog-pose-menu-panel'
+        );
+
+        menu.classList.remove('opens-up');
+
+        panel.style.left = '';
+        panel.style.right = '';
+
+        const bounds = panel.getBoundingClientRect();
+
+        if (bounds.left < 8) {
+          panel.style.left = '0';
+          panel.style.right = 'auto';
+        }
+
+        const trigger = menu.getBoundingClientRect();
+
+        if (
+          bounds.bottom > innerHeight - 8 &&
+          trigger.top > bounds.height + 8
+        ) {
+          menu.classList.add('opens-up');
+        }
+      });
+    },
+    true
+  );
+
+  document.addEventListener('click', (event) => {
+    if (!event.target.closest('.catalog-pose-menu')) {
+      closePhotoPoseMenus();
+    }
+  });
+
+  document.addEventListener('keydown', (event) => {
+    if (
+      event.key === 'Escape' &&
+      document.querySelector('.catalog-pose-menu[open]')
+    ) {
+      event.preventDefault();
+      closePhotoPoseMenus(null, true);
+    }
+  });
+
   const statusLabel = $('#photoCatalogMissingLabel');
   const statusSelect = document.createElement('select');
 
   statusSelect.id = 'photoCatalogStatus';
   statusSelect.className = 'filter';
-  statusSelect.setAttribute('aria-label', 'シリーズの所持状況');
+
+  statusSelect.setAttribute(
+    'aria-label',
+    'シリーズの所持状況'
+  );
 
   for (const [value, label] of [
     ['', 'すべて'],
@@ -1851,7 +2385,10 @@ function initPhotoBrowser() {
     statusSelect
   );
 
-  const browser = content.closest('.photo-catalog-browser');
+  const browser = content.closest(
+    '.photo-catalog-browser'
+  );
+
   const saved = $('#savedPhotos');
 
   saved.querySelector('summary').textContent =
@@ -1867,7 +2404,10 @@ function initPhotoBrowser() {
     ...photoMemberOptions()
   );
 
-  attachMemberAutocomplete(search, photoBrowserSearchOptions);
+  attachMemberAutocomplete(
+    search,
+    photoBrowserSearchOptions
+  );
 
   const picker = search.closest('.member-picker');
 
@@ -1876,7 +2416,11 @@ function initPhotoBrowser() {
   picker.style.minWidth = '0';
 
   const updateSearch = () => {
-    if (photoBrowserState.query === search.value) return;
+    if (
+      photoBrowserState.query === search.value
+    ) {
+      return;
+    }
 
     photoBrowserState.query = search.value;
 
@@ -1888,10 +2432,16 @@ function initPhotoBrowser() {
 
   const savedSearch = $('[data-search="photos"]');
 
-  attachMemberAutocomplete(savedSearch, photoMemberOptions());
+  attachMemberAutocomplete(
+    savedSearch,
+    photoMemberOptions()
+  );
 
-  savedSearch.placeholder = 'メンバー・シリーズ・メモを検索';
-  savedSearch.closest('.member-picker').style.minWidth = '0';
+  savedSearch.placeholder =
+    'メンバー・シリーズ・メモを検索';
+
+  savedSearch.closest('.member-picker').style.minWidth =
+    '0';
 
   let savedQuery = savedSearch.value;
 
@@ -1922,7 +2472,9 @@ function initPhotoBrowser() {
   $('#photoBrowserBack').onclick = () => {
     if (photoBrowserState.groupId) {
       photoBrowserState.groupId = '';
-    } else if (photoBrowserState.browseMode === 'series') {
+    } else if (
+      photoBrowserState.browseMode === 'series'
+    ) {
       if (photoBrowserState.member) {
         photoBrowserState.member = '';
         photoBrowserState.seriesId = '';
@@ -1996,7 +2548,13 @@ function initPhotoBrowser() {
         ?.[entry.id] || []
     ).filter((value) => value !== pose);
 
-    if (storePhotoPoses([...poses, pose], null, hidden)) {
+    if (
+      storePhotoPoses(
+        [...poses, pose],
+        null,
+        hidden
+      )
+    ) {
       input.value = '';
 
       toast('種類を追加しました');
@@ -2007,6 +2565,12 @@ function initPhotoBrowser() {
     const button = event.target.closest('button');
 
     if (!button || !content.contains(button)) return;
+
+    const menu = button.closest('.catalog-pose-menu');
+
+    if (menu) {
+      menu.open = false;
+    }
 
     if (button.hasAttribute('data-browse-series')) {
       photoBrowserState.browseSeriesId =
@@ -2021,7 +2585,9 @@ function initPhotoBrowser() {
       renderPhotoBrowser();
 
       $('#photoBrowserTitle').focus();
-    } else if (button.hasAttribute('data-catalog-group')) {
+    } else if (
+      button.hasAttribute('data-catalog-group')
+    ) {
       const groups = photoSeriesGroups(
         photoBrowserState.member,
         currentPhotoSeries()
@@ -2029,20 +2595,25 @@ function initPhotoBrowser() {
 
       if (
         !groups.some(
-          (group) => group.id === button.dataset.catalogGroup
+          (group) =>
+            group.id === button.dataset.catalogGroup
         )
       ) {
         return;
       }
 
-      photoBrowserState.groupId = button.dataset.catalogGroup;
+      photoBrowserState.groupId =
+        button.dataset.catalogGroup;
 
       renderPhotoBrowser();
 
       $('#photoBrowserTitle').focus();
-    } else if (button.hasAttribute('data-catalog-member')) {
+    } else if (
+      button.hasAttribute('data-catalog-member')
+    ) {
       photoBrowserState.groupId = '';
-      photoBrowserState.member = button.dataset.catalogMember;
+      photoBrowserState.member =
+        button.dataset.catalogMember;
 
       photoBrowserState.seriesId =
         photoBrowserState.browseMode === 'series'
@@ -2055,47 +2626,66 @@ function initPhotoBrowser() {
       renderPhotoBrowser();
 
       $('#photoBrowserTitle').focus();
-    } else if (button.hasAttribute('data-catalog-series')) {
+    } else if (
+      button.hasAttribute('data-catalog-series')
+    ) {
       photoBrowserState.groupId = '';
-      photoBrowserState.seriesId = button.dataset.catalogSeries;
+      photoBrowserState.seriesId =
+        button.dataset.catalogSeries;
 
       renderPhotoBrowser();
 
       $('#photoBrowserTitle').focus();
-    } else if (button.hasAttribute('data-catalog-count')) {
+    } else if (
+      button.hasAttribute('data-catalog-count')
+    ) {
       changeCatalogCount(
         button.dataset.catalogCount,
         Number(button.dataset.delta)
       );
-    } else if (button.hasAttribute('data-catalog-favorite')) {
+    } else if (
+      button.hasAttribute('data-catalog-favorite')
+    ) {
       changeCatalogCount(
         button.dataset.catalogFavorite,
         0,
         true
       );
-    } else if (button.hasAttribute('data-catalog-rename')) {
+    } else if (
+      button.hasAttribute('data-catalog-rename')
+    ) {
       editPhotoPose(button.dataset.catalogRename);
-    } else if (button.hasAttribute('data-catalog-remove')) {
+    } else if (
+      button.hasAttribute('data-catalog-remove')
+    ) {
       removePhotoPose(button.dataset.catalogRemove);
-    } else if (button.hasAttribute('data-catalog-edit')) {
+    } else if (
+      button.hasAttribute('data-catalog-edit')
+    ) {
       requestPhotoForm(
         currentPhotoSeries(),
         button.dataset.catalogEdit
       );
-    } else if (button.hasAttribute('data-catalog-inventory')) {
+    } else if (
+      button.hasAttribute('data-catalog-inventory')
+    ) {
       requestPhotoForm(
         currentPhotoSeries(),
         button.dataset.pose,
         button.dataset.catalogInventory
       );
-    } else if (button.hasAttribute('data-catalog-records')) {
+    } else if (
+      button.hasAttribute('data-catalog-records')
+    ) {
       const entry = currentPhotoSeries();
 
       if (!entry) return;
 
       renderSavedPhotos();
 
-      $('#photoMember').value = photoBrowserState.member;
+      $('#photoMember').value =
+        photoBrowserState.member;
+
       $('#photoSeries').value = entry.title;
 
       $('[data-search="photos"]').value =
