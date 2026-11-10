@@ -11,7 +11,9 @@ try {
 }
 
 const db =
-  stored && typeof stored === 'object' && !Array.isArray(stored)
+  stored &&
+  typeof stored === 'object' &&
+  !Array.isArray(stored)
     ? stored
     : {};
 
@@ -64,7 +66,10 @@ function save() {
     );
   }
 
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(db));
+  localStorage.setItem(
+    STORAGE_KEY,
+    JSON.stringify(db)
+  );
 }
 
 function imageInUse(id) {
@@ -73,26 +78,45 @@ function imageInUse(id) {
   const key = String(id);
 
   const references = [
-    ...db.photos.map((item) => item.imageId || item.id),
+    ...db.photos.map(
+      (item) => item.imageId || item.id
+    ),
 
-    ...db.goods.map((item) => item.imageId),
+    ...Object.values(db.photoMemberIcons || {}).map(
+      (icon) => icon?.imageId
+    ),
 
-    ...(db.goodsCatalog || []).map((item) => item.iconId),
+    ...db.goods.map(
+      (item) => item.imageId
+    ),
+
+    ...(db.goodsCatalog || []).map(
+      (item) => item.iconId
+    ),
 
     ...db.places.flatMap((item) => [
       item.imageId,
-      ...(Array.isArray(item.visits) ? item.visits : []).flatMap(
-        (visit) =>
-          Array.isArray(visit.imageIds) ? visit.imageIds : []
-      )
+
+      ...(Array.isArray(item.visits) ? item.visits : [])
+        .flatMap(
+          (visit) =>
+            Array.isArray(visit.imageIds)
+              ? visit.imageIds
+              : []
+        )
     ]),
 
-    ...db.milestones.map((item) => item.imageId || item.id),
+    ...db.milestones.map(
+      (item) => item.imageId || item.id
+    ),
 
     ...db.reports.flatMap((item) => [
       item.memberAvatarId,
       item.selfAvatarId,
-      ...(item.messages || []).map((message) => message.imageId)
+
+      ...(item.messages || []).map(
+        (message) => message.imageId
+      )
     ]),
 
     db.appearance?.backgroundId,
@@ -103,11 +127,15 @@ function imageInUse(id) {
 
     ...Object.values(db.photoSeriesIcons || {}).flatMap(
       (icons) =>
-        Object.values(icons).map((icon) => icon?.imageId)
+        Object.values(icons).map(
+          (icon) => icon?.imageId
+        )
     )
   ];
 
   return references.some(
-    (value) => value != null && String(value) === key
+    (value) =>
+      value != null &&
+      String(value) === key
   );
 }
