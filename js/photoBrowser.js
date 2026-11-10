@@ -88,13 +88,57 @@ function photoSeriesPoses(name, entry) {
     .filter(
       (item) =>
         item.member === name &&
-        (item.catalogId === entry.id ||
-          (!entry.duplicate && item.series === entry.title))
+        (
+          item.catalogId === entry.id ||
+          (!entry.duplicate && item.series === entry.title)
+        )
     )
     .map((item) => item.pose)
     .filter(Boolean);
 
-  const base = Array.isArray(configured) ? configured : standardPhotoPoses;
+  const usagiPoses = [
+    '森田まろまろさん ヨリ',
+    '森田まろまろさん チュウ',
+    '森田まろまろさん ヒキ',
+    '森田まろまろさん 座り',
+
+    'まろまろさん チュウ',
+    'まろまろさん ヒキ',
+
+    '山下しらたまさん ヨリ',
+    '山下しらたまさん チュウ',
+    '山下しらたまさん ヒキ',
+    '山下しらたまさん 座り',
+
+    'しらたまさん チュウ',
+    'しらたまさん ヒキ',
+
+    '浅井ぴょんきちさん ヨリ',
+    '浅井ぴょんきちさん チュウ',
+    '浅井ぴょんきちさん ヒキ',
+    '浅井ぴょんきちさん 座り',
+
+    'ぴょんきちさん チュウ',
+    'ぴょんきちさん ヒキ',
+
+    '集合①',
+    '集合②',
+    '集合③',
+    '集合④',
+
+    '集合（着ぐるみ）①',
+    '集合（着ぐるみ）②'
+  ];
+
+  const defaults =
+    name === 'その他' &&
+    entry.title === '見つけて櫻坂うさぎ'
+      ? usagiPoses
+      : standardPhotoPoses;
+
+  const base = Array.isArray(configured)
+    ? configured
+    : defaults;
 
   return [
     ...new Set([
@@ -104,7 +148,9 @@ function photoSeriesPoses(name, entry) {
     ])
   ].filter(
     (value) =>
-      typeof value === 'string' && value.trim() && !hidden.includes(value)
+      typeof value === 'string' &&
+      value.trim() &&
+      !hidden.includes(value)
   );
 }
 
