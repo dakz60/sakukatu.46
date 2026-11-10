@@ -6,13 +6,41 @@ const PHOTO_MAX_SIZE = 1200;
 const PHOTO_QUALITY = 0.8;
 
 let databasePromise;
+let activeDatabaseName;
 
 const urls = new Map();
 
 function openDatabase() {
+  const name =
+    JSON.parse(localStorage.getItem('oshi-note-v1') || '{}')
+      ?.__photoDatabase || DB_NAME;
+
+  if (
+    name !== DB_NAME &&
+    !/^sakurazaka-oshi-note-photos-import-[0-9a-f-]{36}$/.test(name)
+  ) {
+    throw new Error('画像保存先の形式が正しくありません');
+  }
+
+  if (activeDatabaseName !== name) {
+    databasePromise
+      ?.then((database) => database.close())
+      .catch(() => {});
+
+    databasePromise = undefined;
+
+    for (const url of urls.values()) {
+      URL.revokeObjectURL(url);
+    }
+
+    urls.clear();
+
+    activeDatabaseName = name;
+  }
+
   if (!databasePromise) {
     databasePromise = new Promise((resolve, reject) => {
-      const request = indexedDB.open(DB_NAME, 1);
+      const request = indexedDB.open(name, 1);
 
       request.onupgradeneeded = () => {
         const database = request.result;
@@ -35,7 +63,8 @@ function openDatabase() {
 
       request.onerror = () => {
         reject(
-          request.error || new Error('画像保存先を開けませんでした')
+          request.error ||
+          new Error('画像保存先を開けませんでした')
         );
       };
     }).catch((error) => {
@@ -54,6 +83,7 @@ async function compressPhoto(file) {
   try {
     await new Promise((resolve, reject) => {
       image.onload = resolve;
+
       image.onerror = () => {
         reject(
           new Error(
@@ -78,8 +108,16 @@ async function compressPhoto(file) {
     );
 
     const canvas = document.createElement('canvas');
-    canvas.width = Math.max(1, Math.round(originalWidth * scale));
-    canvas.height = Math.max(1, Math.round(originalHeight * scale));
+
+    canvas.width = Math.max(
+      1,
+      Math.round(originalWidth * scale)
+    );
+
+    canvas.height = Math.max(
+      1,
+      Math.round(originalHeight * scale)
+    );
 
     try {
       const context = canvas.getContext('2d');
@@ -90,7 +128,14 @@ async function compressPhoto(file) {
 
       context.imageSmoothingEnabled = true;
       context.imageSmoothingQuality = 'high';
-      context.drawImage(image, 0, 0, canvas.width, canvas.height);
+
+      context.drawImage(
+        image,
+        0,
+        0,
+        canvas.width,
+        canvas.height
+      );
 
       const compressed = await new Promise((resolve, reject) => {
         canvas.toBlob(
@@ -106,7 +151,9 @@ async function compressPhoto(file) {
         );
       });
 
-      return compressed.size < file.size ? compressed : file;
+      return compressed.size < file.size
+        ? compressed
+        : file;
     } finally {
       canvas.width = 0;
       canvas.height = 0;
@@ -114,6 +161,7 @@ async function compressPhoto(file) {
   } finally {
     image.onload = null;
     image.onerror = null;
+
     URL.revokeObjectURL(temporaryURL);
   }
 }
@@ -132,19 +180,27 @@ function clearPhotoURL(id) {
 async function savePhoto(id, file, options = {}) {
   try {
     if (!(file instanceof Blob) || !file.size) {
-      throw new Error('画像ファイルが空か、読み込めませんでした');
+      throw new Error(
+        '画像ファイルが空か、読み込めませんでした'
+      );
     }
 
     const key = String(id);
+
     const shouldCompress =
       options.compress ?? key.startsWith('goods-image-');
 
-    const image = shouldCompress ? await compressPhoto(file) : file;
+    const image = shouldCompress
+      ? await compressPhoto(file)
+      : file;
 
     const database = await openDatabase();
 
     await new Promise((resolve, reject) => {
-      const transaction = database.transaction(STORE_NAME, 'readwrite');
+      const transaction = database.transaction(
+        STORE_NAME,
+        'readwrite'
+      );
 
       transaction.oncomplete = () => {
         resolve();
@@ -153,7 +209,7 @@ async function savePhoto(id, file, options = {}) {
       transaction.onerror = transaction.onabort = () => {
         reject(
           transaction.error ||
-            new Error('画像の保存処理が中断されました')
+          new Error('画像の保存処理が中断されました')
         );
       };
 
@@ -169,17 +225,20 @@ async function savePhoto(id, file, options = {}) {
 
 async function getPhotoURL(id) {
   const key = String(id);
+  const database = await openDatabase();
 
   if (urls.has(key)) {
     return urls.get(key);
   }
 
-  const database = await openDatabase();
-
   const file = await new Promise((resolve, reject) => {
-    const transaction = database.transaction(STORE_NAME, 'readonly');
+    const transaction = database.transaction(
+      STORE_NAME,
+      'readonly'
+    );
 
     const request = transaction.objectStore(STORE_NAME).get(key);
+
     let result;
 
     request.onsuccess = () => {
@@ -193,8 +252,8 @@ async function getPhotoURL(id) {
     transaction.onerror = transaction.onabort = () => {
       reject(
         transaction.error ||
-          request.error ||
-          new Error('画像を読み込めませんでした')
+        request.error ||
+        new Error('画像を読み込めませんでした')
       );
     };
   });
@@ -204,7 +263,9 @@ async function getPhotoURL(id) {
   }
 
   if (!(file instanceof Blob)) {
-    throw new Error('保存されている画像の形式が正しくありません');
+    throw new Error(
+      '保存されている画像の形式が正しくありません'
+    );
   }
 
   if (urls.has(key)) {
@@ -212,6 +273,7 @@ async function getPhotoURL(id) {
   }
 
   const url = URL.createObjectURL(file);
+
   urls.set(key, url);
 
   return url;
@@ -222,7 +284,10 @@ async function deletePhoto(id) {
   const database = await openDatabase();
 
   await new Promise((resolve, reject) => {
-    const transaction = database.transaction(STORE_NAME, 'readwrite');
+    const transaction = database.transaction(
+      STORE_NAME,
+      'readwrite'
+    );
 
     transaction.oncomplete = () => {
       resolve();
@@ -231,7 +296,7 @@ async function deletePhoto(id) {
     transaction.onerror = transaction.onabort = () => {
       reject(
         transaction.error ||
-          new Error('画像の削除処理が中断されました')
+        new Error('画像の削除処理が中断されました')
       );
     };
 
