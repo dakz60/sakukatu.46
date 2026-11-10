@@ -11,6 +11,7 @@
     <link rel="stylesheet" href="css/goods.css?v=20261106-split2" />
     <link rel="stylesheet" href="css/places.css?v=20261107-map1" />
   </head>
+
   <body>
     <div class="app">
       <aside class="sidebar" id="sidebar">
@@ -24,18 +25,41 @@
 
         <div>
           <div class="nav-label">MENU</div>
+
           <nav class="nav" id="nav">
-            <button class="active" data-page="home"><span class="ico">⌂</span>ホーム</button>
-            <button data-page="schedule"><span class="ico">▦</span>スケジュール</button>
-            <button data-page="tickets"><span class="ico">♧</span>応募・チケット</button>
-            <button data-page="goods"><span class="ico">✿</span>グッズ管理</button>
-            <button data-page="photos"><span class="ico">▧</span>生写真コレクション</button>
-            <button data-page="lives"><span class="ico">♫</span>ライブ参戦記録</button>
-            <button data-page="reports"><span class="ico">♡</span>ミーグリレポ</button>
-            <button data-page="money"><span class="ico">￥</span>推し活家計簿</button>
-            <button data-page="todos"><span class="ico">☑</span>推し活ToDo</button>
-            <button data-page="places"><span class="ico">⌖</span>推し活マップ</button>
-            <button data-page="milestones"><span class="ico">◎</span>メンバー別記念日</button>
+            <button class="active" data-page="home">
+              <span class="ico">⌂</span>ホーム
+            </button>
+            <button data-page="schedule">
+              <span class="ico">▦</span>スケジュール
+            </button>
+            <button data-page="tickets">
+              <span class="ico">♧</span>応募・チケット
+            </button>
+            <button data-page="goods">
+              <span class="ico">✿</span>グッズ管理
+            </button>
+            <button data-page="photos">
+              <span class="ico">▧</span>生写真コレクション
+            </button>
+            <button data-page="lives">
+              <span class="ico">♫</span>ライブ参戦記録
+            </button>
+            <button data-page="reports">
+              <span class="ico">♡</span>ミーグリレポ
+            </button>
+            <button data-page="money">
+              <span class="ico">￥</span>推し活家計簿
+            </button>
+            <button data-page="todos">
+              <span class="ico">☑</span>推し活ToDo
+            </button>
+            <button data-page="places">
+              <span class="ico">⌖</span>推し活マップ
+            </button>
+            <button data-page="milestones">
+              <span class="ico">◎</span>メンバー別記念日
+            </button>
           </nav>
         </div>
       </aside>
@@ -43,12 +67,26 @@
       <main class="main">
         <div class="topbar">
           <div style="display: flex; align-items: center; gap: 10px">
-            <button class="icon-btn mobile-menu" id="menuBtn" aria-label="メニュー">☰</button>
-            <div class="crumb">マイページ　/　<b id="crumb">ホーム</b></div>
+            <button
+              class="icon-btn mobile-menu"
+              id="menuBtn"
+              aria-label="メニュー"
+            >
+              ☰
+            </button>
+
+            <div class="crumb">
+              マイページ　/　<b id="crumb">ホーム</b>
+            </div>
           </div>
+
           <div class="top-actions">
-            <button type="button" class="subtle" id="appearanceBtn">背景</button>
-            <button class="icon-btn" id="todayBtn" title="今日">▦</button>
+            <button type="button" class="subtle" id="appearanceBtn">
+              背景
+            </button>
+            <button class="icon-btn" id="todayBtn" title="今日">
+              ▦
+            </button>
           </div>
         </div>
 
@@ -58,7 +96,9 @@
               <h2>推し活ノート</h2>
               <p id="todayText">予定と記録を確認できます。</p>
             </div>
-            <button class="primary" data-add="schedule">＋ 予定を追加</button>
+            <button class="primary" data-add="schedule">
+              ＋ 予定を追加
+            </button>
           </div>
 
           <div class="cards">
@@ -67,18 +107,21 @@
               <div class="label">直近の予定</div>
               <div class="value" id="statEvents">0件</div>
             </div>
+
             <div class="stat">
               <span class="stat-icon">♧</span>
               <div class="label">応募・支払い期限</div>
               <div class="value" id="statDeadlines">0件</div>
               <div class="hint">期限の近い応募</div>
             </div>
+
             <div class="stat">
               <span class="stat-icon">♡</span>
               <div class="label">ミーグリレポ</div>
               <div class="value" id="statReports">0件</div>
               <div class="hint">登録したレポ</div>
             </div>
+
             <div class="stat">
               <span class="stat-icon">￥</span>
               <div class="label">今月の推し活費</div>
@@ -92,7 +135,9 @@
               <div class="panel">
                 <div class="panel-head">
                   <h3>今後の予定</h3>
-                  <button class="subtle" data-go="schedule">すべて見る →</button>
+                  <button class="subtle" data-go="schedule">
+                    すべて見る →
+                  </button>
                 </div>
                 <div class="event-list" id="homeEvents"></div>
               </div>
@@ -100,7 +145,9 @@
               <div class="panel">
                 <div class="panel-head">
                   <h3>未完了のToDo</h3>
-                  <button class="subtle" data-go="todos">一覧 →</button>
+                  <button class="subtle" data-go="todos">
+                    一覧 →
+                  </button>
                 </div>
                 <div id="homeTodos"></div>
               </div>
@@ -108,9 +155,17 @@
               <div class="panel">
                 <div class="panel-head">
                   <h3>お気に入りの生写真</h3>
-                  <button type="button" class="subtle" data-go="photos">生写真へ →</button>
+                  <button type="button" class="subtle" data-go="photos">
+                    生写真へ →
+                  </button>
                 </div>
-                <p id="homeFavoritesSummary" class="field-hint" aria-live="polite"></p>
+
+                <p
+                  id="homeFavoritesSummary"
+                  class="field-hint"
+                  aria-live="polite"
+                ></p>
+
                 <div id="homeFavorites" class="home-favorites"></div>
               </div>
             </div>
@@ -119,8 +174,11 @@
               <div class="panel">
                 <div class="panel-head">
                   <h3>推しメン</h3>
-                  <button class="profile-edit" id="editProfile">編集</button>
+                  <button class="profile-edit" id="editProfile">
+                    編集
+                  </button>
                 </div>
+
                 <div class="profile">
                   <div class="profile-pic">🌸</div>
                   <div>
@@ -128,11 +186,14 @@
                     <p id="profileGroup">櫻坂46</p>
                   </div>
                 </div>
+
                 <div id="favoriteDays" aria-live="polite"></div>
+
                 <div class="birthday">
                   <span>誕生日</span>
                   <strong id="profileBirthdayText">未登録</strong>
                 </div>
+
                 <div class="birthday">
                   <span>誕生日まで</span>
                   <strong id="birthdayText">未登録</strong>
@@ -142,7 +203,9 @@
               <div class="panel">
                 <div class="panel-head">
                   <h3>メンバー別記念日</h3>
-                  <button class="subtle" data-go="milestones">一覧・追加 →</button>
+                  <button class="subtle" data-go="milestones">
+                    一覧・追加 →
+                  </button>
                 </div>
                 <div id="homeMilestones"></div>
               </div>
@@ -150,7 +213,9 @@
               <div class="panel">
                 <div class="panel-head">
                   <h3>最近のミーグリレポ</h3>
-                  <button class="subtle" data-go="reports">一覧 →</button>
+                  <button class="subtle" data-go="reports">
+                    一覧 →
+                  </button>
                 </div>
                 <div id="homeReports"></div>
               </div>
@@ -164,11 +229,19 @@
               <h2>スケジュール・出演情報</h2>
               <p>ライブ、リアミ、オンミ、トレなどの予定を管理。</p>
             </div>
-            <button class="primary" data-add="schedule">＋ 予定を追加</button>
+            <button class="primary" data-add="schedule">
+              ＋ 予定を追加
+            </button>
           </div>
+
           <div class="panel">
             <div class="table-tools">
-              <input class="search" placeholder="予定を検索" data-search="schedule" />
+              <input
+                class="search"
+                placeholder="予定を検索"
+                data-search="schedule"
+              />
+
               <select class="filter" data-filter="schedule">
                 <option value="">すべての種類</option>
                 <option>ライブ</option>
@@ -183,6 +256,7 @@
                 <option>その他</option>
               </select>
             </div>
+
             <div class="data-list" id="list-schedule"></div>
           </div>
         </section>
@@ -193,8 +267,11 @@
               <h2>応募・チケット</h2>
               <p>申込、当落、入金の状況と締切を記録。</p>
             </div>
-            <button class="primary" data-add="tickets">＋ 応募を追加</button>
+            <button class="primary" data-add="tickets">
+              ＋ 応募を追加
+            </button>
           </div>
+
           <div class="panel">
             <div class="table-tools">
               <input
@@ -203,7 +280,12 @@
                 aria-label="応募を検索"
                 data-search="tickets"
               />
-              <select class="filter" data-filter="tickets" aria-label="応募の状況">
+
+              <select
+                class="filter"
+                data-filter="tickets"
+                aria-label="応募の状況"
+              >
                 <option value="">すべての状況</option>
                 <option>応募前</option>
                 <option>申込済み</option>
@@ -211,9 +293,20 @@
                 <option>落選</option>
                 <option>入金済み</option>
               </select>
-              <button type="button" class="subtle" id="resetTickets" hidden>絞り込みを解除</button>
+
+              <button
+                type="button"
+                class="subtle"
+                id="resetTickets"
+                hidden
+              >
+                絞り込みを解除
+              </button>
             </div>
-            <p class="field-hint">対応中を先に、期限順で表示します。</p>
+
+            <p class="field-hint">
+              対応中を先に、期限順で表示します。
+            </p>
             <p id="ticketSummary" aria-live="polite"></p>
             <div class="data-list" id="list-tickets"></div>
           </div>
@@ -225,11 +318,19 @@
               <h2>グッズ管理</h2>
               <p>所持品や購入予定のグッズを記録。</p>
             </div>
-            <button class="primary" data-add="goods">＋ グッズを追加</button>
+            <button class="primary" data-add="goods">
+              ＋ グッズを追加
+            </button>
           </div>
+
           <div class="panel">
             <div class="table-tools">
-              <input class="search" placeholder="グッズを検索" data-search="goods" />
+              <input
+                class="search"
+                placeholder="グッズを検索"
+                data-search="goods"
+              />
+
               <select class="filter" data-filter="goods">
                 <option value="">すべて</option>
                 <option>所持</option>
@@ -237,6 +338,7 @@
                 <option>未所持</option>
               </select>
             </div>
+
             <div class="data-list" id="list-goods"></div>
           </div>
         </section>
@@ -245,25 +347,47 @@
           <div class="page-head">
             <div>
               <h2>生写真コレクション</h2>
-              <p>メンバーから衣装を選び、スワリ・ヨリ・チュウ・ヒキを管理。</p>
+              <p>
+                メンバーから衣装を選び、スワリ・ヨリ・チュウ・ヒキを管理。
+              </p>
             </div>
-            <button class="primary" data-add="photos">＋ 生写真を追加</button>
+            <button class="primary" data-add="photos">
+              ＋ 生写真を追加
+            </button>
           </div>
 
           <div class="panel">
-            <div class="collection-tabs" role="group" aria-label="生写真の表示">
-              <button class="secondary" data-photo-view="owned">所持</button>
-              <button class="secondary" data-photo-view="offer">提供</button>
-              <button class="secondary" data-photo-view="want">希望</button>
+            <div
+              class="collection-tabs"
+              role="group"
+              aria-label="生写真の表示"
+            >
+              <button class="secondary" data-photo-view="owned">
+                所持
+              </button>
+              <button class="secondary" data-photo-view="offer">
+                提供
+              </button>
+              <button class="secondary" data-photo-view="want">
+                希望
+              </button>
             </div>
 
             <div class="photo-catalog-browser">
-              <button type="button" class="catalog-back" id="photoBrowserBack" hidden>
+              <button
+                type="button"
+                class="catalog-back"
+                id="photoBrowserBack"
+                hidden
+              >
                 ‹ メンバーへ
               </button>
 
               <p id="photoBrowserCrumb" class="catalog-crumb"></p>
-              <h3 id="photoBrowserTitle" tabindex="-1">メンバーを選ぶ</h3>
+
+              <h3 id="photoBrowserTitle" tabindex="-1">
+                メンバーを選ぶ
+              </h3>
 
               <div class="catalog-filters">
                 <input
@@ -273,22 +397,43 @@
                   placeholder="メンバーを検索"
                   aria-label="メンバーを検索"
                 />
+
                 <label id="photoCatalogYearField" hidden>
                   名称に含まれる年
-                  <select id="photoCatalogYear" class="filter"></select>
+                  <select
+                    id="photoCatalogYear"
+                    class="filter"
+                  ></select>
                 </label>
+
                 <label id="photoCatalogMissingLabel" hidden>
                   <input type="checkbox" id="photoCatalogMissing" />
                   未所持の種類があるシリーズ
                 </label>
               </div>
 
-              <p id="photoCatalogSummary" class="catalog-summary" aria-live="polite"></p>
-              <div id="photoCatalogContent" class="catalog-content"></div>
+              <p
+                id="photoCatalogSummary"
+                class="catalog-summary"
+                aria-live="polite"
+              ></p>
 
-              <form id="photoCustomPoseForm" class="catalog-custom-pose" hidden>
-                <label for="photoCustomPose">ポーズ・専用の種類を追加</label>
+              <div
+                id="photoCatalogContent"
+                class="catalog-content"
+              ></div>
+
+              <form
+                id="photoCustomPoseForm"
+                class="catalog-custom-pose"
+                hidden
+              >
+                <label for="photoCustomPose">
+                  ポーズ・専用の種類を追加
+                </label>
+
                 <p id="photoCustomPoseHint"></p>
+
                 <div>
                   <input
                     type="text"
@@ -297,18 +442,30 @@
                     required
                     placeholder="種類名を入力"
                   />
-                  <button type="submit" class="secondary">追加</button>
+                  <button type="submit" class="secondary">
+                    追加
+                  </button>
                 </div>
               </form>
 
-              <button type="button" class="primary catalog-add" id="photoCatalogAdd" hidden>
+              <button
+                type="button"
+                class="primary catalog-add"
+                id="photoCatalogAdd"
+                hidden
+              >
                 ＋ 写真を登録
               </button>
             </div>
 
             <details id="savedPhotos" class="saved-photos">
               <summary>登録済み一覧・個別の編集と削除</summary>
-              <p id="photoSummary" class="photo-summary" aria-live="polite"></p>
+
+              <p
+                id="photoSummary"
+                class="photo-summary"
+                aria-live="polite"
+              ></p>
 
               <div class="table-tools photo-filters">
                 <input
@@ -317,6 +474,7 @@
                   aria-label="生写真を検索"
                   data-search="photos"
                 />
+
                 <select
                   class="filter"
                   id="photoCategory"
@@ -327,12 +485,14 @@
                   <option>公式ランダム</option>
                   <option>CD封入</option>
                 </select>
+
                 <select
                   class="filter"
                   id="photoMember"
                   data-photo-filter
                   aria-label="メンバー"
                 ></select>
+
                 <select
                   class="filter"
                   id="photoSeries"
@@ -342,16 +502,30 @@
               </div>
 
               <label class="favorite-filter">
-                <input type="checkbox" id="photoFavoritesOnly" data-photo-filter />
+                <input
+                  type="checkbox"
+                  id="photoFavoritesOnly"
+                  data-photo-filter
+                />
                 お気に入りのみ
               </label>
+
               <p id="photoResults" aria-live="polite"></p>
+
               <div class="photo-grid" id="list-photos"></div>
             </details>
 
             <div class="collection-actions">
-              <button class="secondary" data-add="photos" data-wish>＋ 希望を登録</button>
-              <button class="primary" id="openTrade">現場で交換する</button>
+              <button
+                class="secondary"
+                data-add="photos"
+                data-wish
+              >
+                ＋ 希望を登録
+              </button>
+              <button class="primary" id="openTrade">
+                現場で交換する
+              </button>
             </div>
 
             <details>
@@ -365,14 +539,24 @@
           <div class="page-head">
             <div>
               <h2>ライブ参戦記録</h2>
-              <p>会場、座席、セットリスト、感想を思い出と一緒に記録。</p>
+              <p>
+                会場、座席、セットリスト、感想を思い出と一緒に記録。
+              </p>
             </div>
-            <button class="primary" data-add="lives">＋ 参戦記録を追加</button>
+            <button class="primary" data-add="lives">
+              ＋ 参戦記録を追加
+            </button>
           </div>
+
           <div class="panel">
             <div class="table-tools">
-              <input class="search" placeholder="公演名・会場を検索" data-search="lives" />
+              <input
+                class="search"
+                placeholder="公演名・会場を検索"
+                data-search="lives"
+              />
             </div>
+
             <div class="data-list" id="list-lives"></div>
           </div>
         </section>
@@ -383,8 +567,11 @@
               <h2>ミーグリレポ</h2>
               <p>会話や感想、次に話したいことを自分用に保存。</p>
             </div>
-            <button class="primary" data-add="reports">＋ レポを書く</button>
+            <button class="primary" data-add="reports">
+              ＋ レポを書く
+            </button>
           </div>
+
           <div class="panel">
             <div class="table-tools">
               <input
@@ -394,7 +581,13 @@
                 data-search="reports"
               />
             </div>
-            <p id="reportResults" class="field-hint" aria-live="polite"></p>
+
+            <p
+              id="reportResults"
+              class="field-hint"
+              aria-live="polite"
+            ></p>
+
             <div class="data-list" id="list-reports"></div>
           </div>
         </section>
@@ -405,8 +598,11 @@
               <h2>推し活家計簿</h2>
               <p>チケットやグッズ、遠征の出費を記録。</p>
             </div>
-            <button class="primary" data-add="money">＋ 支出を追加</button>
+            <button class="primary" data-add="money">
+              ＋ 支出を追加
+            </button>
           </div>
+
           <div class="cards">
             <div class="stat">
               <div class="label">今月の合計</div>
@@ -414,6 +610,7 @@
               <div class="hint">記録した支出の合計</div>
             </div>
           </div>
+
           <div class="panel">
             <div class="data-list" id="list-money"></div>
           </div>
@@ -425,8 +622,11 @@
               <h2>推し活ToDo</h2>
               <p>予約、応募、入金などのタスクを忘れずに。</p>
             </div>
-            <button class="primary" data-add="todos">＋ ToDoを追加</button>
+            <button class="primary" data-add="todos">
+              ＋ ToDoを追加
+            </button>
           </div>
+
           <div class="panel">
             <div class="data-list" id="list-todos"></div>
           </div>
@@ -438,12 +638,20 @@
               <h2>推し活マップ</h2>
               <p>ライブ会場や聖地巡礼スポットを保存。</p>
             </div>
-            <button class="primary" data-add="places">＋ スポットを追加</button>
+            <button class="primary" data-add="places">
+              ＋ スポットを追加
+            </button>
           </div>
+
           <div class="panel">
             <div class="table-tools">
-              <input class="search" placeholder="場所・スポットを検索" data-search="places" />
+              <input
+                class="search"
+                placeholder="場所・スポットを検索"
+                data-search="places"
+              />
             </div>
+
             <div class="data-list" id="list-places"></div>
           </div>
         </section>
@@ -452,20 +660,31 @@
           <div class="page-head">
             <div>
               <h2>メンバー別記念日</h2>
-              <p>初ミーグリ、初ファンサ、初グッズなどをメンバーごとに記録。</p>
+              <p>
+                初ミーグリ、初ファンサ、初グッズなどをメンバーごとに記録。
+              </p>
             </div>
-            <button class="primary" data-add="milestones">＋ 記念日を追加</button>
+            <button class="primary" data-add="milestones">
+              ＋ 記念日を追加
+            </button>
           </div>
+
           <div class="panel">
             <div class="table-tools">
-              <input class="search" placeholder="メンバー・記念日を検索" data-search="milestones" />
+              <input
+                class="search"
+                placeholder="メンバー・記念日を検索"
+                data-search="milestones"
+              />
             </div>
+
             <select
               class="filter"
               id="milestoneMember"
               data-filter="milestones"
               aria-label="記念日のメンバー"
             ></select>
+
             <div class="data-list" id="list-milestones"></div>
           </div>
         </section>
@@ -475,11 +694,21 @@
     <div class="modal-wrap" id="modalWrap">
       <div class="modal">
         <h3 id="modalTitle">追加</h3>
+
         <form id="itemForm">
           <div class="form-grid" id="formFields"></div>
+
           <div class="modal-actions">
-            <button type="button" class="secondary" id="cancelBtn">キャンセル</button>
-            <button type="submit" class="primary">保存する</button>
+            <button
+              type="button"
+              class="secondary"
+              id="cancelBtn"
+            >
+              キャンセル
+            </button>
+            <button type="submit" class="primary">
+              保存する
+            </button>
           </div>
         </form>
       </div>
@@ -488,20 +717,31 @@
     <div class="modal-wrap" id="profileModal">
       <div class="modal">
         <h3>推しメンを編集</h3>
+
         <form id="profileForm">
           <div class="form-grid">
             <div class="field full">
               <p class="field-hint">
                 推しメンを複数選べます。推し始めた日を登録すると日数を表示します。
               </p>
+
               <fieldset id="profileMembers">
                 <legend>推しメンを選択</legend>
               </fieldset>
             </div>
           </div>
+
           <div class="modal-actions">
-            <button type="button" class="secondary" id="profileCancel">キャンセル</button>
-            <button type="submit" class="primary">保存する</button>
+            <button
+              type="button"
+              class="secondary"
+              id="profileCancel"
+            >
+              キャンセル
+            </button>
+            <button type="submit" class="primary">
+              保存する
+            </button>
           </div>
         </form>
       </div>
@@ -510,14 +750,25 @@
     <div class="modal-wrap" id="tradeModal">
       <div class="modal">
         <h3>現場で交換する</h3>
+
         <p>
           提供・希望として登録した写真から、渡す枚数ともらう枚数を選んでください。未登録の写真は先に「希望を登録」から追加できます。
         </p>
+
         <form id="tradeForm">
           <div id="tradeLines"></div>
+
           <div class="modal-actions">
-            <button type="button" class="secondary" id="cancelTrade">キャンセル</button>
-            <button type="submit" class="primary">交換を確定</button>
+            <button
+              type="button"
+              class="secondary"
+              id="cancelTrade"
+            >
+              キャンセル
+            </button>
+            <button type="submit" class="primary">
+              交換を確定
+            </button>
           </div>
         </form>
       </div>
@@ -526,21 +777,48 @@
     <div class="modal-wrap" id="appearanceModal">
       <div class="modal">
         <h3 id="appearanceTitle">背景</h3>
+
         <form id="appearanceForm">
           <div class="field">
             <label for="backgroundFile">好きな画像を選ぶ</label>
-            <input id="backgroundFile" type="file" accept="image/*" />
+            <input
+              id="backgroundFile"
+              type="file"
+              accept="image/*"
+            />
           </div>
-          <button type="button" class="subtle crop-control" id="cropBackground" disabled>
+
+          <button
+            type="button"
+            class="subtle crop-control"
+            id="cropBackground"
+            disabled
+          >
             切り取り位置
           </button>
+
           <div id="backgroundPreview" class="background-preview">
             <span>文字の見え方</span>
           </div>
+
           <div class="modal-actions">
-            <button type="button" class="subtle" id="removeBackground">背景を解除</button>
-            <button type="button" class="secondary" id="cancelAppearance">キャンセル</button>
-            <button type="submit" class="primary">保存する</button>
+            <button
+              type="button"
+              class="subtle"
+              id="removeBackground"
+            >
+              背景を解除
+            </button>
+            <button
+              type="button"
+              class="secondary"
+              id="cancelAppearance"
+            >
+              キャンセル
+            </button>
+            <button type="submit" class="primary">
+              保存する
+            </button>
           </div>
         </form>
       </div>
@@ -555,9 +833,11 @@
     >
       <div class="modal">
         <h3 id="cropTitle">切り取り位置</h3>
+
         <p class="field-hint">
           画像を動かして位置を合わせ、拡大して使う範囲を選べます。矢印キーでも動かせます。
         </p>
+
         <div class="crop-stage">
           <canvas
             id="cropCanvas"
@@ -566,14 +846,45 @@
             aria-label="切り取り範囲。ドラッグまたは矢印キーで位置を変更"
           ></canvas>
         </div>
+
         <div class="field">
-          <label for="cropZoom"> 拡大 <output id="cropZoomValue">100%</output> </label>
-          <input id="cropZoom" type="range" min="1" max="4" step="0.05" value="1" />
+          <label for="cropZoom">
+            拡大
+            <output id="cropZoomValue">100%</output>
+          </label>
+
+          <input
+            id="cropZoom"
+            type="range"
+            min="1"
+            max="4"
+            step="0.05"
+            value="1"
+          />
         </div>
+
         <div class="modal-actions">
-          <button type="button" class="subtle" id="resetCrop">中央に戻す</button>
-          <button type="button" class="secondary" id="cancelCrop">キャンセル</button>
-          <button type="button" class="primary" id="confirmCrop">この範囲を使う</button>
+          <button
+            type="button"
+            class="subtle"
+            id="resetCrop"
+          >
+            中央に戻す
+          </button>
+          <button
+            type="button"
+            class="secondary"
+            id="cancelCrop"
+          >
+            キャンセル
+          </button>
+          <button
+            type="button"
+            class="primary"
+            id="confirmCrop"
+          >
+            この範囲を使う
+          </button>
         </div>
       </div>
     </div>
@@ -583,8 +894,8 @@
     <script src="data/features.js?v=20261107-map1"></script>
     <script src="data/photoCatalog.js?v=20261107-map1"></script>
     <script src="js/collectionModel.js?v=20261107-map1"></script>
-    <script src="js/photoStorage.js?v=20261107-map1"></script>
-    <script src="js/storage.js?v=20261107-map1"></script>
+    <script src="js/photoStorage.js?v=20261110-backup1"></script>
+    <script src="js/storage.js?v=20261110-backup1"></script>
     <script src="js/memberAutocomplete.js?v=20261107-map1"></script>
     <script src="js/imageCrop.js?v=20261107-map1"></script>
     <script src="js/reports.js?v=20261107-map1"></script>
@@ -598,5 +909,7 @@
     <script src="js/appearance.js?v=20261107-map1"></script>
     <script src="js/trades.js?v=20261107-map1"></script>
     <script src="js/main.js?v=20261107-map1"></script>
+    <script src="js/backup.js?v=20261110-backup1"></script>
+    <script src="js/backupUI.js?v=20261110-backup1"></script>
   </body>
 </html>
