@@ -54,6 +54,16 @@ if (
 db.photos = migratePhotos(db.photos);
 
 function save() {
+  const current = JSON.parse(
+    localStorage.getItem(STORAGE_KEY) || '{}'
+  );
+
+  if (current?.__photoDatabase !== db.__photoDatabase) {
+    throw new Error(
+      '別のタブでデータが引き継がれました。ページを再読み込みしてください'
+    );
+  }
+
   localStorage.setItem(STORAGE_KEY, JSON.stringify(db));
 }
 
@@ -87,7 +97,7 @@ function imageInUse(id) {
 
     db.appearance?.backgroundId,
 
-    ...Object.values(db.appearance?.pages || []).map(
+    ...Object.values(db.appearance?.pages || {}).map(
       (item) => item?.backgroundId
     ),
 
