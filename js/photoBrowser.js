@@ -2,6 +2,7 @@
 
 const photoBrowserState = {
   browseMode: 'member',
+  generation: '',
   browseSeriesId: '',
   member: '',
   seriesId: '',
