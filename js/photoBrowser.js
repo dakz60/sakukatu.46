@@ -17,6 +17,115 @@ const photoExtraGroups = [
   { name: 'その他', kana: 'そのた' }
 ];
 
+const photoMemberGenerations = {
+  '2': [
+    '遠藤光莉',
+    '大園玲',
+    '大沼晶保',
+    '幸阪茉里乃',
+    '田村保乃',
+    '藤吉夏鈴',
+    '松田里奈',
+    '森田ひかる',
+    '守屋麗奈',
+    '山﨑天'
+  ],
+
+  '3': [
+    '石森璃花',
+    '遠藤理子',
+    '小田倉麗奈',
+    '小島凪紗',
+    '谷口愛季',
+    '中嶋優月',
+    '的野美青',
+    '向井純葉',
+    '村井優',
+    '村山美羽',
+    '山下瞳月'
+  ],
+
+  '4': [
+    '浅井恋乃未',
+    '稲熊ひな',
+    '勝又春',
+    '佐藤愛桜',
+    '中川智尋',
+    '松本和子',
+    '目黒陽色',
+    '山川宇衣',
+    '山田桃実'
+  ]
+};
+
+function matchesPhotoGeneration(name) {
+  const generation = photoBrowserState.generation;
+
+  if (!generation) return true;
+
+  if (generation === 'extra') {
+    return photoExtraGroups.some(
+      (item) => item.name === name
+    );
+  }
+
+  return (
+    photoMemberGenerations[generation]?.includes(name) ||
+    false
+  );
+}
+
+function renderPhotoGenerationFilter() {
+  let field = $('#photoGenerationField');
+
+  if (!field) {
+    field = document.createElement('label');
+
+    field.id = 'photoGenerationField';
+    field.htmlFor = 'photoGeneration';
+
+    field.append(
+      document.createTextNode('期生')
+    );
+
+    const select = document.createElement('select');
+
+    select.id = 'photoGeneration';
+    select.className = 'filter';
+
+    for (const [value, label] of [
+      ['', 'すべて'],
+      ['2', '二期生'],
+      ['3', '三期生'],
+      ['4', '四期生'],
+      ['extra', 'HMV・その他']
+    ]) {
+      const option = document.createElement('option');
+
+      option.value = value;
+      option.textContent = label;
+
+      select.append(option);
+    }
+
+    field.append(select);
+
+    $('#photoCatalogYearField').before(field);
+
+    select.onchange = () => {
+      photoBrowserState.generation = select.value;
+
+      renderPhotoBrowser();
+    };
+  }
+
+  field.hidden = !!photoBrowserState.member;
+  field.style.display = field.hidden ? 'none' : '';
+
+  $('#photoGeneration').value =
+    photoBrowserState.generation;
+}
+
 const photoBrowserSearchOptions = [];
 const standardPhotoPoses = ['スワリ', 'ヨリ', 'チュウ', 'ヒキ'];
 
